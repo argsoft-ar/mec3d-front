@@ -1,0 +1,23 @@
+.layout-wrapper {
+  padding-top: var(--navbar-height);
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.layout-inner {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+.layout-inner--full {
+  max-width: 100%;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .layout-inner {
+    padding: var(--space-8) var(--space-6);
+  }
+}
