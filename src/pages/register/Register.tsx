@@ -4,14 +4,22 @@ import Form from "../../components/Form/Form";
 import FormField from "../../components/Form/FormField";
 import Button from "../../components/Button/Button";
 import { authService } from "../../services/api";
-import type { FormFieldType } from "../../types";
-import "./Login.css";
+import type { FormFieldType, SelectOption } from "../../types";
+import type { RolUsuario } from "../../interfaces/user.interface";
+import "./Register.css";
 
-type LoginForm = { email: string; password: string };
+type RegisterForm = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  rol_principal: string;
+};
 
-const LOGIN_FIELDS: Array<{
+type RegisterTextKeys = "email" | "password" | "confirmPassword";
+
+const REGISTER_TEXT_FIELDS: Array<{
   label: string;
-  name: keyof LoginForm;
+  name: RegisterTextKeys;
   type: FormFieldType;
   placeholder: string;
 }> = [
@@ -27,13 +35,27 @@ const LOGIN_FIELDS: Array<{
     type: "password",
     placeholder: "••••••••",
   },
+  {
+    label: "Confirmar contraseña",
+    name: "confirmPassword",
+    type: "password",
+    placeholder: "••••••••",
+  },
 ];
 
-function Login() {
+const ROL_OPTIONS: SelectOption[] = [
+  { value: "comprador", label: "Comprador" },
+  { value: "disenador", label: "Diseñador" },
+  { value: "fabricante", label: "Fabricante" },
+];
+
+function Register() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<LoginForm>({
+  const [formData, setFormData] = useState<RegisterForm>({
     email: "",
     password: "",
+    confirmPassword: "",
+    rol_principal: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,18 +63,23 @@ function Login() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { token, user } = await authService.login(
-        formData.email,
-        formData.password,
-      );
-      localStorage.setItem("auth_token", token);
-      localStorage.setItem("auth_user", JSON.stringify(user));
-      navigate("/dashboard");
+      await authService.register({
+        email: formData.email,
+        password: formData.password,
+        rol_principal: formData.rol_principal as RolUsuario,
+      });
+      navigate("/login");
     } catch {
-      setError("Credenciales inválidas. Revisá tu email y contraseña.");
+      setError("Error al registrar. Verificá los datos.");
     } finally {
       setLoading(false);
     }
@@ -95,7 +122,7 @@ function Login() {
             <p className="login-subtitle">Marketplace de piezas mecánicas</p>
           </div>
 
-          <h2 className="login-title">Iniciá sesión</h2>
+          <h2 className="login-title">Creá tu cuenta</h2>
 
           {error && (
             <div className="login-error" role="alert">
@@ -105,7 +132,7 @@ function Login() {
 
           <div className="login-form-fields">
             <Form onSubmit={handleSubmit} columns={1}>
-              {LOGIN_FIELDS.map((field, i) => (
+              {REGISTER_TEXT_FIELDS.map((field, i) => (
                 <div
                   key={field.name}
                   className="login-field-wrapper"
@@ -129,10 +156,29 @@ function Login() {
               ))}
               <div
                 className="login-field-wrapper"
-                style={{ animationDelay: "0.35s" }}
+                style={{ animationDelay: "0.4s" }}
+              >
+                <FormField
+                  label="Rol"
+                  name="rol_principal"
+                  type="select"
+                  value={formData.rol_principal}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rol_principal: e.target.value,
+                    }))
+                  }
+                  options={ROL_OPTIONS}
+                  required
+                />
+              </div>
+              <div
+                className="login-field-wrapper"
+                style={{ animationDelay: "0.5s" }}
               >
                 <Button
-                  title={loading ? "Ingresando..." : "Ingresar"}
+                  title={loading ? "Registrando..." : "Registrarse"}
                   type="submit"
                   variant="primary"
                   size="lg"
@@ -143,8 +189,11 @@ function Login() {
             </Form>
           </div>
 
-          <p className="login-register-link" style={{ animationDelay: "0.5s" }}>
-            ¿No tenés cuenta? <Link to="/register">Registrate gratis</Link>
+          <p
+            className="login-register-link"
+            style={{ animationDelay: "0.65s" }}
+          >
+            ¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link>
           </p>
         </div>
       </div>
@@ -152,4 +201,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;

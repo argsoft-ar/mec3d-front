@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import type { NavLink } from "../../types";
+import { authService } from "../../services/auth.service";
 import "./Navbar.css";
 
 interface NavbarProps {
@@ -8,56 +9,50 @@ interface NavbarProps {
 }
 
 function Navbar({ links }: NavbarProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const toggleMenu = () => setMenuOpen((prev) => !prev);
-  const closeMenu = () => setMenuOpen(false);
+  const handleLogout = () => {
+    authService.logout();
+    navigate("/login");
+  };
 
   return (
-    <header className="navbar">
-      <div className="navbar__inner">
-        <Link to="/" className="navbar__brand" onClick={closeMenu}>
-          <span className="navbar__logo">MEC3D</span>
+    <aside className="sidebar">
+      <div className="sidebar__top">
+        <Link to="/" className="sidebar__brand">
+          <span className="sidebar__logo">MEC3D</span>
         </Link>
-
-        <button
-          className={`navbar__hamburger${menuOpen ? " navbar__hamburger--open" : ""}`}
-          onClick={toggleMenu}
-          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-          aria-expanded={menuOpen}
-        >
-          <span className="navbar__hamburger-bar" />
-          <span className="navbar__hamburger-bar" />
-          <span className="navbar__hamburger-bar" />
-        </button>
-
-        <nav
-          className={`navbar__nav${menuOpen ? " navbar__nav--open" : ""}`}
-          aria-label="Navegación principal"
-        >
-          <ul className="navbar__list">
-            {links.map((link) => {
-              const isActive = location.pathname === link.path;
-              return (
-                <li key={link.path} className="navbar__item">
-                  <Link
-                    to={link.path}
-                    className={`navbar__link${isActive ? " navbar__link--active" : ""}`}
-                    onClick={closeMenu}
-                  >
-                    {link.icon && (
-                      <span className="navbar__link-icon">{link.icon}</span>
-                    )}
-                    {link.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
       </div>
-    </header>
+
+      <nav className="sidebar__nav" aria-label="Navegación principal">
+        <ul className="sidebar__list">
+          {links.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <li key={link.path} className="sidebar__item">
+                <Link
+                  to={link.path}
+                  className={`sidebar__link${isActive ? " sidebar__link--active" : ""}`}
+                >
+                  {link.icon && (
+                    <span className="sidebar__link-icon">{link.icon}</span>
+                  )}
+                  <span className="sidebar__link-label">{link.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className="sidebar__bottom">
+        <button className="sidebar__logout" onClick={handleLogout}>
+          <LogOut size={18} className="sidebar__logout-icon" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </aside>
   );
 }
 
