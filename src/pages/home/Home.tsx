@@ -8,12 +8,17 @@ import {
   Cog,
   Search,
   Upload,
+  Grid2X2,
+  Users,
+  Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PRODUCTS } from "../../data/products";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
+import ProductCard from "../../components/ProductCard/ProductCard";
 import type { ProductCategory } from "../../types";
 import "./Home.css";
 
@@ -25,6 +30,12 @@ interface CategoryItem {
 
 const ICON_SIZE = 64;
 const ICON_PROPS = { size: ICON_SIZE, strokeWidth: 1.5 };
+
+interface ServiceItem {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
 
 const CATEGORIES: CategoryItem[] = [
   {
@@ -56,6 +67,27 @@ const CATEGORIES: CategoryItem[] = [
     name: "Engranajes",
     icon: <Cog {...ICON_PROPS} />,
     description: "Transmisiones, poleas y sistemas mecánicos",
+  },
+];
+
+const SERVICES: ServiceItem[] = [
+  {
+    icon: <Grid2X2 size={32} strokeWidth={1.5} />,
+    title: "12 Categorías",
+    description:
+      "Desde mecánica hasta tecnología, encuentra la pieza perfecta para tu proyecto",
+  },
+  {
+    icon: <Users size={32} strokeWidth={1.5} />,
+    title: "Comunidad de Diseñadores",
+    description:
+      "Comparte tus diseños y descubre plantillas creadas por profesionales",
+  },
+  {
+    icon: <Download size={32} strokeWidth={1.5} />,
+    title: "Descarga Instantánea",
+    description:
+      "Archivos STL y OBJ listos para imprimir en tu impresora 3D favorita",
   },
 ];
 
@@ -100,6 +132,39 @@ function Home() {
               text={cat.description}
               variant={index < 2 ? "elevated" : "elevated"}
               onClick={() => navigate(`/explore?category=${cat.name}`)}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="home-services">
+        <h2 className="home-section-title">¿Por qué MEC3D?</h2>
+        <div className="home-services__grid">
+          {SERVICES.map((service) => (
+            <div key={service.title} className="home-service-card">
+              <span className="home-service-card__icon">{service.icon}</span>
+              <h3 className="home-service-card__title">{service.title}</h3>
+              <p className="home-service-card__description">
+                {service.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-featured">
+        <h2 className="home-section-title">Plantillas destacadas</h2>
+        <div className="home-featured__grid">
+          {PRODUCTS.map((product) => (
+            <ProductCard
+              key={product.id}
+              title={product.title}
+              description={product.description}
+              imageUrl={product.imageUrl}
+              rating={product.rating}
+              downloads={product.downloads}
+              price={product.price}
+              onClick={() => navigate(`/product/${product.id}`)}
             />
           ))}
         </div>

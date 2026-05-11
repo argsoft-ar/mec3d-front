@@ -1,0 +1,171 @@
+import { useParams } from "react-router-dom";
+import { ShoppingCart, Eye } from "lucide-react";
+import Layout from "../../components/Layout/Layout";
+import Card from "../../components/Card/Card";
+import Button from "../../components/Button/Button";
+import { PRODUCTS } from "../../data/products";
+import "./DetailProduct.css";
+
+interface StarProps {
+  rating: number;
+}
+
+function Stars({ rating }: StarProps) {
+  const filled = Math.round(rating);
+  return (
+    <span
+      className="detail-product__stars"
+      aria-label={`${rating} de 5 estrellas`}
+    >
+      {Array.from({ length: 5 }, (_, i) => (
+        <span
+          key={i}
+          className={
+            i < filled
+              ? "detail-product__star detail-product__star--filled"
+              : "detail-product__star detail-product__star--empty"
+          }
+        >
+          {i < filled ? "★" : "☆"}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function formatDownloads(n: number): string {
+  return n >= 1000
+    ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
+    : String(n);
+}
+
+function formatPrice(price: number): string {
+  if (price === 0) return "Gratis";
+  return "$ " + price.toLocaleString("es-AR");
+}
+
+function DetailProduct() {
+  const { id } = useParams<{ id: string }>();
+  const product = PRODUCTS.find((p) => p.id === id);
+
+  if (!product) {
+    return (
+      <Layout>
+        <p style={{ padding: "2rem" }}>Producto no encontrado.</p>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="detail-product">
+        {/* Hero */}
+        <section className="detail-product__hero">
+          {/* Left: image */}
+          <div className="detail-product__image-wrapper">
+            <img
+              className="detail-product__image"
+              src={product.imageUrl}
+              alt={product.title}
+            />
+          </div>
+
+          {/* Right: info */}
+          <div className="detail-product__info">
+            <h1 className="detail-product__title">{product.title}</h1>
+
+            {/* Rating */}
+            <div className="detail-product__rating-row">
+              <Stars rating={product.rating} />
+              <span>{product.rating}</span>
+              <span>({product.reviewCount} reseñas)</span>
+            </div>
+
+            {/* Downloads */}
+            <div className="detail-product__downloads">
+              <span aria-hidden="true">↓</span>
+              <span>{formatDownloads(product.downloads)} descargas</span>
+            </div>
+
+            {/* Description */}
+            <p className="detail-product__description">{product.description}</p>
+
+            {/* Price + format */}
+            <div className="detail-product__price-row">
+              <span className="detail-product__price">
+                {formatPrice(product.price)}
+              </span>
+              <span className="detail-product__format-badge">
+                {product.format}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="detail-product__actions">
+              <Button
+                variant="primary"
+                size="lg"
+                title="Comprar ahora"
+                fullWidth={true}
+                icon={<ShoppingCart size={18} strokeWidth={2} />}
+                iconPosition="left"
+              />
+              <Button
+                variant="outline"
+                size="lg"
+                title="Vista previa 3D"
+                fullWidth={true}
+                icon={<Eye size={18} strokeWidth={2} />}
+                iconPosition="left"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Especificaciones Técnicas */}
+        <section className="detail-product__section">
+          <h2 className="detail-product__section-title">
+            Especificaciones Técnicas
+          </h2>
+          <div className="detail-product__specs-grid">
+            {product.specs.map((spec) => (
+              <Card
+                key={spec.title}
+                variant="spec"
+                icon={<spec.icon size={20} strokeWidth={1.5} />}
+                title={spec.title}
+              >
+                <span>{spec.value}</span>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Diseñador */}
+        <section className="detail-product__section">
+          <h2 className="detail-product__section-title">Diseñador</h2>
+          <Card
+            variant="default"
+            footer={<Button variant="ghost" size="sm" title="Ver perfil" />}
+          >
+            <div className="detail-product__designer-inner">
+              <div className="detail-product__designer-avatar">
+                {product.designer.initials}
+              </div>
+              <div>
+                <h4 className="detail-product__designer-name">
+                  {product.designer.name}
+                </h4>
+                <p className="detail-product__designer-tagline">
+                  {product.designer.tagline}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </section>
+      </div>
+    </Layout>
+  );
+}
+
+export default DetailProduct;

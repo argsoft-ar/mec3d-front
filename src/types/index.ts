@@ -26,7 +26,7 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "lg";
 
 // Card
-export type CardVariant = "default" | "bordered" | "elevated" | "flat";
+export type CardVariant = "default" | "bordered" | "elevated" | "flat" | "spec";
 
 // Form
 export interface SelectOption {

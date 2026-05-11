@@ -6,6 +6,7 @@ import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import Home from "./pages/home/Home";
 import Dashboard from "./pages/dashboard/Dashboard";
+import DetailProduct from "./pages/products/DetailProduct";
 import type { NavLink } from "./types";
 import "./index.css";
 
@@ -49,6 +50,7 @@ function AppShell() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Dashboard />} />
+            <Route path="/product/:id" element={<DetailProduct />} />
           </Route>
         </Routes>
       </main>
