@@ -1,5 +1,9 @@
 import { request } from "./http.client";
-import type { LoginResponse, RegisterResponse, RegisterRequest } from "../interfaces";
+import type {
+  LoginResponse,
+  RegisterResponse,
+  RegisterRequest,
+} from "../interfaces";
 
 export const authService = {
   login: (email: string, password: string) =>
