@@ -24,3 +24,42 @@ export interface ProductoFisico {
   estado: EstadoProducto;
   creado_en: string;
 }
+
+export interface ProductSpec {
+  title: string;
+  value: string;
+}
+
+export interface ProductDesigner {
+  initials: string;
+  name: string;
+  tagline: string;
+}
+
+export interface Product {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  rating: number;
+  reviewCount: number;
+  downloads: number;
+  price: number;
+  format: string;
+  specs: ProductSpec[];
+  designer: ProductDesigner;
+}
+
+export interface CreateProductPayload {
+  disenadorId?: string;
+  titulo: string;
+  descripcion: string;
+  imagenUrl: string;
+  archivoUrl: string;
+  precioBase: number;
+  formato: string;
+  especificaciones: ProductSpec[];
+}
+
+export type UpdateProductPayload = CreateProductPayload;
+export type PartialUpdateProductPayload = Partial<CreateProductPayload>;

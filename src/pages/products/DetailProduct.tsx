@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { ShoppingCart, Eye } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
-import { PRODUCTS } from "../../data/products";
+import { productService } from "../../services/product.service";
+import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
 import "./DetailProduct.css";
 
@@ -67,12 +68,22 @@ function formatPrice(price: number): string {
 
 function DetailProduct() {
   const { id } = useParams<{ id: string }>();
-  const product = PRODUCTS.find((p) => p.id === id);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    productService.getAll().then((products) => {
+      setProduct(products.find((p) => p.id === id) ?? null);
+      setLoading(false);
+    });
+  }, [id]);
 
   if (!product) {
     return (
       <Layout>
-        <p style={{ padding: "2rem" }}>Producto no encontrado.</p>
+        <p style={{ padding: "2rem" }}>
+          {loading ? "Cargando..." : "Producto no encontrado."}
+        </p>
       </Layout>
     );
   }
@@ -145,12 +156,7 @@ function DetailProduct() {
           </h2>
           <div className="detail-product__specs-grid">
             {product.specs.map((spec) => (
-              <Card
-                key={spec.title}
-                variant="spec"
-                icon={<spec.icon size={20} strokeWidth={1.5} />}
-                title={spec.title}
-              >
+              <Card key={spec.title} variant="spec" title={spec.title}>
                 <span>{spec.value}</span>
               </Card>
             ))}

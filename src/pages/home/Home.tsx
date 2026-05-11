@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Car,
   Bike,
@@ -14,7 +14,8 @@ import {
   ChartNoAxesCombined,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PRODUCTS } from "../../data/products";
+import { productService } from "../../services/product.service";
+import type { Product } from "../../interfaces/product.interface";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Card from "../../components/Card/Card";
@@ -94,6 +95,11 @@ const SERVICES: ServiceItem[] = [
 
 function Home() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    productService.getAll().then(setProducts);
+  }, []);
 
   return (
     <Layout>
@@ -159,7 +165,7 @@ function Home() {
           <ChartNoAxesCombined size={24} strokeWidth={1.5} />
         </h2>
         <div className="home-featured__grid">
-          {PRODUCTS.map((product) => (
+          {products.map((product) => (
             <ProductCard
               key={product.id}
               title={product.title}
