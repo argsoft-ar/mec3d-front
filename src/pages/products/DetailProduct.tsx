@@ -1,10 +1,31 @@
+import type { ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { ShoppingCart, Eye } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
 import { PRODUCTS } from "../../data/products";
+import type { ButtonVariant } from "../../types";
 import "./DetailProduct.css";
+
+interface ActionItem {
+  title: string;
+  icon: ReactNode;
+  variant: ButtonVariant;
+}
+
+const ACTIONS: ActionItem[] = [
+  {
+    title: "Comprar ahora",
+    icon: <ShoppingCart size={18} strokeWidth={2} />,
+    variant: "primary",
+  },
+  {
+    title: "Vista previa 3D",
+    icon: <Eye size={18} strokeWidth={2} />,
+    variant: "outline",
+  },
+];
 
 interface StarProps {
   rating: number;
@@ -102,22 +123,17 @@ function DetailProduct() {
 
             {/* Actions */}
             <div className="detail-product__actions">
-              <Button
-                variant="primary"
-                size="lg"
-                title="Comprar ahora"
-                fullWidth={true}
-                icon={<ShoppingCart size={18} strokeWidth={2} />}
-                iconPosition="left"
-              />
-              <Button
-                variant="outline"
-                size="lg"
-                title="Vista previa 3D"
-                fullWidth={true}
-                icon={<Eye size={18} strokeWidth={2} />}
-                iconPosition="left"
-              />
+              {ACTIONS.map((action) => (
+                <Button
+                  key={action.title}
+                  variant={action.variant}
+                  size="lg"
+                  title={action.title}
+                  fullWidth={true}
+                  icon={action.icon}
+                  iconPosition="left"
+                />
+              ))}
             </div>
           </div>
         </section>

@@ -11,6 +11,7 @@ import {
   Grid2X2,
   Users,
   Download,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PRODUCTS } from "../../data/products";
@@ -153,7 +154,10 @@ function Home() {
       </section>
 
       <section className="home-featured">
-        <h2 className="home-section-title">Plantillas destacadas</h2>
+        <h2 className="home-section-title">
+          Plantillas destacadas{" "}
+          <ChartNoAxesCombined size={24} strokeWidth={1.5} />
+        </h2>
         <div className="home-featured__grid">
           {PRODUCTS.map((product) => (
             <ProductCard
