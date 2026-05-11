@@ -1,5 +1,13 @@
 import type { LucideIcon } from "lucide-react";
-import { Box, Ruler, Gauge, Clock, Wrench, SlidersHorizontal, FileText } from "lucide-react";
+import {
+  Box,
+  Ruler,
+  Gauge,
+  Clock,
+  Wrench,
+  SlidersHorizontal,
+  FileText,
+} from "lucide-react";
 
 export interface ProductSpec {
   icon: LucideIcon;
@@ -46,7 +54,11 @@ export const PRODUCTS: Product[] = [
       { icon: Gauge, title: "Dificultad", value: "Avanzado" },
       { icon: Clock, title: "Tiempo de Impresión", value: "14h" },
       { icon: Wrench, title: "Soportes", value: "Requeridos" },
-      { icon: SlidersHorizontal, title: "Configuración", value: "Layer: 0.15mm · Infill: 40%" },
+      {
+        icon: SlidersHorizontal,
+        title: "Configuración",
+        value: "Layer: 0.15mm · Infill: 40%",
+      },
       { icon: FileText, title: "Licencia", value: "CC BY-NC" },
     ],
     designer: {
@@ -73,7 +85,11 @@ export const PRODUCTS: Product[] = [
       { icon: Gauge, title: "Dificultad", value: "Intermedio" },
       { icon: Clock, title: "Tiempo de Impresión", value: "8h" },
       { icon: Wrench, title: "Soportes", value: "No necesarios" },
-      { icon: SlidersHorizontal, title: "Configuración", value: "Layer: 0.2mm · Infill: 30%" },
+      {
+        icon: SlidersHorizontal,
+        title: "Configuración",
+        value: "Layer: 0.2mm · Infill: 30%",
+      },
       { icon: FileText, title: "Licencia", value: "CC BY-SA" },
     ],
     designer: {
@@ -100,7 +116,11 @@ export const PRODUCTS: Product[] = [
       { icon: Gauge, title: "Dificultad", value: "Básico" },
       { icon: Clock, title: "Tiempo de Impresión", value: "4h" },
       { icon: Wrench, title: "Soportes", value: "No necesarios" },
-      { icon: SlidersHorizontal, title: "Configuración", value: "Layer: 0.2mm · Infill: 25%" },
+      {
+        icon: SlidersHorizontal,
+        title: "Configuración",
+        value: "Layer: 0.2mm · Infill: 25%",
+      },
       { icon: FileText, title: "Licencia", value: "CC BY" },
     ],
     designer: {
@@ -127,7 +147,11 @@ export const PRODUCTS: Product[] = [
       { icon: Gauge, title: "Dificultad", value: "Básico" },
       { icon: Clock, title: "Tiempo de Impresión", value: "2h" },
       { icon: Wrench, title: "Soportes", value: "No necesarios" },
-      { icon: SlidersHorizontal, title: "Configuración", value: "Layer: 0.2mm · Infill: 20%" },
+      {
+        icon: SlidersHorizontal,
+        title: "Configuración",
+        value: "Layer: 0.2mm · Infill: 20%",
+      },
       { icon: FileText, title: "Licencia", value: "CC BY-SA" },
     ],
     designer: {
