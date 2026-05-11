@@ -23,7 +23,7 @@ interface CategoryItem {
   description: string;
 }
 
-const ICON_SIZE = 32;
+const ICON_SIZE = 64;
 const ICON_PROPS = { size: ICON_SIZE, strokeWidth: 1.5 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -65,8 +65,8 @@ function Home() {
   return (
     <Layout>
       <Header
-        title="Encontrá la pieza"
-        accentText="que necesitás"
+        title="MEC3D, lo que necesitas"
+        accentText="en un solo lugar"
         subtitle="El marketplace líder de piezas mecánicas en 3D. Comprá, diseñá y fabricá con los mejores proveedores."
         actions={
           <>
@@ -91,13 +91,14 @@ function Home() {
       <section className="home-categories">
         <h2 className="home-section-title">Categorías</h2>
         <div className="home-categories__grid">
-          {CATEGORIES.map((cat) => (
+          {CATEGORIES.map((cat, index) => (
             <Card
               key={cat.name}
+              className="home-category-card"
               icon={<span className="home-category-icon">{cat.icon}</span>}
               title={cat.name}
               text={cat.description}
-              variant="default"
+              variant={index < 2 ? "elevated" : "elevated"}
               onClick={() => navigate(`/explore?category=${cat.name}`)}
             />
           ))}
