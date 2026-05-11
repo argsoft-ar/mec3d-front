@@ -47,7 +47,11 @@ function DataTable<T extends { id: string | number }>({
               </TableCell>
             ))}
             {hasActions && (
-              <TableCell align="center" className="data-table__head-cell" width={120}>
+              <TableCell
+                align="center"
+                className="data-table__head-cell"
+                width={120}
+              >
                 Acciones
               </TableCell>
             )}
@@ -57,7 +61,10 @@ function DataTable<T extends { id: string | number }>({
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} align="center">
+              <TableCell
+                colSpan={columns.length + (hasActions ? 1 : 0)}
+                align="center"
+              >
                 <Typography
                   variant="body2"
                   sx={{ py: 4, color: "text.secondary" }}
@@ -84,7 +91,10 @@ function DataTable<T extends { id: string | number }>({
                   );
                 })}
                 {hasActions && (
-                  <TableCell align="center" className="data-table__cell data-table__cell--actions">
+                  <TableCell
+                    align="center"
+                    className="data-table__cell data-table__cell--actions"
+                  >
                     {actions.map((action, i) => (
                       <Tooltip key={i} title={action.label} arrow>
                         <span>
@@ -92,7 +102,9 @@ function DataTable<T extends { id: string | number }>({
                             size="small"
                             color={action.color ?? "default"}
                             onClick={() => action.onClick(row)}
-                            disabled={action.disabled ? action.disabled(row) : false}
+                            disabled={
+                              action.disabled ? action.disabled(row) : false
+                            }
                             aria-label={action.label}
                           >
                             {action.icon}

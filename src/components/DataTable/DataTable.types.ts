@@ -4,7 +4,14 @@ export interface TableAction<T> {
   label: string;
   icon: React.ReactNode;
   onClick: (row: T) => void;
-  color?: "default" | "primary" | "secondary" | "error" | "warning" | "info" | "success";
+  color?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "error"
+    | "warning"
+    | "info"
+    | "success";
   disabled?: (row: T) => boolean;
 }
 

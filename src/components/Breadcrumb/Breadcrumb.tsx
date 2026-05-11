@@ -24,7 +24,10 @@ function Breadcrumb({ items }: BreadcrumbProps) {
                   {item.label}
                 </Link>
               ) : (
-                <span className="breadcrumb__current" aria-current={isLast ? "page" : undefined}>
+                <span
+                  className="breadcrumb__current"
+                  aria-current={isLast ? "page" : undefined}
+                >
                   {item.label}
                 </span>
               )}
