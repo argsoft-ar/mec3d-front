@@ -41,11 +41,7 @@ function AppShell() {
   return (
     <>
       {!isAuthRoute && <Navbar links={navLinks} />}
-      <main
-        style={
-          !isAuthRoute ? { marginLeft: "var(--sidebar-width)" } : undefined
-        }
-      >
+      <main className={!isAuthRoute ? "main--with-sidebar" : undefined}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

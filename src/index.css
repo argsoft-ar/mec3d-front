@@ -231,3 +231,14 @@ ul,
 ol {
   list-style: none;
 }
+
+/* Layout helpers */
+.main--with-sidebar {
+  margin-left: var(--sidebar-width);
+}
+
+@media (max-width: 767px) {
+  .main--with-sidebar {
+    margin-left: 0;
+  }
+}
