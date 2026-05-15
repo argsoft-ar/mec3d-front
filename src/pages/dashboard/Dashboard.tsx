@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type React from "react";
 import { useNavigate } from "react-router-dom";
 import { PencilRuler, Package, Star, Eye, Pencil, Trash2 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
@@ -11,9 +12,40 @@ import type {
 } from "../../components/DataTable/DataTable.types";
 import type { Product } from "../../interfaces";
 import { productService } from "../../services/product.service";
+import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
+import ToastContainer from "../../components/Toast/ToastContainer";
+import { useToast } from "../../hooks/useToast";
 import "./Dashboard.css";
 
 const MOCK_USER_NAME = "Miguel";
+
+type StatCard = {
+  icon: React.ReactNode;
+  title: string;
+  value: string | number;
+  label: string;
+};
+
+const STAT_CARDS: StatCard[] = [
+  {
+    icon: <PencilRuler size={20} strokeWidth={1.5} />,
+    title: "Mis Diseños",
+    value: 12,
+    label: "diseños publicados",
+  },
+  {
+    icon: <Package size={20} strokeWidth={1.5} />,
+    title: "Mis Pedidos",
+    value: 3,
+    label: "pedidos activos",
+  },
+  {
+    icon: <Star size={20} strokeWidth={1.5} />,
+    title: "Mi Reputación",
+    value: 4.8,
+    label: "sobre 5.0 (28 reseñas)",
+  },
+];
 
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
   { key: "title", header: "Título" },
@@ -42,8 +74,11 @@ const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { toasts, addToast, removeToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     productService
@@ -52,6 +87,22 @@ function Dashboard() {
       .catch(() => setProducts([]))
       .finally(() => setLoadingProducts(false));
   }, []);
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    productService
+      .remove(deleteTarget.id)
+      .then(() => {
+        setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+        addToast(`"${deleteTarget.title}" eliminado correctamente`, "success");
+        setDeleteTarget(null);
+      })
+      .catch(() => {
+        addToast("Error al eliminar el diseño", "error");
+      })
+      .finally(() => setDeleting(false));
+  };
 
   const productActions: TableAction<Product>[] = [
     {
@@ -70,16 +121,7 @@ function Dashboard() {
       label: "Eliminar",
       icon: <Trash2 size={16} strokeWidth={1.5} />,
       color: "error",
-      onClick: (row) => {
-        if (window.confirm(`¿Eliminar "${row.title}"?`)) {
-          productService
-            .remove(row.id)
-            .then(() =>
-              setProducts((prev) => prev.filter((p) => p.id !== row.id)),
-            )
-            .catch((err) => console.error(err));
-        }
-      },
+      onClick: (row) => setDeleteTarget(row),
     },
   ];
 
@@ -103,30 +145,17 @@ function Dashboard() {
         </header>
 
         <div className="dashboard__stats">
-          <Card
-            icon={<PencilRuler size={20} strokeWidth={1.5} />}
-            title="Mis Diseños"
-            variant="default"
-          >
-            <div className="dashboard__stat-value">12</div>
-            <p className="dashboard__stat-label">diseños publicados</p>
-          </Card>
-          <Card
-            icon={<Package size={20} strokeWidth={1.5} />}
-            title="Mis Pedidos"
-            variant="default"
-          >
-            <div className="dashboard__stat-value">3</div>
-            <p className="dashboard__stat-label">pedidos activos</p>
-          </Card>
-          <Card
-            icon={<Star size={20} strokeWidth={1.5} />}
-            title="Mi Reputación"
-            variant="default"
-          >
-            <div className="dashboard__stat-value">4.8</div>
-            <p className="dashboard__stat-label">sobre 5.0 (28 reseñas)</p>
-          </Card>
+          {STAT_CARDS.map((stat) => (
+            <Card
+              key={stat.title}
+              icon={stat.icon}
+              title={stat.title}
+              variant="default"
+            >
+              <div className="dashboard__stat-value">{stat.value}</div>
+              <p className="dashboard__stat-label">{stat.label}</p>
+            </Card>
+          ))}
         </div>
 
         <section className="dashboard__designs">
@@ -143,6 +172,17 @@ function Dashboard() {
           )}
         </section>
       </div>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Eliminar diseño"
+        message={`¿Estás seguro que querés eliminar "${deleteTarget?.title}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </Layout>
   );
 }

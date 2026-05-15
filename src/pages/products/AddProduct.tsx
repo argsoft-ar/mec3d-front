@@ -10,6 +10,11 @@ import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import type { BreadcrumbItem } from "../../components/Breadcrumb/Breadcrumb";
 import type { SelectOption } from "../../types";
 import { productService } from "../../services/product.service";
+import type {
+  ProductForm,
+  FormFieldConfig,
+  ButtonConfig,
+} from "../../interfaces";
 import "./AddProduct.css";
 
 const CATEGORY_OPTIONS: SelectOption[] = [
@@ -28,17 +33,7 @@ const FORMAT_OPTIONS: SelectOption[] = [
   { value: "PLANO", label: "Plano técnico" },
 ];
 
-interface AddProductForm {
-  titulo: string;
-  descripcion: string;
-  categoria: string;
-  precioBase: string;
-  formato: string;
-  imagenUrl: string;
-  archivoUrl: string;
-}
-
-const INITIAL_FORM: AddProductForm = {
+const INITIAL_FORM: ProductForm = {
   titulo: "",
   descripcion: "",
   categoria: "",
@@ -53,16 +48,6 @@ const BREADCRUMB_ITEMS: BreadcrumbItem[] = [
   { label: "Mis Diseños", path: "/dashboard" },
   { label: "Nuevo Diseño" },
 ];
-
-interface FormFieldConfig {
-  label: string;
-  name: keyof AddProductForm;
-  type?: "text" | "number" | "select" | "textarea";
-  placeholder?: string;
-  required?: boolean;
-  fullWidth?: boolean;
-  options?: SelectOption[];
-}
 
 const FORM_FIELDS: FormFieldConfig[] = [
   {
@@ -116,8 +101,8 @@ const FORM_FIELDS: FormFieldConfig[] = [
 
 function AddProduct() {
   const navigate = useNavigate();
-  const [form, setForm] = useState<AddProductForm>(INITIAL_FORM);
-  const [errors, setErrors] = useState<Partial<AddProductForm>>({});
+  const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
+  const [errors, setErrors] = useState<Partial<ProductForm>>({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (
@@ -127,13 +112,13 @@ function AddProduct() {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof AddProductForm]) {
+    if (errors[name as keyof ProductForm]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
   const validate = (): boolean => {
-    const newErrors: Partial<AddProductForm> = {};
+    const newErrors: Partial<ProductForm> = {};
     if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
     if (!form.descripcion.trim())
       newErrors.descripcion = "La descripción es obligatoria";
@@ -170,14 +155,6 @@ function AddProduct() {
       setLoading(false);
     }
   };
-
-  interface ButtonConfig {
-    title: string;
-    variant: "ghost" | "primary";
-    type: "button" | "submit";
-    loading?: boolean;
-    onClick?: () => void;
-  }
 
   const FORM_ACTIONS: ButtonConfig[] = [
     {

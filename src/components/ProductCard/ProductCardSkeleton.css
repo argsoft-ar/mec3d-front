@@ -1,0 +1,90 @@
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-block {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-container) 25%,
+    var(--color-surface-container-high) 50%,
+    var(--color-surface-container) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Card shell ─────────────────────────────────────────────────────── */
+.product-card-skeleton {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Image placeholder ───────────────────────────────────────────────── */
+.product-card-skeleton__image {
+  height: 190px;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+/* ── Info section ────────────────────────────────────────────────────── */
+.product-card-skeleton__info {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.product-card-skeleton__title {
+  height: 20px;
+  width: 75%;
+  border-radius: var(--radius-sm);
+}
+
+.product-card-skeleton__desc {
+  height: 14px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.product-card-skeleton__desc:last-of-type {
+  width: 60%;
+}
+
+.product-card-skeleton__rating {
+  height: 16px;
+  width: 40%;
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-1);
+}
+
+/* ── Footer row ──────────────────────────────────────────────────────── */
+.product-card-skeleton__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.product-card-skeleton__footer-left {
+  height: 14px;
+  width: 30%;
+  border-radius: var(--radius-sm);
+}
+
+.product-card-skeleton__footer-right {
+  height: 20px;
+  width: 25%;
+  border-radius: var(--radius-sm);
+}

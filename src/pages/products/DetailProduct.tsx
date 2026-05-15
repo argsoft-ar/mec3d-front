@@ -1,6 +1,17 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
-import { ShoppingCart, Eye } from "lucide-react";
+import {
+  ShoppingCart,
+  Eye,
+  Box,
+  Ruler,
+  Gauge,
+  Clock,
+  Wrench,
+  SlidersHorizontal,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
@@ -14,6 +25,25 @@ interface ActionItem {
   icon: ReactNode;
   variant: ButtonVariant;
 }
+const SPEC_TITLES: string[] = [
+  "Material",
+  "Dimensiones",
+  "Dificultad",
+  "Tiempo de Impresión",
+  "Soportes",
+  "Configuración",
+  "Licencia",
+];
+
+const SPEC_ICONS: LucideIcon[] = [
+  Box,
+  Ruler,
+  Gauge,
+  Clock,
+  Wrench,
+  SlidersHorizontal,
+  FileText,
+];
 
 const ACTIONS: ActionItem[] = [
   {
@@ -155,11 +185,20 @@ function DetailProduct() {
             Especificaciones Técnicas
           </h2>
           <div className="detail-product__specs-grid">
-            {product.specs.map((spec) => (
-              <Card key={spec.title} variant="spec" title={spec.title}>
-                <span>{spec.value}</span>
-              </Card>
-            ))}
+            {product.specs.map((spec, i) => {
+              const Icon = SPEC_ICONS[i];
+              const title = SPEC_TITLES[i] ?? spec.title;
+              return (
+                <Card
+                  key={i}
+                  variant="spec"
+                  title={title}
+                  icon={Icon ? <Icon size={16} strokeWidth={2} /> : undefined}
+                >
+                  <span>{spec.value}</span>
+                </Card>
+              );
+            })}
           </div>
         </section>
 

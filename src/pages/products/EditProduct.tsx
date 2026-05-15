@@ -10,7 +10,13 @@ import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import type { BreadcrumbItem } from "../../components/Breadcrumb/Breadcrumb";
 import type { SelectOption } from "../../types";
 import { productService } from "../../services/product.service";
-import type { Product, UpdateProductPayload } from "../../interfaces";
+import type {
+  Product,
+  UpdateProductPayload,
+  ProductForm,
+  FormFieldConfig,
+  ButtonConfig,
+} from "../../interfaces";
 import "./AddProduct.css";
 
 const CATEGORY_OPTIONS: SelectOption[] = [
@@ -29,31 +35,11 @@ const FORMAT_OPTIONS: SelectOption[] = [
   { value: "PLANO", label: "Plano técnico" },
 ];
 
-interface EditProductForm {
-  titulo: string;
-  descripcion: string;
-  categoria: string;
-  precioBase: string;
-  formato: string;
-  imagenUrl: string;
-  archivoUrl: string;
-}
-
 const BREADCRUMB_ITEMS: BreadcrumbItem[] = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Mis Diseños", path: "/dashboard" },
   { label: "Editar Diseño" },
 ];
-
-interface FormFieldConfig {
-  label: string;
-  name: keyof EditProductForm;
-  type?: "text" | "number" | "select" | "textarea";
-  placeholder?: string;
-  required?: boolean;
-  fullWidth?: boolean;
-  options?: SelectOption[];
-}
 
 const FORM_FIELDS: FormFieldConfig[] = [
   {
@@ -108,7 +94,7 @@ const FORM_FIELDS: FormFieldConfig[] = [
 function EditProduct() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [form, setForm] = useState<EditProductForm>({
+  const [form, setForm] = useState<ProductForm>({
     titulo: "",
     descripcion: "",
     categoria: "",
@@ -117,7 +103,7 @@ function EditProduct() {
     imagenUrl: "",
     archivoUrl: "",
   });
-  const [errors, setErrors] = useState<Partial<EditProductForm>>({});
+  const [errors, setErrors] = useState<Partial<ProductForm>>({});
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -157,13 +143,13 @@ function EditProduct() {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof EditProductForm]) {
+    if (errors[name as keyof ProductForm]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
   const validate = (): boolean => {
-    const newErrors: Partial<EditProductForm> = {};
+    const newErrors: Partial<ProductForm> = {};
     if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
     if (!form.descripcion.trim())
       newErrors.descripcion = "La descripción es obligatoria";
@@ -201,14 +187,6 @@ function EditProduct() {
       setLoading(false);
     }
   };
-
-  interface ButtonConfig {
-    title: string;
-    variant: "ghost" | "primary";
-    type: "button" | "submit";
-    loading?: boolean;
-    onClick?: () => void;
-  }
 
   const FORM_ACTIONS: ButtonConfig[] = [
     {

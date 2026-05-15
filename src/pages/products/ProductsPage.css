@@ -1,0 +1,92 @@
+/* ── Page body (sidebar + content) ──────────────────────────────────── */
+.products-page__body {
+  display: block;
+  margin-top: var(--space-4);
+}
+
+/* ── Content area ────────────────────────────────────────────────────── */
+.products-page__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Toolbar row ─────────────────────────────────────────────────────── */
+.products-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* Filters toggle — hidden on desktop */
+.products-page__filters-toggle {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    color var(--transition-base);
+  font-family: inherit;
+}
+
+.products-page__filters-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.products-page__count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+/* ── Products grid ───────────────────────────────────────────────────── */
+.products-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.products-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.products-page__empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.products-page__empty-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .products-page__filters-toggle {
+    display: flex;
+  }
+
+  .products-page__content {
+    width: 100%;
+  }
+}
