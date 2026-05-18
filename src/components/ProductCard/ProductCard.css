@@ -19,7 +19,8 @@
 
 .product-card--clickable:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--glow-mixed);
+  border-color: var(--color-border-focus);
 }
 
 .product-card--clickable:focus-visible {
@@ -48,7 +49,7 @@
   left: 0;
   right: 0;
   height: 64px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.45), transparent);
+  background: linear-gradient(to top, oklch(0% 0 0 / .55), transparent);
   pointer-events: none;
 }
 
@@ -99,7 +100,7 @@
 }
 
 .product-card__star--filled {
-  color: var(--color-primary);
+  color: var(--color-warning);
 }
 
 .product-card__rating-value {

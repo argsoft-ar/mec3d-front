@@ -21,6 +21,11 @@
 .card--elevated {
   border: none;
   box-shadow: var(--shadow-lg);
+  background-image: var(--gradient-glass);
+}
+
+.card--elevated:hover {
+  box-shadow: var(--glow-primary);
 }
 
 .card--flat {
@@ -35,7 +40,8 @@
 }
 
 .card--clickable:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glow-mixed);
+  border-color: var(--color-border-focus);
   transform: translateY(-2px);
 }
 

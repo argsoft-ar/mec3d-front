@@ -56,13 +56,16 @@
   overflow: hidden;
   padding: var(--space-6) var(--space-4);
   text-align: left;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   transition:
     box-shadow var(--transition-base),
     transform var(--transition-base),
     border-color var(--transition-base);
+}
+
+.home-categories__grid .card:hover {
+  box-shadow: var(--glow-mixed);
+  border-color: var(--color-border-focus);
 }
 
 .home-categories__grid .card__header {

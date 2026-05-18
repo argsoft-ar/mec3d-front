@@ -47,11 +47,11 @@
 }
 
 .detail-product__star--filled {
-  color: #f5a623;
+  color: var(--color-warning);
 }
 
 .detail-product__star--empty {
-  color: var(--color-border);
+  color: var(--color-outline-variant);
 }
 
 /* Downloads */
