@@ -71,7 +71,9 @@
 }
 
 .form-field--error .form-field__input:focus {
-  box-shadow: 0 0 0 2px var(--color-danger), 0 0 12px var(--color-danger-light);
+  box-shadow:
+    0 0 0 2px var(--color-danger),
+    0 0 12px var(--color-danger-light);
 }
 
 .form-field__error {

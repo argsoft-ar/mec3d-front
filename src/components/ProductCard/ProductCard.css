@@ -49,7 +49,7 @@
   left: 0;
   right: 0;
   height: 64px;
-  background: linear-gradient(to top, oklch(0% 0 0 / .55), transparent);
+  background: linear-gradient(to top, oklch(0% 0 0 / 0.55), transparent);
   pointer-events: none;
 }
 
