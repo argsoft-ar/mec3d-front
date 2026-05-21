@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Card from "../../components/Card/Card";
@@ -15,11 +15,13 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "../../hooks/useToast";
 import { productService, uploadImage } from "../../services/product.service";
 import type {
+  Product,
+  UpdateProductPayload,
   ProductForm,
   FormFieldConfig,
   ButtonConfig,
 } from "../../interfaces";
-import "./AddProduct.css";
+import "./ProductFormPage.css";
 
 const CATEGORY_OPTIONS: SelectOption[] = [
   { value: "Autos", label: "Autos" },
@@ -46,12 +48,6 @@ const INITIAL_FORM: ProductForm = {
   imagenUrl: "",
   archivoUrl: "",
 };
-
-const BREADCRUMB_ITEMS: BreadcrumbItem[] = [
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "Mis Diseños", path: "/dashboard" },
-  { label: "Nuevo Diseño" },
-];
 
 const FORM_FIELDS: FormFieldConfig[] = [
   {
@@ -98,9 +94,18 @@ const FORM_FIELDS: FormFieldConfig[] = [
   },
 ];
 
-function AddProduct() {
+function ProductFormPage() {
+  const { id } = useParams<{ id?: string }>();
+  const isEdit = !!id;
   const navigate = useNavigate();
   const { toasts, addToast, removeToast } = useToast();
+
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Mis Diseños", path: "/dashboard" },
+    { label: isEdit ? "Editar Diseño" : "Nuevo Diseño" },
+  ];
+
   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<ProductForm>>({});
   const [loading, setLoading] = useState(false);
@@ -108,6 +113,8 @@ function AddProduct() {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [fetching, setFetching] = useState(!isEdit ? false : true);
+  const [notFound, setNotFound] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -115,6 +122,36 @@ function AddProduct() {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
+
+  useEffect(() => {
+    if (!isEdit) return;
+    productService
+      .getAll()
+      .then((products: Product[]) => {
+        const product = products.find((p) => String(p.id) === id);
+        if (!product) {
+          setNotFound(true);
+          return;
+        }
+        setForm({
+          titulo: product.title,
+          descripcion: product.description,
+          categoria: "",
+          precioBase: String(product.price),
+          formato: product.format,
+          imagenUrl: product.imageUrl ?? "",
+          archivoUrl: "",
+        });
+        setImagePreview(product.imageUrl ?? "");
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+        setNotFound(true);
+      })
+      .finally(() => {
+        setFetching(false);
+      });
+  }, [id, isEdit]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -185,20 +222,34 @@ function AddProduct() {
           setUploadingImage(false);
         }
       }
-      await productService.create({
-        titulo: form.titulo,
-        descripcion: form.descripcion,
-        imagenUrl: imageUrl,
-        archivoUrl: form.archivoUrl,
-        precioBase: Number(form.precioBase),
-        formato: form.formato,
-        especificaciones: [],
-      });
+      if (isEdit) {
+        const payload: UpdateProductPayload = {
+          titulo: form.titulo,
+          descripcion: form.descripcion,
+          imagenUrl: imageUrl,
+          archivoUrl: form.archivoUrl,
+          precioBase: Number(form.precioBase),
+          formato: form.formato,
+          especificaciones: [],
+        };
+        await productService.update(id!, payload);
+        addToast("Cambios guardados exitosamente", "success");
+      } else {
+        await productService.create({
+          titulo: form.titulo,
+          descripcion: form.descripcion,
+          imagenUrl: imageUrl,
+          archivoUrl: form.archivoUrl,
+          precioBase: Number(form.precioBase),
+          formato: form.formato,
+          especificaciones: [],
+        });
+        addToast("Diseño publicado exitosamente", "success");
+      }
       navigate("/dashboard");
-      addToast("Diseño publicado exitosamente", "success");
     } catch (error) {
       addToast(
-        error instanceof Error ? error.message : "Error al publicar el diseño",
+        error instanceof Error ? error.message : "Error al guardar el diseño",
         "error",
       );
     } finally {
@@ -214,21 +265,41 @@ function AddProduct() {
       type: "button",
       onClick: () => navigate("/dashboard"),
     },
-    { title: "Publicar diseño", variant: "primary", type: "submit", loading },
+    {
+      title: isEdit ? "Guardar cambios" : "Publicar diseño",
+      variant: "primary",
+      type: "submit",
+      loading,
+    },
   ];
+
+  if (isEdit && fetching)
+    return (
+      <Layout>
+        <p>Cargando...</p>
+      </Layout>
+    );
+  if (isEdit && notFound)
+    return (
+      <Layout>
+        <p>Producto no encontrado.</p>
+      </Layout>
+    );
 
   return (
     <>
       <Layout>
         <div className="add-product">
-          <Breadcrumb items={BREADCRUMB_ITEMS} />
-
+          <Breadcrumb items={breadcrumbItems} />
           <Header
-            title="Nuevo"
+            title={isEdit ? "Editar" : "Nuevo"}
             accentText="Diseño"
-            subtitle="Completá los datos para publicar tu diseño"
+            subtitle={
+              isEdit
+                ? "Modificá los datos de tu diseño"
+                : "Completá los datos para publicar tu diseño"
+            }
           />
-
           <Card variant="default" className="add-product__card">
             <Form onSubmit={handleSubmit} columns={2}>
               <div className="add-product__image-upload">
@@ -305,9 +376,13 @@ function AddProduct() {
       </Layout>
       <ConfirmDialog
         open={confirmOpen}
-        title="Publicar diseño"
-        message="¿Confirmas que querés publicar este diseño?"
-        confirmLabel="Publicar"
+        title={isEdit ? "Guardar cambios" : "Publicar diseño"}
+        message={
+          isEdit
+            ? "¿Confirmas que querés guardar los cambios?"
+            : "¿Confirmas que querés publicar este diseño?"
+        }
+        confirmLabel={isEdit ? "Guardar" : "Publicar"}
         cancelLabel="Revisar"
         variant="info"
         loading={loading}
@@ -319,4 +394,4 @@ function AddProduct() {
   );
 }
 
-export default AddProduct;
+export default ProductFormPage;
