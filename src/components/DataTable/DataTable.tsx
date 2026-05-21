@@ -161,23 +161,25 @@ function DataTable<T extends { id: string | number }>({
               size="small"
               className="data-table__filter-select"
             >
-              <InputLabel>{field.label}</InputLabel>
-              <Select
-                value={filterValues[String(field.key)] ?? ""}
-                label={field.label}
-                onChange={(e) =>
-                  handleFilter(String(field.key), e.target.value)
-                }
-              >
-                <MenuItem value="">
-                  <em>Todos</em>
-                </MenuItem>
-                {field.options.map((opt) => (
-                  <MenuItem key={opt} value={opt}>
-                    {opt}
+              <div className="data-table__filter-select-inner">
+                <p>Formato</p>
+                <Select
+                  value={filterValues[String(field.key)] ?? ""}
+                  label={field.label}
+                  onChange={(e) =>
+                    handleFilter(String(field.key), e.target.value)
+                  }
+                >
+                  <MenuItem value="">
+                    <em>Todos</em>
                   </MenuItem>
-                ))}
-              </Select>
+                  {field.options.map((opt) => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </div>
             </FormControl>
           ))}
           <Box sx={{ flex: 1 }} />
