@@ -113,7 +113,7 @@ function ProductFormPage() {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [fetching, setFetching] = useState(!isEdit ? false : true);
+  const [fetching, setFetching] = useState(isEdit);
   const [notFound, setNotFound] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -188,7 +188,7 @@ function ProductFormPage() {
     if (!form.categoria) newErrors.categoria = "Seleccioná una categoría";
     if (
       !form.precioBase ||
-      isNaN(Number(form.precioBase)) ||
+      Number.isNaN(Number(form.precioBase)) ||
       Number(form.precioBase) <= 0
     )
       newErrors.precioBase = "Ingresá un precio válido";
@@ -222,7 +222,7 @@ function ProductFormPage() {
           setUploadingImage(false);
         }
       }
-      if (isEdit) {
+      if (isEdit && id) {
         const payload: UpdateProductPayload = {
           titulo: form.titulo,
           descripcion: form.descripcion,
@@ -232,7 +232,7 @@ function ProductFormPage() {
           formato: form.formato,
           especificaciones: [],
         };
-        await productService.update(id!, payload);
+        await productService.update(id, payload);
         addToast("Cambios guardados exitosamente", "success");
       } else {
         await productService.create({

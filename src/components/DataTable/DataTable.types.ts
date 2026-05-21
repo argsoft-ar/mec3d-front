@@ -21,6 +21,13 @@ export interface ColumnDef<T> {
   width?: string | number;
   align?: "left" | "center" | "right";
   renderCell?: (value: unknown, row: T) => React.ReactNode;
+  sortable?: boolean;
+}
+
+export interface FilterableField<T> {
+  key: keyof T | string;
+  label: string;
+  options: string[];
 }
 
 export interface DataTableProps<T extends { id: string | number }> {
@@ -30,4 +37,8 @@ export interface DataTableProps<T extends { id: string | number }> {
   emptyMessage?: string;
   stickyHeader?: boolean;
   maxHeight?: number | string;
+  searchable?: boolean;
+  pagination?: boolean;
+  rowsPerPageOptions?: number[];
+  filterableFields?: FilterableField<T>[];
 }

@@ -9,6 +9,7 @@ import DataTable from "../../components/DataTable/DataTable";
 import type {
   ColumnDef,
   TableAction,
+  FilterableField,
 } from "../../components/DataTable/DataTable.types";
 import type { Product } from "../../interfaces";
 import { productService } from "../../services/product.service";
@@ -48,13 +49,14 @@ const STAT_CARDS: StatCard[] = [
 ];
 
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
-  { key: "title", header: "Título" },
+  { key: "title", header: "Título", sortable: true },
   { key: "format", header: "Formato", width: 90, align: "center" },
   {
     key: "price",
     header: "Precio",
     width: 120,
     align: "right",
+    sortable: true,
     renderCell: (value) => `$${Number(value).toLocaleString("es-AR")} ARS`,
   },
   {
@@ -62,6 +64,7 @@ const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
     header: "Rating",
     width: 90,
     align: "center",
+    sortable: true,
     renderCell: (value) => `⭐ ${value}`,
   },
   {
@@ -69,7 +72,12 @@ const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
     header: "Descargas",
     width: 100,
     align: "center",
+    sortable: true,
   },
+];
+
+const PRODUCT_FILTERABLE_FIELDS: FilterableField<Product>[] = [
+  { key: "format", label: "Formato", options: ["STL", "OBJ", "STEP", "3MF"] },
 ];
 
 function Dashboard() {
@@ -168,6 +176,9 @@ function Dashboard() {
               rows={products}
               actions={productActions}
               emptyMessage="No tenés diseños publicados aún"
+              searchable
+              pagination
+              filterableFields={PRODUCT_FILTERABLE_FIELDS}
             />
           )}
         </section>
