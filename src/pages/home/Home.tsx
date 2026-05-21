@@ -148,13 +148,14 @@ function Home() {
         <h2 className="home-section-title">¿Por qué MEC3D?</h2>
         <div className="home-services__grid">
           {SERVICES.map((service) => (
-            <div key={service.title} className="home-service-card">
-              <span className="home-service-card__icon">{service.icon}</span>
-              <h3 className="home-service-card__title">{service.title}</h3>
-              <p className="home-service-card__description">
-                {service.description}
-              </p>
-            </div>
+            <Card
+              key={service.title}
+              icon={service.icon}
+              title={service.title}
+              text={service.description}
+              variant="elevated"
+              disableHover
+            />
           ))}
         </div>
       </section>

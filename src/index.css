@@ -2,7 +2,7 @@
 
 :root {
   /* Surface */
-  --color-surface: #001a2c;
+  --color-surface: #002137;
   --color-surface-dim: #001523;
   --color-surface-bright: #003356;
   --color-surface-container-lowest: #00111c;
@@ -14,7 +14,7 @@
   --color-surface-alt: #002137;
 
   /* Background */
-  --color-bg: #00111c;
+  --color-bg: #002945;
 
   /* On-surface / Text */
   --color-on-surface: oklch(96.7% 0.003 264.542);
@@ -30,7 +30,7 @@
   /* Outline */
   --color-outline: oklch(37.2% 0.044 257.287);
   --color-outline-variant: oklch(27.9% 0.041 260.031);
-  --color-border: oklch(27.9% 0.041 260.031);
+  --color-border: oklch(37.9% 0.146 265.522);
   --color-border-focus: oklch(62.3% 0.214 259.815);
 
   /* Primary */
@@ -164,8 +164,8 @@
     0 0 20px oklch(62.3% 0.214 259.815 / 0.3),
     0 0 42px oklch(71.4% 0.203 305.504 / 0.2),
     0 0 64px oklch(82.8% 0.189 84.429 / 0.1);
-  --shadow-card: 4px 4px 0 0 #002945;
-  --shadow-navbar: 0 1px 0 0 #002945;
+  --shadow-card: 4px 4px 0 0 oklch(30.341% 0.15259 273.011);
+  --shadow-navbar: 0 1px 0 0 oklch(82.7% 0.119 306.383);
   --shadow-active:
     0 0 12px oklch(62.3% 0.214 259.815 / 0.5),
     0 0 24px oklch(71.4% 0.203 305.504 / 0.3);
