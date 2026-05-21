@@ -5,7 +5,7 @@ import type {
   UpdateProductPayload,
   PartialUpdateProductPayload,
 } from "../interfaces";
-import { request } from "./http.client";
+import { BASE_URL, request } from "./http.client";
 
 export const productService = {
   getAll: (params?: Record<string, string>) => {
@@ -36,3 +36,22 @@ export const productService = {
       method: "DELETE",
     }),
 };
+
+export async function uploadImage(file: File): Promise<string> {
+  const token = localStorage.getItem("auth_token");
+  const formData = new FormData();
+  formData.append("imagen", file);
+
+  const response = await fetch(`${BASE_URL}/archivos/imagen`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al subir la imagen");
+  }
+
+  const data = (await response.json()) as { url: string };
+  return data.url;
+}

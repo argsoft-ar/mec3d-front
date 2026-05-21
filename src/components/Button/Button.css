@@ -42,14 +42,14 @@
 /* Variants */
 .btn--primary {
   background-color: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-text-primary);
   border-color: var(--color-primary);
 }
 
 .btn--primary:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glow-primary);
 }
 
 .btn--secondary {
@@ -61,7 +61,7 @@
 .btn--secondary:hover:not(:disabled) {
   background-color: var(--color-secondary-dark);
   border-color: var(--color-secondary-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glow-secondary);
 }
 
 .btn--ghost {
@@ -71,7 +71,7 @@
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background-color: var(--color-primary-light);
+  background-color: var(--color-primary-container);
 }
 
 .btn--outline {
@@ -81,7 +81,7 @@
 }
 
 .btn--outline:hover:not(:disabled) {
-  background-color: var(--color-primary-light);
+  background-color: var(--color-primary-container);
 }
 
 .btn--danger {
@@ -92,13 +92,19 @@
 
 .btn--danger:hover:not(:disabled) {
   opacity: 0.88;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 0 14px var(--color-danger);
 }
 
 /* Disabled & Loading */
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  box-shadow: var(--glow-primary);
 }
 
 .btn--loading {

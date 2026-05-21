@@ -1,4 +1,3 @@
-import React from "react";
 import type { ProductCardProps } from "./ProductCard.types";
 import "./ProductCard.css";
 

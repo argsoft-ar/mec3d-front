@@ -38,7 +38,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-primary);
 }
 
 .detail-product__stars {
@@ -47,11 +47,11 @@
 }
 
 .detail-product__star--filled {
-  color: #f5a623;
+  color: var(--color-warning);
 }
 
 .detail-product__star--empty {
-  color: var(--color-border);
+  color: var(--color-primary);
 }
 
 /* Downloads */

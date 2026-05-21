@@ -56,7 +56,7 @@
 
 .form-field__input:focus {
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  box-shadow: var(--glow-primary);
 }
 
 .form-field__input:disabled {
@@ -71,7 +71,9 @@
 }
 
 .form-field--error .form-field__input:focus {
-  box-shadow: 0 0 0 3px var(--color-danger-light);
+  box-shadow:
+    0 0 0 2px var(--color-danger),
+    0 0 12px var(--color-danger-light);
 }
 
 .form-field__error {
