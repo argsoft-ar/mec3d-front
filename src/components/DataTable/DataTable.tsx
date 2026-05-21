@@ -50,7 +50,7 @@ function DataTable<T extends { id: string | number }>({
   rows,
   actions = [],
   emptyMessage = "No hay datos disponibles",
-  stickyHeader = false,
+  stickyHeader = true,
   maxHeight,
   searchable = false,
   pagination = false,
@@ -161,6 +161,7 @@ function DataTable<T extends { id: string | number }>({
       className="data-table"
       sx={{
         minHeight: 600,
+        maxHeight: 600,
         display: "flex",
         flexDirection: "column",
         ...(maxHeight ? { maxHeight } : {}),
@@ -235,7 +236,10 @@ function DataTable<T extends { id: string | number }>({
           )}
         </Toolbar>
       )}
-      <TableContainer sx={{ flex: 1 }}>
+      <TableContainer
+        className="data-table__container"
+        sx={{ flex: 1, overflow: "auto" }}
+      >
         <Table stickyHeader={stickyHeader} size="small">
           <TableHead>
             <TableRow>
