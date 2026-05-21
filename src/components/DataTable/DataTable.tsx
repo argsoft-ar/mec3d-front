@@ -17,7 +17,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   Toolbar,
   Box,
 } from "@mui/material";
@@ -32,6 +31,12 @@ function getCellValue<T>(row: T, key: string): unknown {
   return (row as Record<string, unknown>)[key];
 }
 
+function toSafeString(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
 function DataTable<T extends { id: string | number }>({
   columns,
   rows,
@@ -43,7 +48,7 @@ function DataTable<T extends { id: string | number }>({
   pagination = false,
   rowsPerPageOptions = DEFAULT_ROWS_PER_PAGE_OPTIONS,
   filterableFields = EMPTY_FILTERABLE_FIELDS,
-}: DataTableProps<T>) {
+}: Readonly<DataTableProps<T>>) {
   const hasActions = actions.length > 0;
   const hasToolbar = searchable || filterableFields.length > 0;
 
@@ -91,7 +96,7 @@ function DataTable<T extends { id: string | number }>({
       const lower = searchTerm.toLowerCase();
       result = result.filter((row) =>
         columns.some((col) =>
-          String(getCellValue(row, String(col.key)) ?? "")
+          toSafeString(getCellValue(row, String(col.key)))
             .toLowerCase()
             .includes(lower),
         ),
@@ -103,7 +108,7 @@ function DataTable<T extends { id: string | number }>({
       if (selected) {
         result = result.filter(
           (row) =>
-            String(getCellValue(row, String(field.key)) ?? "") === selected,
+            toSafeString(getCellValue(row, String(field.key))) === selected,
         );
       }
     });
@@ -115,8 +120,8 @@ function DataTable<T extends { id: string | number }>({
         if (typeof aVal === "number" && typeof bVal === "number") {
           return sortDir === "asc" ? aVal - bVal : bVal - aVal;
         }
-        const aStr = String(aVal ?? "").toLowerCase();
-        const bStr = String(bVal ?? "").toLowerCase();
+        const aStr = toSafeString(aVal).toLowerCase();
+        const bStr = toSafeString(bVal).toLowerCase();
         if (aStr < bStr) return sortDir === "asc" ? -1 : 1;
         if (aStr > bStr) return sortDir === "asc" ? 1 : -1;
         return 0;
@@ -288,7 +293,7 @@ function DataTable<T extends { id: string | number }>({
                       >
                         {col.renderCell
                           ? col.renderCell(value, row)
-                          : String(value ?? "")}
+                          : toSafeString(value)}
                       </TableCell>
                     );
                   })}
@@ -330,7 +335,7 @@ function DataTable<T extends { id: string | number }>({
           onPageChange={(_, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
+            setRowsPerPage(Number.parseInt(e.target.value, 10));
             setPage(0);
           }}
           rowsPerPageOptions={rowsPerPageOptions}
