@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { PencilRuler, Package, Star, Eye, Pencil, Trash2 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
@@ -16,8 +16,6 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
 import "./Dashboard.css";
-
-const MOCK_USER_NAME = "Miguel";
 
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
   { key: "title", header: "Título", sortable: true },
@@ -53,7 +51,25 @@ const PRODUCT_FILTERABLE_FIELDS: FilterableField<Product>[] = [
 
 function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toasts, addToast, removeToast } = useToast();
+
+  useEffect(() => {
+    const state = location.state as { successToast?: string } | null;
+    if (state?.successToast) {
+      addToast(state.successToast, "success");
+      window.history.replaceState({}, "");
+    }
+  }, []);
+
+  const rawUser = localStorage.getItem("auth_user");
+  const userEmail: string = rawUser
+    ? (JSON.parse(rawUser) as { email: string }).email
+    : "";
+  const displayName = userEmail
+    ? userEmail.split("@")[0].charAt(0).toUpperCase() +
+      userEmail.split("@")[0].slice(1)
+    : "Usuario";
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
@@ -117,7 +133,7 @@ function Dashboard() {
       <div className="dashboard">
         <header className="dashboard__header">
           <div>
-            <h1 className="dashboard__title">Bienvenido, {MOCK_USER_NAME}</h1>
+            <h1 className="dashboard__title">Bienvenido, {displayName}</h1>
             <p className="dashboard__subtitle">
               Aquí está el resumen de tu actividad
             </p>
