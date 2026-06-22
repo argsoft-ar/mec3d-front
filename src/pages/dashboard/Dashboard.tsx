@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import type React from "react";
 import { useNavigate } from "react-router-dom";
 import { PencilRuler, Package, Star, Eye, Pencil, Trash2 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
@@ -19,34 +18,6 @@ import { useToast } from "../../hooks/useToast";
 import "./Dashboard.css";
 
 const MOCK_USER_NAME = "Miguel";
-
-type StatCard = {
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  label: string;
-};
-
-const STAT_CARDS: StatCard[] = [
-  {
-    icon: <PencilRuler size={20} strokeWidth={1.5} />,
-    title: "Mis Diseños",
-    value: 12,
-    label: "diseños publicados",
-  },
-  {
-    icon: <Package size={20} strokeWidth={1.5} />,
-    title: "Mis Pedidos",
-    value: 3,
-    label: "pedidos activos",
-  },
-  {
-    icon: <Star size={20} strokeWidth={1.5} />,
-    title: "Mi Reputación",
-    value: 4.8,
-    label: "sobre 5.0 (28 reseñas)",
-  },
-];
 
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
   { key: "title", header: "Título", sortable: true },
@@ -95,6 +66,12 @@ function Dashboard() {
       .catch(() => setProducts([]))
       .finally(() => setLoadingProducts(false));
   }, []);
+
+  const totalReviews = products.reduce((sum, p) => sum + p.reviewCount, 0);
+  const avgRating =
+    products.length > 0
+      ? products.reduce((sum, p) => sum + p.rating, 0) / products.length
+      : 0;
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
@@ -155,17 +132,35 @@ function Dashboard() {
         </header>
 
         <div className="dashboard__stats">
-          {STAT_CARDS.map((stat) => (
-            <Card
-              key={stat.title}
-              icon={stat.icon}
-              title={stat.title}
-              variant="default"
-            >
-              <div className="dashboard__stat-value">{stat.value}</div>
-              <p className="dashboard__stat-label">{stat.label}</p>
-            </Card>
-          ))}
+          <Card
+            key="designs"
+            icon={<PencilRuler size={20} strokeWidth={1.5} />}
+            title="Mis Diseños"
+            variant="default"
+          >
+            <div className="dashboard__stat-value">{products.length}</div>
+            <p className="dashboard__stat-label">diseños publicados</p>
+          </Card>
+          <Card
+            key="pedidos"
+            icon={<Package size={20} strokeWidth={1.5} />}
+            title="Mis Pedidos"
+            variant="default"
+          >
+            <div className="dashboard__stat-value">3</div>
+            <p className="dashboard__stat-label">pedidos activos</p>
+          </Card>
+          <Card
+            key="reputation"
+            icon={<Star size={20} strokeWidth={1.5} />}
+            title="Mi Reputación"
+            variant="default"
+          >
+            <div className="dashboard__stat-value">{avgRating.toFixed(1)}</div>
+            <p className="dashboard__stat-label">
+              sobre 5.0 ({totalReviews} reseñas)
+            </p>
+          </Card>
         </div>
 
         <section className="dashboard__designs">

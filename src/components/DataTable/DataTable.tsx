@@ -204,7 +204,11 @@ function DataTable<T extends { id: string | number }>({
                 className="data-table__search-btn"
                 onClick={() => setSearchOpen(true)}
               >
-                <Search size={18} strokeWidth={1.5} />
+                <Search
+                  size={18}
+                  strokeWidth={1.5}
+                  color="var(--color-text-secondary)"
+                />
               </IconButton>
             </Tooltip>
           )}
@@ -283,10 +287,11 @@ function DataTable<T extends { id: string | number }>({
                 <TableCell
                   colSpan={columns.length + (hasActions ? 1 : 0)}
                   align="center"
+                  sx={{ minHeight: 600 }}
                 >
                   <Typography
                     variant="body2"
-                    sx={{ py: 4, color: "text.secondary" }}
+                    sx={{ py: 4, color: "var(--color-text-secondary)" }}
                   >
                     {emptyMessage}
                   </Typography>

@@ -6,6 +6,7 @@ import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import Home from "./pages/home/Home";
 import Dashboard from "./pages/dashboard/Dashboard";
+import Account from "./pages/account/Account";
 import DetailProduct from "./pages/products/DetailProduct";
 import ProductFormPage from "./pages/products/ProductFormPage";
 import ProductsPage from "./pages/products/ProductsPage";
@@ -49,7 +50,7 @@ function AppShell() {
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<ProductsPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/account" element={<Dashboard />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/product/:id" element={<DetailProduct />} />
             <Route path="/profile/:designerName" element={<Profile />} />
             <Route
