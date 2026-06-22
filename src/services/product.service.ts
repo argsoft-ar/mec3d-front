@@ -13,7 +13,7 @@ export const productService = {
     return request<Product[]>(`/productos${query}`);
   },
 
-  getMine: () => request<Product[]>('/productos/mis-disenos'),
+  getMine: () => request<Product[]>("/productos/mis-disenos"),
 
   create: (payload: CreateProductPayload) =>
     request<ApiResponse<Product>>("/productos", {
