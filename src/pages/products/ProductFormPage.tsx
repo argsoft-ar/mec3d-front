@@ -351,7 +351,9 @@ function ProductFormPage() {
           especificaciones,
         };
         await productService.update(id, payload);
-        addToast("Cambios guardados exitosamente", "success");
+        navigate("/dashboard", {
+          state: { successToast: "Cambios guardados exitosamente" },
+        });
       } else {
         await productService.create({
           titulo: form.titulo,
@@ -363,9 +365,10 @@ function ProductFormPage() {
           categoria: form.categoria,
           especificaciones,
         });
-        addToast("Diseño publicado exitosamente", "success");
+        navigate("/dashboard", {
+          state: { successToast: "Diseño publicado exitosamente" },
+        });
       }
-      navigate("/dashboard");
     } catch (error) {
       addToast(
         error instanceof Error ? error.message : "Error al guardar el diseño",
