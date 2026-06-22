@@ -1,5 +1,5 @@
-import type { ApiResponse } from "../interfaces";
 import type {
+  ApiResponse,
   Product,
   CreateProductPayload,
   UpdateProductPayload,

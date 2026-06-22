@@ -40,8 +40,8 @@ function AppShell() {
 
   return (
     <>
-      {!isAuthRoute && <Navbar links={navLinks} />}
-      <main className={!isAuthRoute ? "main--with-sidebar" : undefined}>
+      {isAuthRoute ? null : <Navbar links={navLinks} />}
+      <main className={isAuthRoute ? undefined : "main--with-sidebar"}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

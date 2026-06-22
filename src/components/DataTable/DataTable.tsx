@@ -314,8 +314,8 @@ function DataTable<T extends { id: string | number }>({
                       align="center"
                       className="data-table__cell data-table__cell--actions"
                     >
-                      {actions.map((action, i) => (
-                        <Tooltip key={i} title={action.label} arrow>
+                      {actions.map((action) => (
+                        <Tooltip key={action.label} title={action.label} arrow>
                           <span>
                             <IconButton
                               size="small"

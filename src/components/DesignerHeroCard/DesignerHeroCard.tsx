@@ -7,11 +7,11 @@ interface DesignerStats {
 }
 
 interface DesignerHeroCardProps {
-  initials: string;
-  name: string;
-  tagline: string;
-  stats?: DesignerStats;
-  onViewProfile?: () => void;
+  readonly initials: string;
+  readonly name: string;
+  readonly tagline: string;
+  readonly stats?: DesignerStats;
+  readonly onViewProfile?: () => void;
 }
 
 function formatDownloads(n: number): string {

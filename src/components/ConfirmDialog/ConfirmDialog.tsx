@@ -4,15 +4,15 @@ import Button from "../Button/Button";
 import "./ConfirmDialog.css";
 
 export interface ConfirmDialogProps {
-  open: boolean;
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  variant?: "danger" | "warning" | "info";
-  loading?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
+  readonly open: boolean;
+  readonly title: string;
+  readonly message: string;
+  readonly confirmLabel?: string;
+  readonly cancelLabel?: string;
+  readonly variant?: "danger" | "warning" | "info";
+  readonly loading?: boolean;
+  readonly onConfirm: () => void;
+  readonly onCancel: () => void;
 }
 
 const variantIcon: Record<
@@ -52,13 +52,13 @@ export default function ConfirmDialog({
     <div
       className="confirm-dialog-overlay"
       onClick={onCancel}
-      aria-hidden="true"
+      onKeyDown={(e) => e.key === "Enter" && onCancel()}
+      role="presentation"
     >
-      <div
+      <dialog
         className={`confirm-dialog confirm-dialog--${variant}`}
-        role="dialog"
-        aria-modal="true"
         aria-labelledby={titleId}
+        open
         onClick={(e) => e.stopPropagation()}
       >
         <div className="confirm-dialog__icon">{variantIcon[variant]}</div>
@@ -81,7 +81,7 @@ export default function ConfirmDialog({
             disabled={loading}
           />
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }

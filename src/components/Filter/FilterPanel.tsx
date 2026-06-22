@@ -1,27 +1,13 @@
 import { Search, X } from "lucide-react";
+import type { FilterState } from "./FilterPanel.types";
+import { DEFAULT_FILTER_STATE } from "./FilterPanel.types";
 import "./FilterPanel.css";
 
-export interface FilterState {
-  search: string;
-  priceMin: string;
-  priceMax: string;
-  rating: number;
-  sortBy: "relevance" | "price_asc" | "price_desc" | "rating" | "downloads";
-}
-
-export const DEFAULT_FILTER_STATE: FilterState = {
-  search: "",
-  priceMin: "",
-  priceMax: "",
-  rating: 0,
-  sortBy: "relevance",
-};
-
 interface FilterPanelProps {
-  state: FilterState;
-  onChange: (next: FilterState) => void;
-  isOpen: boolean;
-  onClose: () => void;
+  readonly state: FilterState;
+  readonly onChange: (next: FilterState) => void;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
 }
 
 const SORT_OPTIONS: { value: FilterState["sortBy"]; label: string }[] = [
@@ -131,13 +117,9 @@ function FilterPanel({ state, onChange, isOpen, onClose }: FilterPanelProps) {
         </div>
 
         {/* Rating */}
-        <div className="filter-panel__section">
-          <span className="filter-panel__label">Calificación mínima</span>
-          <div
-            className="filter-panel__stars"
-            role="group"
-            aria-label="Calificación mínima"
-          >
+        <fieldset className="filter-panel__section filter-panel__fieldset">
+          <legend className="filter-panel__label">Calificación mínima</legend>
+          <div className="filter-panel__stars">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
@@ -151,7 +133,7 @@ function FilterPanel({ state, onChange, isOpen, onClose }: FilterPanelProps) {
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {/* Sort */}
         <div className="filter-panel__section">

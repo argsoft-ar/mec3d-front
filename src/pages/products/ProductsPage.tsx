@@ -6,10 +6,11 @@ import Header from "../../components/Header/Header";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import ProductCardSkeleton from "../../components/ProductCard/ProductCardSkeleton";
-import FilterPanel, {
+import FilterPanel from "../../components/Filter/FilterPanel";
+import {
   DEFAULT_FILTER_STATE,
-} from "../../components/Filter/FilterPanel";
-import type { FilterState } from "../../components/Filter/FilterPanel";
+  type FilterState,
+} from "../../components/Filter/FilterPanel.types";
 import type { BreadcrumbItem } from "../../components/Breadcrumb/Breadcrumb";
 import { productService } from "../../services/product.service";
 import type { Product } from "../../interfaces/product.interface";
@@ -30,13 +31,13 @@ function applyFilters(products: Product[], filters: FilterState): Product[] {
   }
 
   if (filters.priceMin !== "") {
-    const min = parseFloat(filters.priceMin);
-    if (!isNaN(min)) result = result.filter((p) => p.price >= min);
+    const min = Number.parseFloat(filters.priceMin);
+    if (!Number.isNaN(min)) result = result.filter((p) => p.price >= min);
   }
 
   if (filters.priceMax !== "") {
-    const max = parseFloat(filters.priceMax);
-    if (!isNaN(max)) result = result.filter((p) => p.price <= max);
+    const max = Number.parseFloat(filters.priceMax);
+    if (!Number.isNaN(max)) result = result.filter((p) => p.price <= max);
   }
 
   if (filters.rating > 0) {
@@ -76,7 +77,6 @@ function ProductsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     productService
       .getAll()
       .then((data) => setProducts(data))
@@ -96,6 +96,46 @@ function ProductsPage() {
         { label: category },
       ]
     : [{ label: "Inicio", path: "/" }, { label: "Explorar" }];
+
+  const renderProducts = () => {
+    if (loading) {
+      return (
+        <div className="products-page__grid">
+          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      );
+    }
+    if (filtered.length === 0) {
+      return (
+        <div className="products-page__empty">
+          <p className="products-page__empty-title">
+            No se encontraron productos
+          </p>
+          <p className="products-page__empty-subtitle">
+            Intentá ajustar los filtros o buscar otro término.
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div className="products-page__grid">
+        {filtered.map((product) => (
+          <ProductCard
+            key={product.id}
+            imageUrl={product.imageUrl}
+            title={product.title}
+            description={product.description}
+            rating={product.rating}
+            downloads={product.downloads}
+            price={product.price}
+            onClick={() => navigate(`/product/${product.id}`)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <Layout>
@@ -143,37 +183,7 @@ function ProductsPage() {
             )}
           </div>
 
-          {loading ? (
-            <div className="products-page__grid">
-              {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="products-page__empty">
-              <p className="products-page__empty-title">
-                No se encontraron productos
-              </p>
-              <p className="products-page__empty-subtitle">
-                Intentá ajustar los filtros o buscar otro término.
-              </p>
-            </div>
-          ) : (
-            <div className="products-page__grid">
-              {filtered.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  imageUrl={product.imageUrl}
-                  title={product.title}
-                  description={product.description}
-                  rating={product.rating}
-                  downloads={product.downloads}
-                  price={product.price}
-                  onClick={() => navigate(`/product/${product.id}`)}
-                />
-              ))}
-            </div>
-          )}
+          {renderProducts()}
         </div>
       </div>
     </Layout>

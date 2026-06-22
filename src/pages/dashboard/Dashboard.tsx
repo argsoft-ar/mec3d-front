@@ -99,11 +99,13 @@ function Dashboard() {
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    const { id, title } = deleteTarget;
+    const removeDeleted = (prev: Product[]) => prev.filter((p) => p.id !== id);
     productService
-      .remove(deleteTarget.id)
+      .remove(id)
       .then(() => {
-        setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-        addToast(`"${deleteTarget.title}" eliminado correctamente`, "success");
+        setProducts(removeDeleted);
+        addToast(`"${title}" eliminado correctamente`, "success");
         setDeleteTarget(null);
       })
       .catch(() => {
