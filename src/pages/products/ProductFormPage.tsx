@@ -39,6 +39,40 @@ const FORMAT_OPTIONS: SelectOption[] = [
   { value: "PLANO", label: "Plano técnico" },
 ];
 
+const MATERIAL_OPTIONS: SelectOption[] = [
+  { value: "PLA", label: "PLA" },
+  { value: "PLA+", label: "PLA+" },
+  { value: "PETG", label: "PETG" },
+  { value: "ABS", label: "ABS" },
+  { value: "TPU", label: "TPU" },
+  { value: "Nylon", label: "Nylon" },
+  { value: "Resina", label: "Resina" },
+];
+const DIFICULTAD_OPTIONS: SelectOption[] = [
+  { value: "Básico", label: "Básico" },
+  { value: "Intermedio", label: "Intermedio" },
+  { value: "Avanzado", label: "Avanzado" },
+];
+const SOPORTES_OPTIONS: SelectOption[] = [
+  { value: "Necesarios", label: "Necesarios" },
+  { value: "No necesarios", label: "No necesarios" },
+];
+const LAYER_OPTIONS: SelectOption[] = [
+  { value: "0.1mm", label: "0.1mm" },
+  { value: "0.15mm", label: "0.15mm" },
+  { value: "0.2mm", label: "0.2mm" },
+  { value: "0.3mm", label: "0.3mm" },
+];
+const INFILL_OPTIONS: SelectOption[] = [
+  { value: "15%", label: "15%" },
+  { value: "20%", label: "20%" },
+  { value: "25%", label: "25%" },
+  { value: "30%", label: "30%" },
+  { value: "40%", label: "40%" },
+  { value: "50%", label: "50%" },
+  { value: "60%", label: "60%" },
+];
+
 const INITIAL_FORM: ProductForm = {
   titulo: "",
   descripcion: "",
@@ -47,6 +81,13 @@ const INITIAL_FORM: ProductForm = {
   formato: "",
   imagenUrl: "",
   archivoUrl: "",
+  specMaterial: "",
+  specDimensiones: "",
+  specDificultad: "",
+  specTiempoImpresion: "",
+  specSoportes: "",
+  specLayer: "",
+  specInfill: "",
 };
 
 const FORM_FIELDS: FormFieldConfig[] = [
@@ -92,6 +133,53 @@ const FORM_FIELDS: FormFieldConfig[] = [
     required: true,
     fullWidth: true,
   },
+  {
+    label: "Material",
+    name: "specMaterial",
+    type: "select",
+    options: MATERIAL_OPTIONS,
+    required: true,
+  },
+  {
+    label: "Dimensiones",
+    name: "specDimensiones",
+    placeholder: "Ej: 110x90x35mm",
+    required: true,
+  },
+  {
+    label: "Dificultad",
+    name: "specDificultad",
+    type: "select",
+    options: DIFICULTAD_OPTIONS,
+    required: true,
+  },
+  {
+    label: "Tiempo de Impresión",
+    name: "specTiempoImpresion",
+    placeholder: "Ej: 4h",
+    required: true,
+  },
+  {
+    label: "Soportes",
+    name: "specSoportes",
+    type: "select",
+    options: SOPORTES_OPTIONS,
+    required: true,
+  },
+  {
+    label: "Altura de Capa (Layer)",
+    name: "specLayer",
+    type: "select",
+    options: LAYER_OPTIONS,
+    required: true,
+  },
+  {
+    label: "Relleno (Infill)",
+    name: "specInfill",
+    type: "select",
+    options: INFILL_OPTIONS,
+    required: true,
+  },
 ];
 
 function ProductFormPage() {
@@ -136,11 +224,18 @@ function ProductFormPage() {
         setForm({
           titulo: product.title,
           descripcion: product.description,
-          categoria: "",
+          categoria: product.categoria ?? "",
           precioBase: String(product.price),
           formato: product.format,
           imagenUrl: product.imageUrl ?? "",
           archivoUrl: "",
+          specMaterial: product.specs?.material ?? "",
+          specDimensiones: product.specs?.dimensiones ?? "",
+          specDificultad: product.specs?.dificultad ?? "",
+          specTiempoImpresion: product.specs?.tiempoImpresion ?? "",
+          specSoportes: product.specs?.soportes ?? "",
+          specLayer: product.specs?.configuracion.layer ?? "",
+          specInfill: product.specs?.configuracion.infill ?? "",
         });
         setImagePreview(product.imageUrl ?? "");
       })
@@ -197,6 +292,17 @@ function ProductFormPage() {
       newErrors.archivoUrl = "Ingresá una URL válida para el archivo";
     if (!form.imagenUrl && !imageFile)
       newErrors.imagenUrl = "La imagen es obligatoria";
+    if (!form.specMaterial) newErrors.specMaterial = "Seleccioná un material";
+    if (!form.specDimensiones.trim())
+      newErrors.specDimensiones = "Las dimensiones son obligatorias";
+    if (!form.specDificultad)
+      newErrors.specDificultad = "Seleccioná la dificultad";
+    if (!form.specTiempoImpresion.trim())
+      newErrors.specTiempoImpresion = "El tiempo de impresión es obligatorio";
+    if (!form.specSoportes)
+      newErrors.specSoportes = "Seleccioná la opción de soportes";
+    if (!form.specLayer) newErrors.specLayer = "Seleccioná la altura de capa";
+    if (!form.specInfill) newErrors.specInfill = "Seleccioná el relleno";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -222,6 +328,17 @@ function ProductFormPage() {
           setUploadingImage(false);
         }
       }
+      const especificaciones = {
+        material: form.specMaterial,
+        dimensiones: form.specDimensiones,
+        dificultad: form.specDificultad,
+        tiempoImpresion: form.specTiempoImpresion,
+        soportes: form.specSoportes,
+        configuracion: {
+          layer: form.specLayer,
+          infill: form.specInfill,
+        },
+      };
       if (isEdit && id) {
         const payload: UpdateProductPayload = {
           titulo: form.titulo,
@@ -230,7 +347,8 @@ function ProductFormPage() {
           archivoUrl: form.archivoUrl,
           precioBase: Number(form.precioBase),
           formato: form.formato,
-          especificaciones: [],
+          categoria: form.categoria,
+          especificaciones,
         };
         await productService.update(id, payload);
         addToast("Cambios guardados exitosamente", "success");
@@ -242,7 +360,8 @@ function ProductFormPage() {
           archivoUrl: form.archivoUrl,
           precioBase: Number(form.precioBase),
           formato: form.formato,
-          especificaciones: [],
+          categoria: form.categoria,
+          especificaciones,
         });
         addToast("Diseño publicado exitosamente", "success");
       }
@@ -341,7 +460,27 @@ function ProductFormPage() {
                 )}
               </div>
 
-              {FORM_FIELDS.map((field) => (
+              {FORM_FIELDS.slice(0, 6).map((field) => (
+                <FormField
+                  key={field.name}
+                  label={field.label}
+                  name={field.name}
+                  type={field.type}
+                  value={form[field.name]}
+                  onChange={handleChange}
+                  placeholder={field.placeholder}
+                  required={field.required}
+                  fullWidth={field.fullWidth}
+                  options={field.options}
+                  error={errors[field.name]}
+                />
+              ))}
+
+              <h3 className="add-product__specs-title">
+                Especificaciones Técnicas
+              </h3>
+
+              {FORM_FIELDS.slice(6).map((field) => (
                 <FormField
                   key={field.name}
                   label={field.label}

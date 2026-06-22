@@ -1,5 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   Eye,
@@ -9,12 +9,11 @@ import {
   Clock,
   Wrench,
   SlidersHorizontal,
-  FileText,
-  type LucideIcon,
 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
+import DesignerHeroCard from "../../components/DesignerHeroCard/DesignerHeroCard";
 import { productService } from "../../services/product.service";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
@@ -25,26 +24,6 @@ interface ActionItem {
   icon: ReactNode;
   variant: ButtonVariant;
 }
-const SPEC_TITLES: string[] = [
-  "Material",
-  "Dimensiones",
-  "Dificultad",
-  "Tiempo de Impresión",
-  "Soportes",
-  "Configuración",
-  "Licencia",
-];
-
-const SPEC_ICONS: LucideIcon[] = [
-  Box,
-  Ruler,
-  Gauge,
-  Clock,
-  Wrench,
-  SlidersHorizontal,
-  FileText,
-];
-
 const ACTIONS: ActionItem[] = [
   {
     title: "Comprar ahora",
@@ -98,11 +77,14 @@ function formatPrice(price: number): string {
 
 function DetailProduct() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     productService.getAll().then((products) => {
+      setAllProducts(products);
       setProduct(products.find((p) => p.id === id) ?? null);
       setLoading(false);
     });
@@ -117,6 +99,19 @@ function DetailProduct() {
       </Layout>
     );
   }
+
+  const designerProducts = allProducts.filter(
+    (p) => p.designer.name === product.designer.name,
+  );
+  const totalDownloads = designerProducts.reduce(
+    (sum, p) => sum + p.downloads,
+    0,
+  );
+  const avgRating =
+    designerProducts.length > 0
+      ? designerProducts.reduce((sum, p) => sum + p.rating, 0) /
+        designerProducts.length
+      : product.rating;
 
   return (
     <Layout>
@@ -185,43 +180,65 @@ function DetailProduct() {
             Especificaciones Técnicas
           </h2>
           <div className="detail-product__specs-grid">
-            {product.specs.map((spec, i) => {
-              const Icon = SPEC_ICONS[i];
-              const title = SPEC_TITLES[i] ?? spec.title;
-              return (
-                <Card
-                  key={i}
-                  variant="spec"
-                  title={title}
-                  icon={Icon ? <Icon size={16} strokeWidth={2} /> : undefined}
-                >
-                  <span>{spec.value}</span>
-                </Card>
-              );
-            })}
+            {product.specs &&
+              (() => {
+                const {
+                  material,
+                  dimensiones,
+                  dificultad,
+                  tiempoImpresion,
+                  soportes,
+                  configuracion,
+                } = product.specs;
+                const items = [
+                  { Icon: Box, title: "Material", value: material },
+                  { Icon: Ruler, title: "Dimensiones", value: dimensiones },
+                  { Icon: Gauge, title: "Dificultad", value: dificultad },
+                  {
+                    Icon: Clock,
+                    title: "Tiempo de Impresión",
+                    value: tiempoImpresion,
+                  },
+                  { Icon: Wrench, title: "Soportes", value: soportes },
+                  {
+                    Icon: SlidersHorizontal,
+                    title: "Configuración",
+                    value: `Layer: ${configuracion.layer} · Infill: ${configuracion.infill}`,
+                  },
+                ];
+                return items.map(({ Icon, title, value }) => (
+                  <Card
+                    key={title}
+                    variant="spec"
+                    title={title}
+                    icon={<Icon size={16} strokeWidth={2} />}
+                  >
+                    <span>{value}</span>
+                  </Card>
+                ));
+              })()}
           </div>
         </section>
 
         {/* Diseñador */}
         <section className="detail-product__section">
           <h2 className="detail-product__section-title">Diseñador</h2>
-          <Card
-            variant="default"
-            footer={<Button variant="ghost" size="sm" title="Ver perfil" />}
-          >
-            <div className="detail-product__designer-inner">
-              <div className="detail-product__designer-avatar">
-                {product.designer.initials}
-              </div>
-              <div>
-                <h4 className="detail-product__designer-name">
-                  {product.designer.name}
-                </h4>
-                <p className="detail-product__designer-tagline">
-                  {product.designer.tagline}
-                </p>
-              </div>
-            </div>
+          <Card variant="default">
+            <DesignerHeroCard
+              initials={product.designer.initials}
+              name={product.designer.name}
+              tagline={product.designer.tagline}
+              stats={{
+                designs: designerProducts.length,
+                downloads: totalDownloads,
+                avgRating,
+              }}
+              onViewProfile={() =>
+                navigate(
+                  `/profile/${encodeURIComponent(product.designer.name)}`,
+                )
+              }
+            />
           </Card>
         </section>
       </div>

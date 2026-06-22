@@ -25,9 +25,16 @@ export interface ProductoFisico {
   creado_en: string;
 }
 
-export interface ProductSpec {
-  title: string;
-  value: string;
+export interface ProductSpecificaciones {
+  material: string;
+  dimensiones: string;
+  dificultad: string;
+  tiempoImpresion: string;
+  soportes: string;
+  configuracion: {
+    layer: string;
+    infill: string;
+  };
 }
 
 export interface ProductDesigner {
@@ -46,7 +53,8 @@ export interface Product {
   downloads: number;
   price: number;
   format: string;
-  specs: ProductSpec[];
+  categoria?: string;
+  specs: ProductSpecificaciones | null;
   designer: ProductDesigner;
 }
 
@@ -58,7 +66,8 @@ export interface CreateProductPayload {
   archivoUrl: string;
   precioBase: number;
   formato: string;
-  especificaciones: ProductSpec[];
+  categoria?: string;
+  especificaciones?: ProductSpecificaciones;
 }
 
 export type UpdateProductPayload = CreateProductPayload;

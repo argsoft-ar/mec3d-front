@@ -8,6 +8,13 @@ export interface ProductForm {
   formato: string;
   imagenUrl: string;
   archivoUrl: string;
+  specMaterial: string;
+  specDimensiones: string;
+  specDificultad: string;
+  specTiempoImpresion: string;
+  specSoportes: string;
+  specLayer: string;
+  specInfill: string;
 }
 
 export interface FormFieldConfig {

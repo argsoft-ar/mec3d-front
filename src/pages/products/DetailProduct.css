@@ -122,40 +122,6 @@
   gap: var(--space-4);
 }
 
-/* Designer */
-.detail-product__designer-inner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.detail-product__designer-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-primary);
-  color: var(--color-on-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-base);
-  flex-shrink: 0;
-}
-
-.detail-product__designer-name {
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-lg);
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.detail-product__designer-tagline {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  margin: var(--space-1) 0 0;
-}
-
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .detail-product__hero {
