@@ -1,0 +1,34 @@
+name: CI
+
+# Lint + build check en feature branches y PRs.
+# Los deploys a producción/staging los maneja Vercel
+# automáticamente desde su integración con GitHub.
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches: ['**']
+
+jobs:
+  build-and-lint:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          # Placeholder para que el build no falle sin .env
+          VITE_API_URL: https://mec3d-api.onrender.com/api/v1
