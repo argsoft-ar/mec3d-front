@@ -36,6 +36,15 @@ function DesignerHeroCard({
             <h1 className="designer-hero-card__name">{name}</h1>
             <p className="designer-hero-card__tagline">{tagline}</p>
           </div>
+          {onViewProfile && (
+            <button
+              className="designer-hero-card__profile-btn"
+              type="button"
+              onClick={onViewProfile}
+            >
+              Ver perfil
+            </button>
+          )}
         </div>
         <div className="designer-hero-card__stats">
           <div className="designer-hero-card__stat">
@@ -63,17 +72,6 @@ function DesignerHeroCard({
             </span>
           </div>
         </div>
-        {onViewProfile && (
-          <div className="designer-hero-card__footer">
-            <button
-              className="designer-hero-card__profile-btn"
-              type="button"
-              onClick={onViewProfile}
-            >
-              Ver perfil
-            </button>
-          </div>
-        )}
       </div>
     );
   }
@@ -90,9 +88,7 @@ function DesignerHeroCard({
           </h4>
           <p className="designer-hero-card__tagline">{tagline}</p>
         </div>
-      </div>
-      {onViewProfile && (
-        <div className="designer-hero-card__footer">
+        {onViewProfile && (
           <button
             className="designer-hero-card__profile-btn"
             type="button"
@@ -100,8 +96,8 @@ function DesignerHeroCard({
           >
             Ver perfil
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
