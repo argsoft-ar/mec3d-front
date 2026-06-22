@@ -77,7 +77,7 @@ function Dashboard() {
 
   useEffect(() => {
     productService
-      .getAll()
+      .getMine()
       .then((data) => setProducts(data))
       .catch(() => setProducts([]))
       .finally(() => setLoadingProducts(false));
