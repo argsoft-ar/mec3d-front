@@ -45,6 +45,7 @@ export interface ProductDesigner {
 
 export interface Product {
   id: string;
+  designerId: string;
   title: string;
   description: string;
   imageUrl: string;
