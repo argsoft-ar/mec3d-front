@@ -10,12 +10,58 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: transform var(--transition-base);
+}
+
+/* Hamburger — mobile only */
+.sidebar__hamburger {
+  display: none;
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: calc(var(--z-navbar) + 1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  color: var(--color-text-primary);
+  line-height: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Close button — hidden on desktop */
+.sidebar__close {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  line-height: 0;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.sidebar__close:hover {
+  color: var(--color-text-primary);
+}
+
+/* Overlay — mobile only */
+.sidebar__overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: oklch(0% 0 0 / 0.65);
+  z-index: calc(var(--z-navbar) - 1);
 }
 
 /* Top — brand */
 .sidebar__top {
   padding: var(--space-6) var(--space-4) var(--space-4);
   border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sidebar__brand {
@@ -59,7 +105,7 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-3);
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
@@ -70,12 +116,12 @@
 
 .sidebar__link:hover {
   background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-on-surface);
 }
 
 .sidebar__link--active {
   background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-on-surface);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -121,4 +167,33 @@
 
 .sidebar__logout-icon {
   flex-shrink: 0;
+}
+
+/* ── Mobile ────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar__hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar__overlay {
+    display: block;
+  }
 }

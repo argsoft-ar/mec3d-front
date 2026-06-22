@@ -1,0 +1,249 @@
+.data-table__wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.data-table__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-surface-bright);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 68px !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+@keyframes search-expand {
+  from {
+    opacity: 0;
+    width: 0;
+    transform: scaleX(0.85);
+    transform-origin: right center;
+  }
+  to {
+    opacity: 1;
+    width: 300px;
+    transform: scaleX(1);
+    transform-origin: right center;
+  }
+}
+
+.data-table__search {
+  width: 300px;
+  animation: search-expand var(--transition-base) ease forwards;
+  transform-origin: right center;
+  overflow: hidden;
+}
+
+.data-table__search .MuiInputBase-root {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+.data-table__search .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.data-table__search .MuiInputAdornment-root svg {
+  color: var(--color-text-muted);
+}
+.data-table__search .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border-focus);
+  transition: border-color var(--transition-fast);
+}
+.data-table__search
+  .MuiInputBase-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border-focus);
+}
+.data-table__search .MuiInputBase-input {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.data-table__search-btn {
+  color: var(--color-text-secondary);
+  width: 36px !important;
+  height: 36px !important;
+}
+.data-table__search-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.data-table__search-close {
+  color: var(--color-danger) !important;
+  transition:
+    color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+.data-table__search-close:hover {
+  opacity: 0.8;
+}
+
+.data-table__filter-select {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.data-table__filter-select-inner {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.data-table__filter-select .MuiInputBase-root {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+.data-table__filter-select .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.data-table__filter-select
+  .MuiInputBase-root:hover
+  .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border-focus);
+  transition: border-color var(--transition-fast);
+}
+.data-table__filter-select
+  .MuiInputBase-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border-focus);
+}
+.data-table__filter-select .MuiSelect-select {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  padding-left: var(--space-3);
+  padding-right: var(--space-6) !important;
+}
+
+.data-table__filter-select .MuiInputLabel-root {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary) !important;
+  font-weight: var(--font-weight-medium);
+}
+.data-table__filter-select .MuiInputLabel-root.Mui-focused {
+  color: var(--color-border-focus) !important;
+}
+
+.data-table {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+}
+
+.data-table__container {
+  background: var(--color-surface) !important;
+}
+
+.data-table__container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.data-table__container::-webkit-scrollbar-track {
+  background: var(--color-surface-container-low);
+}
+
+.data-table__container::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.data-table__container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-focus);
+}
+
+.data-table__head-cell {
+  font-weight: var(--font-weight-semibold) !important;
+  font-size: var(--font-size-sm) !important;
+  color: white !important;
+  background: var(--color-surface-bright) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: var(--space-3) var(--space-4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.data-table__head-cell .MuiTableSortLabel-root {
+  color: white !important;
+}
+.data-table__head-cell .MuiTableSortLabel-root:hover,
+.data-table__head-cell .MuiTableSortLabel-root.Mui-active {
+  color: white !important;
+}
+.data-table__head-cell .MuiTableSortLabel-icon {
+  color: white !important;
+  opacity: 0.7;
+}
+.data-table__head-cell
+  .MuiTableSortLabel-root.Mui-active
+  .MuiTableSortLabel-icon {
+  opacity: 1;
+}
+
+.data-table__container .MuiTableHead-root .MuiTableCell-stickyHeader {
+  background: var(--color-surface-bright) !important;
+  color: white !important;
+}
+
+.data-table__row:nth-child(odd) td {
+  background: var(--color-surface);
+}
+.data-table__row:nth-child(even) td {
+  background: var(--color-surface-container);
+}
+.data-table__row:hover td {
+  background: var(--color-surface-container-high) !important;
+}
+
+.data-table__cell {
+  font-size: var(--font-size-sm) !important;
+  color: var(--color-text-primary) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding: var(--space-3) var(--space-4) !important;
+}
+
+.data-table__cell--actions {
+  white-space: nowrap;
+}
+
+.data-table .MuiTablePagination-root {
+  background: var(--color-surface-bright);
+  color: white;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.data-table .MuiTablePagination-toolbar {
+  overflow: hidden;
+  min-height: 52px;
+}
+.data-table .MuiTablePagination-selectLabel,
+.data-table .MuiTablePagination-displayedRows,
+.data-table .MuiTablePagination-select,
+.data-table .MuiTablePagination-menuItem {
+  color: white;
+}
+.data-table .MuiTablePagination-actions .MuiIconButton-root {
+  color: white;
+}
+.data-table .MuiTablePagination-actions .MuiIconButton-root.Mui-disabled {
+  color: rgba(255, 255, 255, 0.3);
+}
+.data-table .MuiSelect-icon {
+  color: white;
+}

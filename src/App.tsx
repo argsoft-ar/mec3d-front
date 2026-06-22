@@ -7,6 +7,9 @@ import Register from "./pages/register/Register";
 import Home from "./pages/home/Home";
 import Dashboard from "./pages/dashboard/Dashboard";
 import DetailProduct from "./pages/products/DetailProduct";
+import ProductFormPage from "./pages/products/ProductFormPage";
+import ProductsPage from "./pages/products/ProductsPage";
+import Profile from "./pages/profile/Profile";
 import type { NavLink } from "./types";
 import "./index.css";
 
@@ -37,20 +40,26 @@ function AppShell() {
 
   return (
     <>
-      {!isAuthRoute && <Navbar links={navLinks} />}
-      <main
-        style={
-          !isAuthRoute ? { marginLeft: "var(--sidebar-width)" } : undefined
-        }
-      >
+      {isAuthRoute ? null : <Navbar links={navLinks} />}
+      <main className={isAuthRoute ? undefined : "main--with-sidebar"}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
+            <Route path="/explore" element={<ProductsPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Dashboard />} />
             <Route path="/product/:id" element={<DetailProduct />} />
+            <Route path="/profile/:designerName" element={<Profile />} />
+            <Route
+              path="/dashboard/products/new"
+              element={<ProductFormPage />}
+            />
+            <Route
+              path="/dashboard/products/:id/edit"
+              element={<ProductFormPage />}
+            />
           </Route>
         </Routes>
       </main>

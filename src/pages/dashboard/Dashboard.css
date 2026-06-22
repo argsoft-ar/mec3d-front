@@ -61,3 +61,16 @@
     gap: var(--space-5);
   }
 }
+
+/* Designs table section */
+.dashboard__designs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dashboard__section-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}

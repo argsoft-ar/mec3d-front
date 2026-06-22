@@ -12,6 +12,7 @@ interface CardProps {
   variant?: CardVariant;
   className?: string;
   onClick?: () => void;
+  disableHover?: boolean;
 }
 
 function Card({
@@ -24,12 +25,13 @@ function Card({
   variant = "default",
   className = "",
   onClick,
+  disableHover = false,
 }: CardProps) {
   const isClickable = typeof onClick === "function";
 
   return (
     <div
-      className={`card card--${variant}${isClickable ? " card--clickable" : ""} ${className}`.trim()}
+      className={`card card--${variant}${isClickable ? " card--clickable" : ""}${disableHover ? " card--no-hover" : ""} ${className}`.trim()}
       onClick={onClick}
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}

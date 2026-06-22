@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Car,
   Bike,
@@ -11,9 +11,11 @@ import {
   Grid2X2,
   Users,
   Download,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PRODUCTS } from "../../data/products";
+import { productService } from "../../services/product.service";
+import type { Product } from "../../interfaces/product.interface";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Card from "../../components/Card/Card";
@@ -93,6 +95,11 @@ const SERVICES: ServiceItem[] = [
 
 function Home() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    productService.getAll().then(setProducts);
+  }, []);
 
   return (
     <Layout>
@@ -141,21 +148,25 @@ function Home() {
         <h2 className="home-section-title">¿Por qué MEC3D?</h2>
         <div className="home-services__grid">
           {SERVICES.map((service) => (
-            <div key={service.title} className="home-service-card">
-              <span className="home-service-card__icon">{service.icon}</span>
-              <h3 className="home-service-card__title">{service.title}</h3>
-              <p className="home-service-card__description">
-                {service.description}
-              </p>
-            </div>
+            <Card
+              key={service.title}
+              icon={service.icon}
+              title={service.title}
+              text={service.description}
+              variant="elevated"
+              disableHover
+            />
           ))}
         </div>
       </section>
 
       <section className="home-featured">
-        <h2 className="home-section-title">Plantillas destacadas</h2>
+        <h2 className="home-section-title">
+          Plantillas destacadas{" "}
+          <ChartNoAxesCombined size={24} strokeWidth={1.5} />
+        </h2>
         <div className="home-featured__grid">
-          {PRODUCTS.map((product) => (
+          {products.map((product) => (
             <ProductCard
               key={product.id}
               title={product.title}
