@@ -34,8 +34,8 @@ function Account() {
 
   useEffect(() => {
     productService
-      .getAll()
-      .then((data) => setProducts(data))
+      .getMine()
+      .then((res) => setProducts(res))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);
@@ -63,7 +63,7 @@ function Account() {
         </Card>
 
         <section className="account__section">
-          <h2 className="account__section-title">Mis diseños</h2>
+          <h2 className="account__section-title">Mis publicaciones</h2>
           <div className="account__grid">
             {loading
               ? Array.from({ length: 6 }, (_, i) => (

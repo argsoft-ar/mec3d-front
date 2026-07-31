@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, MapPin } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -14,9 +14,20 @@ import {
 import type { BreadcrumbItem } from "../../components/Breadcrumb/Breadcrumb";
 import { productService } from "../../services/product.service";
 import type { Product } from "../../interfaces/product.interface";
+import type { UsuarioPublico } from "../../interfaces/user.interface";
 import "./ProductsPage.css";
 
 const SKELETON_COUNT = 8;
+
+function getStoredUser(): UsuarioPublico | null {
+  const raw = localStorage.getItem("auth_user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as UsuarioPublico;
+  } catch {
+    return null;
+  }
+}
 
 function applyFilters(products: Product[], filters: FilterState): Product[] {
   let result = [...products];
@@ -69,20 +80,33 @@ function ProductsPage() {
   const navigate = useNavigate();
   const category = searchParams.get("category") ?? "";
 
+  const [user] = useState<UsuarioPublico | null>(getStoredUser);
+  const userZonaId =
+    typeof user?.zonaId === "number" &&
+    Number.isInteger(user.zonaId) &&
+    user.zonaId > 0 &&
+    user.zonaId <= 99_999_999
+      ? user.zonaId
+      : null;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     ...DEFAULT_FILTER_STATE,
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [nearbyFirst, setNearbyFirst] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     productService
-      .getAll()
-      .then((data) => setProducts(data))
+      .getAll(
+        userZonaId !== null && nearbyFirst ? { zonaId: userZonaId } : undefined,
+      )
+      .then((res) => setProducts(res.data))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [userZonaId, nearbyFirst]);
 
   const filtered = useMemo(
     () => applyFilters(products, filters),
@@ -130,6 +154,11 @@ function ProductsPage() {
             rating={product.rating}
             downloads={product.downloads}
             price={product.price}
+            badge={
+              userZonaId !== null && product.designer.zonaId === userZonaId
+                ? "En tu zona"
+                : undefined
+            }
             onClick={() => navigate(`/product/${product.id}`)}
           />
         ))}
@@ -174,6 +203,20 @@ function ProductsPage() {
               <SlidersHorizontal size={16} strokeWidth={1.5} />
               Filtros
             </button>
+
+            {userZonaId !== null && (
+              <button
+                type="button"
+                className={`products-page__nearby-toggle${
+                  nearbyFirst ? " products-page__nearby-toggle--active" : ""
+                }`}
+                onClick={() => setNearbyFirst((v) => !v)}
+                aria-pressed={nearbyFirst}
+              >
+                <MapPin size={16} strokeWidth={1.5} />
+                Cerca de tu zona
+              </button>
+            )}
 
             {!loading && (
               <p className="products-page__count">

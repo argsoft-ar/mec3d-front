@@ -83,9 +83,9 @@ function DetailProduct() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    productService.getAll().then((products) => {
-      setAllProducts(products);
-      setProduct(products.find((p) => p.id === id) ?? null);
+    productService.getAll().then((res) => {
+      setAllProducts(res.data);
+      setProduct(res.data.find((p) => p.id === id) ?? null);
       setLoading(false);
     });
   }, [id]);

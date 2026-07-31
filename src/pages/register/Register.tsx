@@ -1,47 +1,30 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useRegister } from "./useRegister";
+import { Link } from "react-router-dom";
+import type { ChangeEvent } from "react";
+import type React from "react";
 import Form from "../../components/Form/Form";
 import FormField from "../../components/Form/FormField";
 import Button from "../../components/Button/Button";
-import { authService } from "../../services/api";
+import BrandPanel from "../../components/BrandPanel/BrandPanel";
+import PasswordStrengthHint from "./PasswordStrengthHint";
 import type { FormFieldType, SelectOption } from "../../types";
-import type { RolUsuario } from "../../interfaces/user.interface";
 import "./Register.css";
 
-type RegisterForm = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  rol_principal: string;
-};
-
-type RegisterTextKeys = "email" | "password" | "confirmPassword";
-
-const REGISTER_TEXT_FIELDS: Array<{
+interface FieldDefinition {
+  name: string;
   label: string;
-  name: RegisterTextKeys;
   type: FormFieldType;
-  placeholder: string;
-}> = [
-  {
-    label: "Email",
-    name: "email",
-    type: "email",
-    placeholder: "tucorreo@ejemplo.com",
-  },
-  {
-    label: "Contraseña",
-    name: "password",
-    type: "password",
-    placeholder: "••••••••",
-  },
-  {
-    label: "Confirmar contraseña",
-    name: "confirmPassword",
-    type: "password",
-    placeholder: "••••••••",
-  },
-];
+  value: string;
+  onChange: (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
+  placeholder?: string;
+  toggleable?: boolean;
+  options?: SelectOption[];
+  disabled?: boolean;
+  error?: string;
+  hint?: React.ReactNode;
+}
 
 const ROL_OPTIONS: SelectOption[] = [
   { value: "comprador", label: "Comprador" },
@@ -50,71 +33,93 @@ const ROL_OPTIONS: SelectOption[] = [
 ];
 
 function Register() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState<RegisterForm>({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    rol_principal: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { formData, loading, error, handleChange, handleSubmit, georef } =
+    useRegister();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await authService.register({
-        email: formData.email,
-        password: formData.password,
-        rol_principal: formData.rol_principal as RolUsuario,
-      });
-      navigate("/login");
-    } catch {
-      setError("Error al registrar. Verificá los datos.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fields: FieldDefinition[] = [
+    {
+      name: "email",
+      label: "Email",
+      type: "email",
+      placeholder: "tucorreo@ejemplo.com",
+      value: formData.email,
+      onChange: handleChange("email"),
+    },
+    {
+      name: "password",
+      label: "Contraseña",
+      type: "password",
+      placeholder: "••••••••",
+      toggleable: true,
+      value: formData.password,
+      onChange: handleChange("password"),
+      hint:
+        formData.password.length > 0 ? (
+          <PasswordStrengthHint value={formData.password} />
+        ) : undefined,
+    },
+    {
+      name: "confirmPassword",
+      label: "Confirmar contraseña",
+      type: "password",
+      placeholder: "••••••••",
+      toggleable: true,
+      value: formData.confirmPassword,
+      onChange: handleChange("confirmPassword"),
+    },
+    {
+      name: "rolPrincipal",
+      label: "Rol",
+      type: "select",
+      options: ROL_OPTIONS,
+      value: formData.rolPrincipal,
+      onChange: handleChange("rolPrincipal"),
+    },
+    {
+      name: "provincia",
+      label: "Provincia",
+      type: "select",
+      value: georef.provinciaId,
+      onChange: (e) => georef.selectProvincia(e.target.value),
+      options: georef.provincias.options,
+      placeholder: georef.provincias.loading
+        ? "Cargando provincias..."
+        : "Seleccioná una provincia",
+      error: georef.provincias.error || undefined,
+      disabled: georef.provincias.loading,
+    },
+    {
+      name: "departamento",
+      label: "Departamento",
+      type: "select",
+      value: georef.departamentoId,
+      onChange: (e) => georef.selectDepartamento(e.target.value),
+      options: georef.departamentos.options,
+      placeholder: georef.departamentos.loading
+        ? "Cargando departamentos..."
+        : "Seleccioná un departamento",
+      error: georef.departamentos.error || undefined,
+      disabled: !georef.provinciaId || georef.departamentos.loading,
+    },
+    {
+      name: "localidad",
+      label: "Localidad",
+      type: "select",
+      value: georef.localidadId,
+      onChange: (e) => georef.selectLocalidad(e.target.value),
+      options: georef.localidades.options,
+      placeholder: georef.localidades.loading
+        ? "Cargando localidades..."
+        : "Seleccioná una localidad",
+      error: georef.localidades.error || undefined,
+      disabled: !georef.departamentoId || georef.localidades.loading,
+    },
+  ];
 
   return (
     <div className="login-page">
-      {/* ── Left brand panel ── */}
-      <div className="login-brand" aria-hidden="true">
-        <div className="login-brand__blob login-brand__blob--blue" />
-        <div className="login-brand__blob login-brand__blob--orange" />
-        <div className="login-brand__blob login-brand__blob--purple" />
-        <div className="login-brand__grid" />
+      <BrandPanel />
 
-        <div className="login-brand__gear login-brand__gear--1" />
-        <div className="login-brand__gear login-brand__gear--2" />
-        <div className="login-brand__gear login-brand__gear--3" />
-        <div className="login-brand__hex login-brand__hex--1" />
-        <div className="login-brand__hex login-brand__hex--2" />
-
-        <div className="login-brand__content">
-          <h1 className="login-brand__logo">MEC3D</h1>
-          <p className="login-brand__tagline">
-            Marketplace de piezas mecánicas 3D
-          </p>
-          <div className="login-brand__divider" />
-          <ul className="login-brand__features">
-            <li>Impresión 3D bajo demanda</li>
-            <li>Piezas mecánicas certificadas</li>
-            <li>Entrega rápida en todo el país</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* ── Right form panel ── */}
       <div className="login-panel">
         <div className="login-card">
           <div className="login-header">
@@ -132,50 +137,32 @@ function Register() {
 
           <div className="login-form-fields">
             <Form onSubmit={handleSubmit} columns={1}>
-              {REGISTER_TEXT_FIELDS.map((field, i) => (
+              {fields.map((field, i) => (
                 <div
                   key={field.name}
                   className="login-field-wrapper"
-                  style={{ animationDelay: `${0.1 + i * 0.1}s` }}
+                  style={{ animationDelay: `${0.1 + i * 0.08}s` }}
                 >
                   <FormField
                     label={field.label}
                     name={field.name}
                     type={field.type}
-                    value={formData[field.name]}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        [field.name]: e.target.value,
-                      }))
-                    }
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder={field.placeholder}
+                    toggleable={field.toggleable}
+                    options={field.options}
+                    error={field.error}
+                    disabled={field.disabled}
+                    hint={field.hint}
                     required
                   />
                 </div>
               ))}
+
               <div
                 className="login-field-wrapper"
-                style={{ animationDelay: "0.4s" }}
-              >
-                <FormField
-                  label="Rol"
-                  name="rol_principal"
-                  type="select"
-                  value={formData.rol_principal}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      rol_principal: e.target.value,
-                    }))
-                  }
-                  options={ROL_OPTIONS}
-                  required
-                />
-              </div>
-              <div
-                className="login-field-wrapper"
-                style={{ animationDelay: "0.5s" }}
+                style={{ animationDelay: `${0.1 + fields.length * 0.08}s` }}
               >
                 <Button
                   title={loading ? "Registrando..." : "Registrarse"}
@@ -189,10 +176,7 @@ function Register() {
             </Form>
           </div>
 
-          <p
-            className="login-register-link"
-            style={{ animationDelay: "0.65s" }}
-          >
+          <p className="login-register-link">
             ¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link>
           </p>
         </div>

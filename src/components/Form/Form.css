@@ -96,3 +96,39 @@
   padding-right: var(--space-8);
   cursor: pointer;
 }
+
+/* Input wrapper for suffix icons */
+.form-field__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-field__input-wrapper .form-field__input {
+  width: 100%;
+}
+
+.form-field__input--has-right {
+  padding-right: 2.75rem;
+}
+
+.form-field__right-element {
+  position: absolute;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 0;
+}
+
+.form-field__right-element:hover {
+  color: var(--color-text-primary);
+}
+
+.form-field__hint {
+  margin-top: var(--space-2, 0.5rem);
+}
