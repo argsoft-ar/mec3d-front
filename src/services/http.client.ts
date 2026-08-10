@@ -21,6 +21,11 @@ export async function request<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+      window.location.href = "/login";
+    }
     const error: ApiError = {
       message: `HTTP error ${response.status}`,
       status: response.status,
