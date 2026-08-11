@@ -167,7 +167,8 @@ function ProductsPage() {
             downloads={product.downloads}
             price={product.price}
             badge={(() => {
-              if (userZonaId === null || product.designer.zonaId == null) return undefined;
+              if (userZonaId === null || product.designer.zonaId == null)
+                return undefined;
               const userPartido = getPartidoPrefix(userZonaId);
               const designerPartido = getPartidoPrefix(product.designer.zonaId);
               return userPartido !== null && userPartido === designerPartido
