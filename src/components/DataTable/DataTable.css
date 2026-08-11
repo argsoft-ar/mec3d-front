@@ -195,7 +195,7 @@
 
 .data-table__container .MuiTableHead-root .MuiTableCell-stickyHeader {
   background: var(--color-surface-bright) !important;
-  color: white !important;
+  color: rgb(5, 5, 5) !important;
 }
 
 .data-table__row:nth-child(odd) td {

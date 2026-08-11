@@ -15,7 +15,6 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "../../hooks/useToast";
 import { productService, uploadImage } from "../../services/product.service";
 import type {
-  Product,
   UpdateProductPayload,
   ProductForm,
   FormFieldConfig,
@@ -215,7 +214,7 @@ function ProductFormPage() {
     if (!isEdit) return;
     productService
       .getAll()
-      .then((products: Product[]) => {
+      .then(({ data: products }) => {
         const product = products.find((p) => String(p.id) === id);
         if (!product) {
           setNotFound(true);

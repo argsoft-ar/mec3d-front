@@ -1,0 +1,356 @@
+/* =====================================================================
+   BRAND PANEL — Animated left panel (shared by Login & Register)
+   ===================================================================== */
+
+/* ── Brand-only keyframes ───────────────────────────────────────────── */
+
+@keyframes floatBlobA {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(6%, 8%) scale(1.08);
+  }
+  66% {
+    transform: translate(-5%, 4%) scale(0.95);
+  }
+}
+
+@keyframes floatBlobB {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(-8%, -6%) scale(1.1);
+  }
+  70% {
+    transform: translate(5%, -3%) scale(0.92);
+  }
+}
+
+@keyframes floatBlobC {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(4%, -9%) scale(1.06);
+  }
+}
+
+@keyframes rotateSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateSlowReverse {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes floatUp {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* =====================================================================
+   BRAND PANEL (left, 60%)
+   ===================================================================== */
+
+.login-brand {
+  position: relative;
+  flex: 0 0 60%;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* -- Gradient grid overlay -- */
+.login-brand__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(84, 233, 138, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(84, 233, 138, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  z-index: 0;
+}
+
+/* -- Animated blobs -- */
+.login-brand__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.login-brand__blob--blue {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(
+    circle,
+    rgba(84, 233, 138, 0.22) 0%,
+    transparent 70%
+  );
+  top: -120px;
+  left: -80px;
+  animation: floatBlobA 18s ease-in-out infinite;
+}
+
+.login-brand__blob--orange {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 192, 172, 0.15) 0%,
+    transparent 70%
+  );
+  bottom: -80px;
+  right: -60px;
+  animation: floatBlobB 22s ease-in-out infinite;
+}
+
+.login-brand__blob--purple {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(
+    circle,
+    rgba(84, 233, 138, 0.08) 0%,
+    transparent 70%
+  );
+  top: 40%;
+  left: 40%;
+  animation: floatBlobC 26s ease-in-out infinite;
+}
+
+/* -- Gear shapes -- */
+.login-brand__gear {
+  position: absolute;
+  border-radius: 4px;
+  z-index: 2;
+  opacity: 0.18;
+}
+
+.login-brand__gear--1 {
+  width: 96px;
+  height: 96px;
+  top: 12%;
+  right: 14%;
+  animation: rotateSlow 20s linear infinite;
+  clip-path: polygon(
+    50% 0%,
+    61% 15%,
+    79% 9%,
+    79% 27%,
+    95% 35%,
+    84% 50%,
+    95% 65%,
+    79% 73%,
+    79% 91%,
+    61% 85%,
+    50% 100%,
+    39% 85%,
+    21% 91%,
+    21% 73%,
+    5% 65%,
+    16% 50%,
+    5% 35%,
+    21% 27%,
+    21% 9%,
+    39% 15%
+  );
+  background-color: var(--color-primary, #1a56db);
+  border: none;
+  opacity: 0.22;
+}
+
+.login-brand__gear--2 {
+  width: 64px;
+  height: 64px;
+  background-color: var(--color-secondary, #ff6b00);
+  bottom: 20%;
+  left: 10%;
+  clip-path: polygon(
+    50% 0%,
+    61% 15%,
+    79% 9%,
+    79% 27%,
+    95% 35%,
+    84% 50%,
+    95% 65%,
+    79% 73%,
+    79% 91%,
+    61% 85%,
+    50% 100%,
+    39% 85%,
+    21% 91%,
+    21% 73%,
+    5% 65%,
+    16% 50%,
+    5% 35%,
+    21% 27%,
+    21% 9%,
+    39% 15%
+  );
+  opacity: 0.25;
+  animation: rotateSlowReverse 14s linear infinite;
+}
+
+.login-brand__gear--3 {
+  width: 44px;
+  height: 44px;
+  background-color: var(--color-primary, #1a56db);
+  top: 55%;
+  right: 8%;
+  clip-path: polygon(
+    50% 0%,
+    61% 15%,
+    79% 9%,
+    79% 27%,
+    95% 35%,
+    84% 50%,
+    95% 65%,
+    79% 73%,
+    79% 91%,
+    61% 85%,
+    50% 100%,
+    39% 85%,
+    21% 91%,
+    21% 73%,
+    5% 65%,
+    16% 50%,
+    5% 35%,
+    21% 27%,
+    21% 9%,
+    39% 15%
+  );
+  opacity: 0.18;
+  animation: rotateSlow 10s linear infinite;
+}
+
+/* -- Hexagon shapes -- */
+.login-brand__hex {
+  position: absolute;
+  z-index: 2;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.login-brand__hex--1 {
+  width: 80px;
+  height: 92px;
+  background: linear-gradient(
+    135deg,
+    rgba(84, 233, 138, 0.25),
+    rgba(255, 192, 172, 0.15)
+  );
+  bottom: 30%;
+  right: 18%;
+  animation: floatUp 8s ease-in-out infinite;
+}
+
+.login-brand__hex--2 {
+  width: 52px;
+  height: 60px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 192, 172, 0.2),
+    rgba(84, 233, 138, 0.1)
+  );
+  top: 25%;
+  left: 15%;
+  animation: floatUp 11s ease-in-out infinite reverse;
+}
+
+/* -- Brand content -- */
+.login-brand__content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-8, 2rem);
+}
+
+.login-brand__logo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: -2px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 30%,
+    var(--color-primary-container) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin: 0;
+  animation: fadeUp 0.7s ease both;
+}
+
+.login-brand__tagline {
+  font-size: var(--font-size-base, 1rem);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  margin: 0;
+  animation: fadeUp 0.7s 0.15s ease both;
+}
+
+.login-brand__divider {
+  width: 64px;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 2px;
+  animation: fadeUp 0.7s 0.25s ease both;
+}
+
+.login-brand__features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+  animation: fadeUp 0.7s 0.35s ease both;
+}
+
+.login-brand__features li {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.login-brand__features li::before {
+  content: "›  ";
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold, 700);
+}
+
+/* -- Responsive: hide on mobile -- */
+@media (max-width: 767px) {
+  .login-brand {
+    display: none;
+  }
+}

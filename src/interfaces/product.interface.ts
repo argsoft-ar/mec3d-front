@@ -8,21 +8,21 @@ export interface Categoria {
 
 export interface Diseno {
   id: string;
-  disenador_id: string;
+  disenadorId: string;
   titulo: string;
-  categoria_id: number | null;
-  archivo_url: string;
-  precio_base: number;
-  creado_en: string;
+  categoriaId: number | null;
+  archivoUrl: string;
+  precioBase: number;
+  creadoEn: string;
 }
 
 export interface ProductoFisico {
   id: string;
-  fabricante_id: string;
-  diseno_id: string;
-  precio_final: number;
+  fabricanteId: string;
+  disenoId: string;
+  precioFinal: number;
   estado: EstadoProducto;
-  creado_en: string;
+  creadoEn: string;
 }
 
 export interface ProductSpecificaciones {
@@ -41,6 +41,7 @@ export interface ProductDesigner {
   initials: string;
   name: string;
   tagline: string;
+  zonaId?: number | null;
 }
 
 export interface Product {

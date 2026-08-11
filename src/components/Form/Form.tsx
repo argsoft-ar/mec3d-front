@@ -3,14 +3,22 @@ import "./Form.css";
 
 interface FormProps {
   children: React.ReactNode;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
+  id?: string;
   columns?: 1 | 2;
   className?: string;
 }
 
-function Form({ children, onSubmit, columns = 1, className = "" }: FormProps) {
+function Form({
+  children,
+  onSubmit = (e) => e.preventDefault(),
+  id,
+  columns = 1,
+  className = "",
+}: Readonly<FormProps>) {
   return (
     <form
+      id={id}
       className={`form form--cols-${columns} ${className}`.trim()}
       onSubmit={onSubmit}
       noValidate

@@ -60,7 +60,7 @@ function Dashboard() {
       addToast(state.successToast, "success");
       window.history.replaceState({}, "");
     }
-  }, []);
+  }, [addToast, location.state]);
 
   const rawUser = localStorage.getItem("auth_user");
   const userEmail: string = rawUser

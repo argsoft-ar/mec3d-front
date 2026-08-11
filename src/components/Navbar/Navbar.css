@@ -116,12 +116,12 @@
 
 .sidebar__link:hover {
   background-color: var(--color-primary-light);
-  color: var(--color-on-surface);
+  color: var(--color-text-inverse);
 }
 
 .sidebar__link--active {
   background-color: var(--color-primary-light);
-  color: var(--color-on-surface);
+  color: var(--color-text-inverse);
   font-weight: var(--font-weight-semibold);
 }
 

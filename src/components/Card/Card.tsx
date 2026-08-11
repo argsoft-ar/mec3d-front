@@ -13,6 +13,7 @@ interface CardProps {
   className?: string;
   onClick?: () => void;
   disableHover?: boolean;
+  bodyClassName?: string;
 }
 
 function Card({
@@ -26,6 +27,7 @@ function Card({
   className = "",
   onClick,
   disableHover = false,
+  bodyClassName,
 }: CardProps) {
   const isClickable = typeof onClick === "function";
 
@@ -62,7 +64,13 @@ function Card({
         </ul>
       )}
 
-      {children && <div className="card__body">{children}</div>}
+      {children && (
+        <div
+          className={["card__body", bodyClassName].filter(Boolean).join(" ")}
+        >
+          {children}
+        </div>
+      )}
 
       {footer && <div className="card__footer">{footer}</div>}
     </div>
