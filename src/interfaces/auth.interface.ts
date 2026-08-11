@@ -16,6 +16,7 @@ export interface RegisterRequest {
   password: string;
   rolPrincipal: RolUsuario;
   zonaId?: number;
+  georefLocalidadId?: string;
 }
 
 export interface RegisterResponse {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type React from "react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
@@ -81,11 +81,13 @@ function Account() {
   const [profile, setProfile] = useState<PerfilCompleto | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState(EMPTY_PROFILE_FORM);
+  const georefInitializedRef = useRef(false);
 
   useEffect(() => {
     usuarioService
       .getMyProfile()
       .then((p) => {
+        georefInitializedRef.current = false;
         setProfile(p);
         setProfileForm({
           tagline: p.tagline ?? "",
@@ -113,6 +115,7 @@ function Account() {
       const updated = await usuarioService.updateProfile({
         ...profileForm,
         zonaId,
+        georefLocalidadId: localidadId || undefined,
       });
       setProfile(updated);
       addToast("Perfil actualizado", "success");
@@ -122,6 +125,40 @@ function Account() {
       setSavingProfile(false);
     }
   }
+
+  useEffect(() => {
+    if (georefInitializedRef.current) return;
+    const locId = profile?.georefLocalidadId;
+    if (!locId) return;
+    if (provincias.options.length === 0) return;
+
+    const provId = locId.slice(0, 2);
+    const deptId = locId.slice(0, 5);
+
+    if (provinciaId !== provId) {
+      selectProvincia(provId);
+      return;
+    }
+    if (departamentos.options.length === 0) return;
+    if (departamentoId !== deptId) {
+      selectDepartamento(deptId);
+      return;
+    }
+    if (localidades.options.length === 0) return;
+
+    selectLocalidad(locId);
+    georefInitializedRef.current = true;
+  }, [
+    profile,
+    provincias.options,
+    departamentos.options,
+    localidades.options,
+    provinciaId,
+    departamentoId,
+    selectProvincia,
+    selectDepartamento,
+    selectLocalidad,
+  ]);
 
   const zonaFields: ZonaFieldConfig[] = [
     {

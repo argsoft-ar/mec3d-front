@@ -26,6 +26,7 @@ export interface UpdateProfileDTO {
   experiencia?: string;
   zonaId?: number;
   cuentaMercadopago?: string;
+  georefLocalidadId?: string;
 }
 
 export interface PerfilCompleto {
@@ -40,4 +41,5 @@ export interface PerfilCompleto {
   experiencia: string | null;
   actualizadoEn: string;
   materiales: Material[];
+  georefLocalidadId?: string | null;
 }

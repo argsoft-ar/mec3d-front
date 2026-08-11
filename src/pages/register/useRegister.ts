@@ -54,6 +54,7 @@ export function useRegister() {
         password: formData.password,
         rolPrincipal: formData.rolPrincipal as RolUsuario,
         zonaId: toZonaId(georef.localidadId),
+        georefLocalidadId: georef.localidadId,
       });
       navigate("/login");
     } catch {

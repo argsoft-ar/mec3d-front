@@ -75,6 +75,13 @@ function applyFilters(products: Product[], filters: FilterState): Product[] {
   return result;
 }
 
+function getPartidoPrefix(zonaId: number): string | null {
+  const codigo = String(zonaId);
+  if (codigo.length === 8) return codigo.substring(0, 5);
+  if (codigo.length === 7) return `0${codigo.substring(0, 4)}`;
+  return null;
+}
+
 function ProductsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -108,10 +115,15 @@ function ProductsPage() {
       .finally(() => setLoading(false));
   }, [userZonaId, nearbyFirst]);
 
-  const filtered = useMemo(
-    () => applyFilters(products, filters),
-    [products, filters],
-  );
+  const filtered = useMemo(() => {
+    let result = applyFilters(products, filters);
+    if (category) {
+      result = result.filter(
+        (p) => p.categoria?.toLowerCase() === category.toLowerCase(),
+      );
+    }
+    return result;
+  }, [products, filters, category]);
 
   const breadcrumbItems: BreadcrumbItem[] = category
     ? [
@@ -154,11 +166,14 @@ function ProductsPage() {
             rating={product.rating}
             downloads={product.downloads}
             price={product.price}
-            badge={
-              userZonaId !== null && product.designer.zonaId === userZonaId
+            badge={(() => {
+              if (userZonaId === null || product.designer.zonaId == null) return undefined;
+              const userPartido = getPartidoPrefix(userZonaId);
+              const designerPartido = getPartidoPrefix(product.designer.zonaId);
+              return userPartido !== null && userPartido === designerPartido
                 ? "En tu zona"
-                : undefined
-            }
+                : undefined;
+            })()}
             onClick={() => navigate(`/product/${product.id}`)}
           />
         ))}
