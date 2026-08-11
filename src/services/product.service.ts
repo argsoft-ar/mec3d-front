@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  PaginatedResponse,
   Product,
   CreateProductPayload,
   UpdateProductPayload,
@@ -8,9 +9,17 @@ import type {
 import { BASE_URL, request } from "./http.client";
 
 export const productService = {
-  getAll: (params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params).toString()}` : "";
-    return request<Product[]>(`/productos${query}`);
+  getAll: (params?: { page?: number; limit?: number; zonaId?: number }) => {
+    const query = params
+      ? `?${new URLSearchParams(
+          Object.entries(params).reduce(
+            (acc, [k, v]) =>
+              v !== undefined ? { ...acc, [k]: String(v) } : acc,
+            {},
+          ),
+        ).toString()}`
+      : "";
+    return request<PaginatedResponse<Product>>(`/productos${query}`);
   },
 
   getMine: () => request<Product[]>("/productos/mis-disenos"),

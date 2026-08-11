@@ -2,3 +2,5 @@
 export * from "./http.client";
 export * from "./auth.service";
 export * from "./product.service";
+export * from "./georef.service";
+export * from "./usuario.service";

@@ -11,6 +11,8 @@ export interface ProductCardProps {
   downloads: number;
   /** Price in currency units; 0 means free ("Gratis") */
   price: number;
+  /** Optional badge text shown over the image (e.g. "En tu zona") */
+  badge?: string;
   /** Optional click handler; makes the card interactive */
   onClick?: () => void;
   /** Additional CSS class */
