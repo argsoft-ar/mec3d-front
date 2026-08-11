@@ -68,28 +68,31 @@ export function useGeoref() {
     if (!provinciaId) return;
 
     let cancelled = false;
-    setDepartamentos({ options: [], loading: true, error: "" });
-    georefService
-      .getDepartamentos(provinciaId)
-      .then((res) => {
-        if (cancelled) return;
-        setDepartamentos({
-          options: (res.data ?? []).map((d) => ({
-            value: d.id,
-            label: d.nombre,
-          })),
-          loading: false,
-          error: "",
+    const fetchDepartamentos = () => {
+      setDepartamentos({ options: [], loading: true, error: "" });
+      georefService
+        .getDepartamentos(provinciaId)
+        .then((res) => {
+          if (cancelled) return;
+          setDepartamentos({
+            options: (res.data ?? []).map((d) => ({
+              value: d.id,
+              label: d.nombre,
+            })),
+            loading: false,
+            error: "",
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setDepartamentos({
+            options: [],
+            loading: false,
+            error: "No se pudieron cargar los departamentos.",
+          });
         });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setDepartamentos({
-          options: [],
-          loading: false,
-          error: "No se pudieron cargar los departamentos.",
-        });
-      });
+    };
+    fetchDepartamentos();
     return () => {
       cancelled = true;
     };
@@ -104,28 +107,31 @@ export function useGeoref() {
     if (!provinciaId || !departamentoId) return;
 
     let cancelled = false;
-    setLocalidades({ options: [], loading: true, error: "" });
-    georefService
-      .getLocalidades(provinciaId, departamentoId)
-      .then((res) => {
-        if (cancelled) return;
-        setLocalidades({
-          options: (res.data ?? []).map((l) => ({
-            value: l.id,
-            label: l.nombre,
-          })),
-          loading: false,
-          error: "",
+    const fetchLocalidades = () => {
+      setLocalidades({ options: [], loading: true, error: "" });
+      georefService
+        .getLocalidades(provinciaId, departamentoId)
+        .then((res) => {
+          if (cancelled) return;
+          setLocalidades({
+            options: (res.data ?? []).map((l) => ({
+              value: l.id,
+              label: l.nombre,
+            })),
+            loading: false,
+            error: "",
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setLocalidades({
+            options: [],
+            loading: false,
+            error: "No se pudieron cargar las localidades.",
+          });
         });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setLocalidades({
-          options: [],
-          loading: false,
-          error: "No se pudieron cargar las localidades.",
-        });
-      });
+    };
+    fetchLocalidades();
     return () => {
       cancelled = true;
     };
