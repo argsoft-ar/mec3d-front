@@ -97,7 +97,7 @@ function Account() {
         });
       })
       .catch(() => addToast("No se pudo cargar el perfil", "error"));
-  }, []);
+  }, [addToast]);
 
   function handleProfileChange(
     e: React.ChangeEvent<

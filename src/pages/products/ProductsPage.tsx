@@ -105,14 +105,19 @@ function ProductsPage() {
   const [nearbyFirst, setNearbyFirst] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    productService
-      .getAll(
-        userZonaId !== null && nearbyFirst ? { zonaId: userZonaId } : undefined,
-      )
-      .then((res) => setProducts(res.data))
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
+    const fetchProducts = () => {
+      setLoading(true);
+      productService
+        .getAll(
+          userZonaId !== null && nearbyFirst
+            ? { zonaId: userZonaId }
+            : undefined,
+        )
+        .then((res) => setProducts(res.data))
+        .catch(() => setProducts([]))
+        .finally(() => setLoading(false));
+    };
+    fetchProducts();
   }, [userZonaId, nearbyFirst]);
 
   const filtered = useMemo(() => {

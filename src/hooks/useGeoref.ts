@@ -15,7 +15,11 @@ const INITIAL_LEVEL: GeorefLevelState = {
 };
 
 export function useGeoref() {
-  const [provincias, setProvincias] = useState<GeorefLevelState>(INITIAL_LEVEL);
+  const [provincias, setProvincias] = useState<GeorefLevelState>({
+    options: [],
+    loading: true,
+    error: "",
+  });
   const [departamentos, setDepartamentos] =
     useState<GeorefLevelState>(INITIAL_LEVEL);
   const [localidades, setLocalidades] =
@@ -27,7 +31,6 @@ export function useGeoref() {
 
   useEffect(() => {
     let cancelled = false;
-    setProvincias({ options: [], loading: true, error: "" });
     georefService
       .getProvincias()
       .then((res) => {
@@ -55,11 +58,13 @@ export function useGeoref() {
   }, []);
 
   useEffect(() => {
-    setDepartamentos(INITIAL_LEVEL);
-    setLocalidades(INITIAL_LEVEL);
-    setDepartamentoId("");
-    setLocalidadId("");
-
+    const resetDeps = () => {
+      setDepartamentos(INITIAL_LEVEL);
+      setLocalidades(INITIAL_LEVEL);
+      setDepartamentoId("");
+      setLocalidadId("");
+    };
+    resetDeps();
     if (!provinciaId) return;
 
     let cancelled = false;
@@ -91,9 +96,11 @@ export function useGeoref() {
   }, [provinciaId]);
 
   useEffect(() => {
-    setLocalidades(INITIAL_LEVEL);
-    setLocalidadId("");
-
+    const resetLocalidades = () => {
+      setLocalidades(INITIAL_LEVEL);
+      setLocalidadId("");
+    };
+    resetLocalidades();
     if (!provinciaId || !departamentoId) return;
 
     let cancelled = false;
