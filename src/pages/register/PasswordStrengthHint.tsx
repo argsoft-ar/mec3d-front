@@ -9,7 +9,7 @@ function getRequirements(password: string): Requirement[] {
   return [
     { label: "Mínimo 8 caracteres", met: password.length >= 8 },
     { label: "Al menos una mayúscula", met: /[A-Z]/.test(password) },
-    { label: "Al menos un número", met: /[0-9]/.test(password) },
+    { label: "Al menos un número", met: /\d/.test(password) },
     {
       label: "Al menos un símbolo (!@#$%^&*...)",
       met: /[^A-Za-z0-9]/.test(password),
@@ -33,7 +33,7 @@ interface Props {
   value: string;
 }
 
-function PasswordStrengthHint({ value }: Props) {
+function PasswordStrengthHint({ value }: Readonly<Props>) {
   const reqs = getRequirements(value);
   const metCount = reqs.filter((r) => r.met).length;
   const strength = getStrength(metCount);

@@ -10,7 +10,7 @@ export default function MaterialTag({
   label,
   onRemove,
   disabled,
-}: MaterialTagProps) {
+}: Readonly<MaterialTagProps>) {
   return (
     <span className="material-tag">
       {label}

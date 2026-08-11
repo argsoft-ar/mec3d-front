@@ -153,7 +153,6 @@
 .login-brand__gear--1 {
   width: 96px;
   height: 96px;
-  border: 6px solid var(--color-primary, #1a56db);
   top: 12%;
   right: 14%;
   animation: rotateSlow 20s linear infinite;

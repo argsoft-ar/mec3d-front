@@ -40,26 +40,21 @@ function FormField({
   rightElement,
   toggleable = false,
   hint,
-}: FormFieldProps) {
+}: Readonly<FormFieldProps>) {
   const fieldId = `field-${name}`;
   const errorId = `${fieldId}-error`;
   const [visible, setVisible] = useState(false);
 
-  return (
-    <div
-      className={`form-field${fullWidth ? " form-field--full" : ""}${error ? " form-field--error" : ""}`}
-    >
-      <label className="form-field__label" htmlFor={fieldId}>
-        {label}
-        {required && (
-          <span className="form-field__required" aria-hidden="true">
-            {" "}
-            *
-          </span>
-        )}
-      </label>
+  function getInputType() {
+    if (type === "password" && toggleable) {
+      return visible ? "text" : "password";
+    }
+    return type;
+  }
 
-      {type === "textarea" ? (
+  function renderField() {
+    if (type === "textarea") {
+      return (
         <textarea
           id={fieldId}
           name={name}
@@ -73,7 +68,10 @@ function FormField({
           aria-describedby={error ? errorId : undefined}
           rows={4}
         />
-      ) : type === "select" ? (
+      );
+    }
+    if (type === "select") {
+      return (
         <select
           id={fieldId}
           name={name}
@@ -92,42 +90,55 @@ function FormField({
             </option>
           ))}
         </select>
-      ) : (
-        <div className="form-field__input-wrapper">
-          <input
-            id={fieldId}
-            name={name}
-            type={
-              type === "password" && toggleable
-                ? visible
-                  ? "text"
-                  : "password"
-                : type
-            }
-            className={`form-field__input${toggleable || rightElement ? " form-field__input--has-right" : ""}`}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            required={required}
-            disabled={disabled}
-            aria-invalid={!!error}
-            aria-describedby={error ? errorId : undefined}
-          />
-          {toggleable && type === "password" && (
-            <button
-              type="button"
-              className="form-field__right-element"
-              onClick={() => setVisible((v) => !v)}
-              aria-label={visible ? "Ocultar contraseña" : "Ver contraseña"}
-            >
-              {visible ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          )}
-          {rightElement && (
-            <span className="form-field__right-element">{rightElement}</span>
-          )}
-        </div>
-      )}
+      );
+    }
+    return (
+      <div className="form-field__input-wrapper">
+        <input
+          id={fieldId}
+          name={name}
+          type={getInputType()}
+          className={`form-field__input${toggleable || rightElement ? " form-field__input--has-right" : ""}`}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+        />
+        {toggleable && type === "password" && (
+          <button
+            type="button"
+            className="form-field__right-element"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? "Ocultar contraseña" : "Ver contraseña"}
+          >
+            {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+        {rightElement && (
+          <span className="form-field__right-element">{rightElement}</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`form-field${fullWidth ? " form-field--full" : ""}${error ? " form-field--error" : ""}`}
+    >
+      <label className="form-field__label" htmlFor={fieldId}>
+        {label}
+        {required && (
+          <span className="form-field__required" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
+
+      {renderField()}
 
       {error && (
         <span id={errorId} className="form-field__error" role="alert">

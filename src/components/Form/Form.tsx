@@ -15,7 +15,7 @@ function Form({
   id,
   columns = 1,
   className = "",
-}: FormProps) {
+}: Readonly<FormProps>) {
   return (
     <form
       id={id}
