@@ -83,6 +83,7 @@
 
 .btn--outline:hover:not(:disabled) {
   background-color: var(--color-primary-container);
+  color: var(--color-inverse-on-surface);
 }
 
 .btn--danger {

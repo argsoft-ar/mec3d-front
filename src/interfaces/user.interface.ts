@@ -20,6 +20,17 @@ export interface Material {
   disponible: boolean;
 }
 
+export interface Tecnologia {
+  id: number;
+  tecnologia: string;
+  disponible: boolean;
+}
+
+export interface CatalogoItem {
+  id: number;
+  nombre: string;
+}
+
 export interface UpdateProfileDTO {
   tagline?: string;
   descripcion?: string;
@@ -41,5 +52,6 @@ export interface PerfilCompleto {
   experiencia: string | null;
   actualizadoEn: string;
   materiales: Material[];
+  tecnologias: Tecnologia[];
   georefLocalidadId?: string | null;
 }
