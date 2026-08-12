@@ -60,14 +60,6 @@ function FabricanteSection({
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    setMateriales(profile.materiales.map((m) => m.material));
-  }, [profile.materiales]);
-
-  useEffect(() => {
-    setTecnologias(profile.tecnologias.map((t) => t.tecnologia));
-  }, [profile.tecnologias]);
-
   const handleBecomeFabricante = () => {
     setBecomingFabricante(true);
     usuarioService

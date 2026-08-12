@@ -26,11 +26,15 @@ export function cacheSet<T>(key: string, data: T, ttlMs: number): void {
       PREFIX + key,
       JSON.stringify({ data, expiresAt: Date.now() + ttlMs }),
     );
-  } catch {}
+  } catch {
+    // storage quota exceeded or private browsing
+  }
 }
 
 export function cacheDel(key: string): void {
   try {
     sessionStorage.removeItem(PREFIX + key);
-  } catch {}
+  } catch {
+    // storage quota exceeded or private browsing
+  }
 }
