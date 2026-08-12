@@ -15,8 +15,8 @@ function Breadcrumb({ items }: BreadcrumbProps) {
   return (
     <nav className="breadcrumb" aria-label="Navegación">
       <ol className="breadcrumb__list">
-        {items.map((item) => {
-          const isLast = items.indexOf(item) === items.length - 1;
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
           return (
             <li key={item.path ?? item.label} className="breadcrumb__item">
               {!isLast && item.path ? (

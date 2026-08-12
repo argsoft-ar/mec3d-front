@@ -9,7 +9,12 @@ import type {
 import { BASE_URL, request } from "./http.client";
 
 export const productService = {
-  getAll: (params?: { page?: number; limit?: number; zonaId?: number }) => {
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    zonaId?: number;
+    categoria?: string;
+  }) => {
     const query = params
       ? `?${new URLSearchParams(
           Object.entries(params).reduce(

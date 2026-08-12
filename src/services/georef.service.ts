@@ -1,4 +1,5 @@
 import { request } from "./http.client";
+import { cacheGet, cacheSet } from "./cache";
 import type {
   ApiResponse,
   Provincia,
@@ -12,7 +13,13 @@ export function toZonaId(localidadId: string): number {
 }
 
 export const georefService = {
-  getProvincias: () => request<ApiResponse<Provincia[]>>("/georef/provincias"),
+  getProvincias: async () => {
+    const cached = cacheGet<ApiResponse<Provincia[]>>("georef:provincias");
+    if (cached) return cached;
+    const data = await request<ApiResponse<Provincia[]>>("/georef/provincias");
+    cacheSet("georef:provincias", data, 24 * 60 * 60 * 1000);
+    return data;
+  },
 
   getDepartamentos: (provinciaId: string) =>
     request<ApiResponse<Departamento[]>>(

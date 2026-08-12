@@ -107,28 +107,21 @@ function ProductsPage() {
   useEffect(() => {
     const fetchProducts = () => {
       setLoading(true);
+      const params: { zonaId?: number; categoria?: string } = {};
+      if (userZonaId !== null && nearbyFirst) params.zonaId = userZonaId;
+      if (category) params.categoria = category;
       productService
-        .getAll(
-          userZonaId !== null && nearbyFirst
-            ? { zonaId: userZonaId }
-            : undefined,
-        )
+        .getAll(params)
         .then((res) => setProducts(res.data))
         .catch(() => setProducts([]))
         .finally(() => setLoading(false));
     };
     fetchProducts();
-  }, [userZonaId, nearbyFirst]);
+  }, [userZonaId, nearbyFirst, category]);
 
   const filtered = useMemo(() => {
-    let result = applyFilters(products, filters);
-    if (category) {
-      result = result.filter(
-        (p) => p.categoria?.toLowerCase() === category.toLowerCase(),
-      );
-    }
-    return result;
-  }, [products, filters, category]);
+    return applyFilters(products, filters);
+  }, [products, filters]);
 
   const breadcrumbItems: BreadcrumbItem[] = category
     ? [
