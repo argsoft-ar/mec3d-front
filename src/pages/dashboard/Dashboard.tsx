@@ -10,8 +10,10 @@ import type {
   TableAction,
   FilterableField,
 } from "../../components/DataTable/DataTable.types";
-import type { Product } from "../../interfaces";
+import type { Product, PerfilCompleto, RolUsuario } from "../../interfaces";
 import { productService } from "../../services/product.service";
+import { usuarioService } from "../../services/usuario.service";
+import FabricanteSection from "../../components/FabricanteSection/FabricanteSection";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
@@ -70,10 +72,18 @@ function Dashboard() {
     ? userEmail.split("@")[0].charAt(0).toUpperCase() +
       userEmail.split("@")[0].slice(1)
     : "Usuario";
+  const [profile, setProfile] = useState<PerfilCompleto | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    usuarioService
+      .getMyProfile()
+      .then(setProfile)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     productService
@@ -88,6 +98,9 @@ function Dashboard() {
     products.length > 0
       ? products.reduce((sum, p) => sum + p.rating, 0) / products.length
       : 0;
+
+  const handleRolChange = (newRol: RolUsuario) =>
+    setProfile((prev) => (prev ? { ...prev, rolPrincipal: newRol } : prev));
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
@@ -192,6 +205,17 @@ function Dashboard() {
               searchable
               pagination
               filterableFields={PRODUCT_FILTERABLE_FIELDS}
+            />
+          )}
+        </section>
+
+        <section className="dashboard__fabricante">
+          <h2 className="dashboard__section-title">Fabricante</h2>
+          {profile && (
+            <FabricanteSection
+              profile={profile}
+              onRolChange={handleRolChange}
+              addToast={addToast}
             />
           )}
         </section>

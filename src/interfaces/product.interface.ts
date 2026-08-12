@@ -55,6 +55,7 @@ export interface Product {
   downloads: number;
   price: number;
   format: string;
+  archivoUrl?: string;
   categoria?: string;
   specs: ProductSpecificaciones | null;
   designer: ProductDesigner;
