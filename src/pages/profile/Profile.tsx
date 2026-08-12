@@ -28,12 +28,17 @@ function Profile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    productService.getAll().then((res) => {
-      const filtered = res.data.filter((p) => p.designer.name === designerName);
-      setProducts(filtered);
-      setDesigner(filtered.length > 0 ? filtered[0].designer : null);
-      setLoading(false);
-    });
+    productService
+      .getAll()
+      .then((res) => {
+        const filtered = (res.data ?? []).filter(
+          (p) => p.designer.name === designerName,
+        );
+        setProducts(filtered);
+        setDesigner(filtered.length > 0 ? filtered[0].designer : null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [designerName]);
 
   if (loading) {
