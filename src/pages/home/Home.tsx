@@ -98,7 +98,10 @@ function Home() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    productService.getAll().then((res) => setProducts(res.data));
+    productService
+      .getAll()
+      .then((res) => setProducts(res.data ?? []))
+      .catch(() => setProducts([]));
   }, []);
 
   return (

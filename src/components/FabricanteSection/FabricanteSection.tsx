@@ -37,10 +37,10 @@ function FabricanteSection({
     CatalogoItem[]
   >([]);
   const [materiales, setMateriales] = useState<string[]>(() =>
-    profile.materiales.map((m) => m.material),
+    (profile.materiales ?? []).map((m) => m.material),
   );
   const [tecnologias, setTecnologias] = useState<string[]>(() =>
-    profile.tecnologias.map((t) => t.tecnologia),
+    (profile.tecnologias ?? []).map((t) => t.tecnologia),
   );
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [selectedTecnologia, setSelectedTecnologia] = useState("");
