@@ -17,6 +17,7 @@ import FabricanteSection from "../../components/FabricanteSection/FabricanteSect
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
+import PageLoader from "../../components/PageLoader/PageLoader";
 import "./Dashboard.css";
 
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
@@ -60,9 +61,9 @@ function Dashboard() {
     const state = location.state as { successToast?: string } | null;
     if (state?.successToast) {
       addToast(state.successToast, "success");
-      window.history.replaceState({}, "");
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [addToast, location.state]);
+  }, [addToast, location.state, navigate, location.pathname]);
 
   const rawUser = localStorage.getItem("auth_user");
   const userEmail: string = rawUser
@@ -195,7 +196,7 @@ function Dashboard() {
         <section className="dashboard__designs">
           <h2 className="dashboard__section-title">Mis Diseños</h2>
           {loadingProducts ? (
-            <p>Cargando diseños...</p>
+            <PageLoader label="Cargando diseños..." />
           ) : (
             <DataTable<Product>
               columns={PRODUCT_COLUMNS}

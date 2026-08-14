@@ -17,6 +17,7 @@ import DesignerHeroCard from "../../components/DesignerHeroCard/DesignerHeroCard
 import { productService } from "../../services/product.service";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
+import PageLoader from "../../components/PageLoader/PageLoader";
 import "./DetailProduct.css";
 
 interface ActionItem {
@@ -90,15 +91,18 @@ function DetailProduct() {
     });
   }, [id]);
 
-  if (!product) {
+  if (loading)
     return (
       <Layout>
-        <p style={{ padding: "2rem" }}>
-          {loading ? "Cargando..." : "Producto no encontrado."}
-        </p>
+        <PageLoader />
       </Layout>
     );
-  }
+  if (!product)
+    return (
+      <Layout>
+        <p style={{ padding: "2rem" }}>Producto no encontrado.</p>
+      </Layout>
+    );
 
   const designerProducts = allProducts.filter(
     (p) => p.designer.name === product.designer.name,

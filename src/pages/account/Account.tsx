@@ -13,6 +13,7 @@ import { usuarioService } from "../../services/usuario.service";
 import { toZonaId } from "../../services/georef.service";
 import type { PerfilCompleto } from "../../interfaces";
 import type { SelectOption } from "../../types";
+import PageLoader from "../../components/PageLoader/PageLoader";
 import "./Account.css";
 
 function deriveDisplayName(email: string): string {
@@ -79,6 +80,7 @@ function Account() {
   } = useGeoref();
 
   const [profile, setProfile] = useState<PerfilCompleto | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState(EMPTY_PROFILE_FORM);
   const georefInitializedRef = useRef(false);
@@ -96,7 +98,8 @@ function Account() {
           cuentaMercadopago: p.cuentaMercadopago ?? "",
         });
       })
-      .catch(() => addToast("No se pudo cargar el perfil", "error"));
+      .catch(() => addToast("No se pudo cargar el perfil", "error"))
+      .finally(() => setLoadingProfile(false));
   }, [addToast]);
 
   function handleProfileChange(
@@ -189,6 +192,13 @@ function Account() {
 
   const displayName = profile ? deriveDisplayName(profile.email) : "Usuario";
   const initials = profile ? deriveInitials(profile.email) : "U";
+
+  if (loadingProfile)
+    return (
+      <Layout>
+        <PageLoader />
+      </Layout>
+    );
 
   return (
     <Layout>

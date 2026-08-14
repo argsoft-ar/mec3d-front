@@ -86,7 +86,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  color: var(--color-inverse-on-surface);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
   text-transform: uppercase;
