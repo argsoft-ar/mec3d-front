@@ -9,10 +9,13 @@ import DesignerHeroCard from "../../components/DesignerHeroCard/DesignerHeroCard
 import ToastContainer from "../../components/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
 import { useGeoref } from "../../hooks/useGeoref";
+import { useUsernameAvailability } from "../../hooks/useUsernameAvailability";
 import { usuarioService } from "../../services/usuario.service";
 import { toZonaId } from "../../services/georef.service";
-import type { PerfilCompleto } from "../../interfaces";
+import type { ApiError, PerfilCompleto } from "../../interfaces";
 import type { SelectOption } from "../../types";
+import PageLoader from "../../components/PageLoader/PageLoader";
+import UsernameStatus from "../../components/UsernameStatus/UsernameStatus";
 import "./Account.css";
 
 function deriveDisplayName(email: string): string {
@@ -32,10 +35,13 @@ interface ProfileFieldConfig {
 }
 
 const EMPTY_PROFILE_FORM = {
+  username: "",
   tagline: "",
   descripcion: "",
   experiencia: "",
   cuentaMercadopago: "",
+  telefono: "",
+  direccion: "",
 };
 
 const PROFILE_TEXT_FIELDS: ProfileFieldConfig[] = [
@@ -52,6 +58,18 @@ const PROFILE_TEXT_FIELDS: ProfileFieldConfig[] = [
     type: "textarea",
     placeholder: "Tu experiencia en impresión 3D",
     fullWidth: true,
+  },
+  {
+    label: "Teléfono",
+    name: "telefono",
+    type: "text",
+    placeholder: "Tu número de contacto",
+  },
+  {
+    label: "Dirección",
+    name: "direccion",
+    type: "text",
+    placeholder: "Tu dirección",
   },
 ];
 
@@ -79,9 +97,14 @@ function Account() {
   } = useGeoref();
 
   const [profile, setProfile] = useState<PerfilCompleto | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState(EMPTY_PROFILE_FORM);
   const georefInitializedRef = useRef(false);
+  const { status: usernameStatus } = useUsernameAvailability(
+    profileForm.username,
+    profile?.username ?? "",
+  );
 
   useEffect(() => {
     usuarioService
@@ -90,13 +113,17 @@ function Account() {
         georefInitializedRef.current = false;
         setProfile(p);
         setProfileForm({
+          username: p.username ?? "",
           tagline: p.tagline ?? "",
           descripcion: p.descripcion ?? "",
           experiencia: p.experiencia ?? "",
           cuentaMercadopago: p.cuentaMercadopago ?? "",
+          telefono: p.telefono ?? "",
+          direccion: p.direccion ?? "",
         });
       })
-      .catch(() => addToast("No se pudo cargar el perfil", "error"));
+      .catch(() => addToast("No se pudo cargar el perfil", "error"))
+      .finally(() => setLoadingProfile(false));
   }, [addToast]);
 
   function handleProfileChange(
@@ -119,8 +146,12 @@ function Account() {
       });
       setProfile(updated);
       addToast("Perfil actualizado", "success");
-    } catch {
-      addToast("Error al guardar el perfil", "error");
+    } catch (err) {
+      if ((err as ApiError).status === 409) {
+        addToast("El nombre de usuario ya está en uso", "error");
+      } else {
+        addToast("Error al guardar el perfil", "error");
+      }
     } finally {
       setSavingProfile(false);
     }
@@ -190,6 +221,24 @@ function Account() {
   const displayName = profile ? deriveDisplayName(profile.email) : "Usuario";
   const initials = profile ? deriveInitials(profile.email) : "U";
 
+  let usernameHint: string | undefined;
+  if (usernameStatus === "checking")
+    usernameHint = "Comprobando disponibilidad...";
+  else if (usernameStatus === "available") usernameHint = "Disponible";
+
+  let usernameError: string | undefined;
+  if (usernameStatus === "taken")
+    usernameError = "Nombre de usuario no disponible";
+  else if (usernameStatus === "invalid")
+    usernameError = "3-30 caracteres: letras, números y guion bajo";
+
+  if (loadingProfile)
+    return (
+      <Layout>
+        <PageLoader />
+      </Layout>
+    );
+
   return (
     <Layout>
       <div className="account">
@@ -203,6 +252,26 @@ function Account() {
           />
           <div className="account__profile-form">
             <Form columns={2}>
+              <FormField
+                label="Email"
+                name="email"
+                type="text"
+                value={profile?.email ?? ""}
+                onChange={() => {}}
+                disabled
+              />
+              <FormField
+                label="Nombre de usuario"
+                name="username"
+                type="text"
+                value={profileForm.username}
+                onChange={handleProfileChange}
+                placeholder="tu_usuario"
+                disabled={savingProfile}
+                rightElement={<UsernameStatus status={usernameStatus} />}
+                hint={usernameHint}
+                error={usernameError}
+              />
               {PROFILE_TEXT_FIELDS.map((f) => (
                 <FormField
                   key={f.name}

@@ -11,6 +11,7 @@ import type {
   ProductDesigner,
 } from "../../interfaces/product.interface";
 import type { BreadcrumbItem } from "../../components/Breadcrumb/Breadcrumb";
+import PageLoader from "../../components/PageLoader/PageLoader";
 import "./Profile.css";
 
 const BREADCRUMB_ITEMS: BreadcrumbItem[] = [
@@ -41,13 +42,12 @@ function Profile() {
       .finally(() => setLoading(false));
   }, [designerName]);
 
-  if (loading) {
+  if (loading)
     return (
       <Layout>
-        <p>Cargando...</p>
+        <PageLoader />
       </Layout>
     );
-  }
 
   if (!designer) {
     return (

@@ -32,17 +32,21 @@ export interface CatalogoItem {
 }
 
 export interface UpdateProfileDTO {
+  username?: string;
   tagline?: string;
   descripcion?: string;
   experiencia?: string;
   zonaId?: number;
   cuentaMercadopago?: string;
   georefLocalidadId?: string;
+  telefono?: string;
+  direccion?: string;
 }
 
 export interface PerfilCompleto {
   id: string;
   email: string;
+  username: string | null;
   rolPrincipal: RolUsuario;
   zonaId: number | null;
   puntuacion: number;
@@ -54,4 +58,6 @@ export interface PerfilCompleto {
   materiales: Material[];
   tecnologias: Tecnologia[];
   georefLocalidadId?: string | null;
+  telefono: string | null;
+  direccion: string | null;
 }

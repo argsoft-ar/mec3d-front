@@ -21,6 +21,7 @@ import Header from "../../components/Header/Header";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
 import ProductCard from "../../components/ProductCard/ProductCard";
+import PageLoader from "../../components/PageLoader/PageLoader";
 import type { ProductCategory } from "../../types";
 import "./Home.css";
 
@@ -96,12 +97,14 @@ const SERVICES: ServiceItem[] = [
 function Home() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     productService
       .getAll()
       .then((res) => setProducts(res.data ?? []))
-      .catch(() => setProducts([]));
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -168,20 +171,24 @@ function Home() {
           Plantillas destacadas{" "}
           <ChartNoAxesCombined size={24} strokeWidth={1.5} />
         </h2>
-        <div className="home-featured__grid">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              title={product.title}
-              description={product.description}
-              imageUrl={product.imageUrl}
-              rating={product.rating}
-              downloads={product.downloads}
-              price={product.price}
-              onClick={() => navigate(`/product/${product.id}`)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <PageLoader />
+        ) : (
+          <div className="home-featured__grid">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                title={product.title}
+                description={product.description}
+                imageUrl={product.imageUrl}
+                rating={product.rating}
+                downloads={product.downloads}
+                price={product.price}
+                onClick={() => navigate(`/product/${product.id}`)}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </Layout>
   );
