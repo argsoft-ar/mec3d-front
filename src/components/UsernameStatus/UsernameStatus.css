@@ -1,0 +1,27 @@
+.username-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.username-status--available {
+  color: var(--color-success);
+}
+
+.username-status--taken {
+  color: var(--color-error);
+}
+
+.username-status--checking {
+  color: var(--color-text-muted);
+}
+
+.username-status__spinner {
+  animation: username-status-spin 0.8s linear infinite;
+}
+
+@keyframes username-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
