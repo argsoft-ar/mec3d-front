@@ -17,7 +17,7 @@ interface CheckResult {
   result: "available" | "taken";
 }
 
-const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,30}$/;
+const USERNAME_REGEX = /^\w{3,30}$/;
 const DEBOUNCE_MS = 400;
 
 export function useUsernameAvailability(
