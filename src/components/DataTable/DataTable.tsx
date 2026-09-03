@@ -64,6 +64,7 @@ function DataTable<T extends { id: string | number }>({
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchClosing, setSearchClosing] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
@@ -92,7 +93,13 @@ function DataTable<T extends { id: string | number }>({
   };
 
   const handleSearchClose = () => {
+    setSearchClosing(true);
+  };
+
+  const handleSearchAnimationEnd = () => {
+    if (!searchClosing) return;
     setSearchOpen(false);
+    setSearchClosing(false);
     setSearchTerm("");
     setPage(0);
   };
@@ -202,7 +209,10 @@ function DataTable<T extends { id: string | number }>({
               <IconButton
                 size="small"
                 className="data-table__search-btn"
-                onClick={() => setSearchOpen(true)}
+                onClick={() => {
+                  setSearchClosing(false);
+                  setSearchOpen(true);
+                }}
               >
                 <Search
                   size={18}
@@ -219,7 +229,8 @@ function DataTable<T extends { id: string | number }>({
               placeholder="Buscar..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="data-table__search"
+              onAnimationEnd={handleSearchAnimationEnd}
+              className={`data-table__search${searchClosing ? " data-table__search--closing" : ""}`}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

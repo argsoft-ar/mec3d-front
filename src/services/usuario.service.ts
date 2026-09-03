@@ -30,6 +30,11 @@ export const usuarioService = {
     return result;
   },
 
+  checkUsernameDisponible: (username: string) =>
+    request<{ disponible: boolean }>(
+      `/usuarios/username-disponible?username=${encodeURIComponent(username)}`,
+    ),
+
   setMateriales: (materiales: string[]) =>
     request<Material[]>("/usuarios/materiales", {
       method: "PUT",
