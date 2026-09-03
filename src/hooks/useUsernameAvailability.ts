@@ -42,7 +42,10 @@ export function useUsernameAvailability(
         .checkUsernameDisponible(trimmed)
         .then((res) => {
           if (cancelled) return;
-          setCheck({ value: trimmed, result: res.disponible ? "available" : "taken" });
+          setCheck({
+            value: trimmed,
+            result: res.disponible ? "available" : "taken",
+          });
         })
         .catch(() => {
           /* ignore, falls back to "checking" until user edits again */
@@ -63,4 +66,3 @@ export function useUsernameAvailability(
 
   return { status };
 }
-
