@@ -222,11 +222,13 @@ function Account() {
   const initials = profile ? deriveInitials(profile.email) : "U";
 
   let usernameHint: string | undefined;
-  if (usernameStatus === "checking") usernameHint = "Comprobando disponibilidad...";
+  if (usernameStatus === "checking")
+    usernameHint = "Comprobando disponibilidad...";
   else if (usernameStatus === "available") usernameHint = "Disponible";
 
   let usernameError: string | undefined;
-  if (usernameStatus === "taken") usernameError = "Nombre de usuario no disponible";
+  if (usernameStatus === "taken")
+    usernameError = "Nombre de usuario no disponible";
   else if (usernameStatus === "invalid")
     usernameError = "3-30 caracteres: letras, números y guion bajo";
 
