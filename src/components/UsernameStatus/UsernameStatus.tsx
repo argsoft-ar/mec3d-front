@@ -11,13 +11,12 @@ export default function UsernameStatus({
 }: Readonly<UsernameStatusProps>) {
   if (status === "checking") {
     return (
-      <span
+      <output
         className="username-status username-status--checking"
-        role="status"
         aria-label="Comprobando disponibilidad"
       >
         <Loader2 size={16} className="username-status__spinner" />
-      </span>
+      </output>
     );
   }
   if (status === "available") {

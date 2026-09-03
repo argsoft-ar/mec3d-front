@@ -121,6 +121,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  padding-left: var(--space-3);
+  padding-right: var(--space-6) !important;
 }
 
 .data-table__filter-select .MuiInputBase-root {
@@ -145,13 +149,6 @@
   .MuiOutlinedInput-notchedOutline {
   border-color: var(--color-border-focus);
 }
-.data-table__filter-select .MuiSelect-select {
-  padding-top: var(--space-2);
-  padding-bottom: var(--space-2);
-  padding-left: var(--space-3);
-  padding-right: var(--space-6) !important;
-}
-
 .data-table__filter-select .MuiInputLabel-root {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary) !important;

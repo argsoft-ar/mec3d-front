@@ -61,7 +61,7 @@ export function useUsernameAvailability(
   let status: UsernameAvailabilityStatus;
   if (isUnchanged) status = "idle";
   else if (!isValidFormat) status = "invalid";
-  else if (check && check.value === trimmed) status = check.result;
+  else if (check?.value === trimmed && check.result) status = check.result;
   else status = "checking";
 
   return { status };

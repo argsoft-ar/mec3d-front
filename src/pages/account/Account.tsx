@@ -221,18 +221,14 @@ function Account() {
   const displayName = profile ? deriveDisplayName(profile.email) : "Usuario";
   const initials = profile ? deriveInitials(profile.email) : "U";
 
-  const usernameHint =
-    usernameStatus === "checking"
-      ? "Comprobando disponibilidad..."
-      : usernameStatus === "available"
-        ? "Disponible"
-        : undefined;
-  const usernameError =
-    usernameStatus === "taken"
-      ? "Nombre de usuario no disponible"
-      : usernameStatus === "invalid"
-        ? "3-30 caracteres: letras, números y guion bajo"
-        : undefined;
+  let usernameHint: string | undefined;
+  if (usernameStatus === "checking") usernameHint = "Comprobando disponibilidad...";
+  else if (usernameStatus === "available") usernameHint = "Disponible";
+
+  let usernameError: string | undefined;
+  if (usernameStatus === "taken") usernameError = "Nombre de usuario no disponible";
+  else if (usernameStatus === "invalid")
+    usernameError = "3-30 caracteres: letras, números y guion bajo";
 
   if (loadingProfile)
     return (
