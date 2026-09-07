@@ -172,6 +172,11 @@ function DetailProduct() {
                   fullWidth={true}
                   icon={action.icon}
                   iconPosition="left"
+                  onClick={
+                    action.title === "Vista previa 3D"
+                      ? () => navigate(`/product/${id}/preview`)
+                      : undefined
+                  }
                 />
               ))}
             </div>

@@ -8,6 +8,7 @@ import Home from "./pages/home/Home";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Account from "./pages/account/Account";
 import DetailProduct from "./pages/products/DetailProduct";
+import ProductPreview3D from "./pages/products/ProductPreview3D";
 import ProductFormPage from "./pages/products/ProductFormPage";
 import ProductsPage from "./pages/products/ProductsPage";
 import Profile from "./pages/profile/Profile";
@@ -52,6 +53,10 @@ function AppShell() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Account />} />
             <Route path="/product/:id" element={<DetailProduct />} />
+            <Route
+              path="/product/:id/preview"
+              element={<ProductPreview3D />}
+            />
             <Route path="/profile/:designerName" element={<Profile />} />
             <Route
               path="/dashboard/products/new"

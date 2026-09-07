@@ -1,4 +1,4 @@
-import { CheckCircle } from "lucide-react";
+import type React from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
@@ -67,6 +67,24 @@ const INFILL_OPTIONS: SelectOption[] = [
 
 const FORM_FIELDS: FormFieldConfig[] = [
   {
+    label: "Imagen de portada",
+    name: "imagenUrl",
+    type: "file",
+    accept: "image/*",
+    required: true,
+    fullWidth: true,
+    hint: "El archivo debe ser menor a 5MB",
+  },
+  {
+    label: "Archivo de diseño 3D",
+    name: "archivoUrl",
+    type: "file",
+    accept: ".stl,.3mf,.obj,.step,.stp",
+    required: true,
+    fullWidth: true,
+    hint: "Formatos permitidos: STL, 3MF, OBJ, STEP (máx. 100MB)",
+  },
+  {
     label: "Título del diseño",
     name: "titulo",
     placeholder: "Ej: Engranaje cónico 45°",
@@ -92,13 +110,6 @@ const FORM_FIELDS: FormFieldConfig[] = [
     type: "select",
     options: FORMAT_OPTIONS,
     required: true,
-  },
-  {
-    label: "URL del archivo de diseño",
-    name: "archivoUrl",
-    placeholder: "https://...",
-    required: true,
-    fullWidth: true,
   },
   {
     label: "Descripción",
@@ -168,6 +179,10 @@ function ProductFormPage() {
     uploadingImage,
     fileInputRef,
     handleFileChange,
+    archivoFile,
+    uploadingArchivo,
+    archivoFileInputRef,
+    handleArchivoFileChange,
     loading,
     confirmOpen,
     setConfirmOpen,
@@ -179,6 +194,32 @@ function ProductFormPage() {
     removeToast,
   } = useProductForm();
   const navigate = useNavigate();
+
+  const FILE_FIELD_PROPS: Record<
+    string,
+    {
+      fileInputRef: React.RefObject<HTMLInputElement | null>;
+      onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+      fileName?: string;
+      fileSelected: boolean;
+      disabled: boolean;
+    }
+  > = {
+    imagenUrl: {
+      fileInputRef,
+      onFileChange: handleFileChange,
+      fileName: imageFile?.name,
+      fileSelected: !!imagePreview,
+      disabled: uploadingImage || loading,
+    },
+    archivoUrl: {
+      fileInputRef: archivoFileInputRef,
+      onFileChange: handleArchivoFileChange,
+      fileName: archivoFile?.name,
+      fileSelected: !!(archivoFile || form.archivoUrl),
+      disabled: uploadingArchivo || loading,
+    },
+  };
 
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: "Dashboard", path: "/dashboard" },
@@ -230,46 +271,7 @@ function ProductFormPage() {
           />
           <Card variant="default" className="add-product__card">
             <Form onSubmit={handleSubmit} columns={2}>
-              <div className="add-product__image-upload">
-                <span className="add-product__image-label">
-                  Imagen de portada <span className="required">*</span>
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  style={{ display: "none" }}
-                />
-                <Button
-                  title="Subir imagen"
-                  variant="primary"
-                  type="button"
-                  disabled={uploadingImage || loading}
-                  onClick={() => fileInputRef.current?.click()}
-                />
-                <p className="add-product__image-hint">
-                  El archivo debe ser menor a 5MB
-                </p>
-                {imagePreview && (
-                  <div className="add-product__image-success">
-                    <CheckCircle
-                      size={18}
-                      className="add-product__image-success-icon"
-                    />
-                    <span className="add-product__image-success-text">
-                      {imageFile ? imageFile.name : "Imagen cargada"}
-                    </span>
-                  </div>
-                )}
-                {errors.imagenUrl && (
-                  <span className="add-product__image-error">
-                    {errors.imagenUrl}
-                  </span>
-                )}
-              </div>
-
-              {FORM_FIELDS.slice(0, 6).map((field) => (
+              {FORM_FIELDS.slice(0, 7).map((field) => (
                 <FormField
                   key={field.name}
                   label={field.label}
@@ -282,6 +284,11 @@ function ProductFormPage() {
                   fullWidth={field.fullWidth}
                   options={field.options}
                   error={errors[field.name]}
+                  hint={field.hint}
+                  accept={field.accept}
+                  {...(field.type === "file"
+                    ? FILE_FIELD_PROPS[field.name]
+                    : {})}
                 />
               ))}
 
@@ -289,7 +296,7 @@ function ProductFormPage() {
                 Especificaciones Técnicas
               </h3>
 
-              {FORM_FIELDS.slice(6).map((field) => (
+              {FORM_FIELDS.slice(7).map((field) => (
                 <FormField
                   key={field.name}
                   label={field.label}

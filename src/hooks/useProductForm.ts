@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "./useToast";
-import { productService, uploadImage } from "../services/product.service";
+import {
+  productService,
+  uploadImage,
+  uploadModel,
+} from "../services/product.service";
 import type { UpdateProductPayload, ProductForm } from "../interfaces";
 
 const INITIAL_FORM: ProductForm = {
@@ -33,10 +37,13 @@ export function useProductForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [archivoFile, setArchivoFile] = useState<File | null>(null);
+  const [uploadingArchivo, setUploadingArchivo] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
   const [notFound, setNotFound] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const archivoFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -108,6 +115,26 @@ export function useProductForm() {
     }
   };
 
+  const ARCHIVO_EXTENSIONS = [".stl", ".3mf", ".obj", ".step", ".stp"];
+
+  const handleArchivoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    if (!ARCHIVO_EXTENSIONS.includes(extension)) {
+      addToast("Formato no permitido. Usá STL, 3MF, OBJ, STEP o STP", "error");
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      addToast("El archivo debe ser menor a 100MB", "error");
+      return;
+    }
+    setArchivoFile(file);
+    if (errors.archivoUrl) {
+      setErrors((prev) => ({ ...prev, archivoUrl: undefined }));
+    }
+  };
+
   const validate = (): boolean => {
     const newErrors: Partial<ProductForm> = {};
     if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
@@ -121,8 +148,8 @@ export function useProductForm() {
     )
       newErrors.precioBase = "Ingresá un precio válido";
     if (!form.formato) newErrors.formato = "Seleccioná un formato";
-    if (!form.archivoUrl.trim() || !/^https?:\/\/.+/.test(form.archivoUrl))
-      newErrors.archivoUrl = "Ingresá una URL válida para el archivo";
+    if (!form.archivoUrl.trim() && !archivoFile)
+      newErrors.archivoUrl = "Subí el archivo de diseño 3D";
     if (!form.imagenUrl && !imageFile)
       newErrors.imagenUrl = "La imagen es obligatoria";
     if (!form.specMaterial) newErrors.specMaterial = "Seleccioná un material";
@@ -161,6 +188,18 @@ export function useProductForm() {
           setUploadingImage(false);
         }
       }
+      let archivoUrl = form.archivoUrl;
+      if (archivoFile) {
+        setUploadingArchivo(true);
+        try {
+          archivoUrl = await uploadModel(archivoFile);
+        } catch {
+          addToast("Error al subir el archivo 3D", "error");
+          return;
+        } finally {
+          setUploadingArchivo(false);
+        }
+      }
       const especificaciones = {
         material: form.specMaterial,
         dimensiones: form.specDimensiones,
@@ -177,7 +216,7 @@ export function useProductForm() {
           titulo: form.titulo,
           descripcion: form.descripcion,
           imagenUrl: imageUrl,
-          archivoUrl: form.archivoUrl,
+          archivoUrl,
           precioBase: Number(form.precioBase),
           formato: form.formato,
           categoria: form.categoria,
@@ -192,7 +231,7 @@ export function useProductForm() {
           titulo: form.titulo,
           descripcion: form.descripcion,
           imagenUrl: imageUrl,
-          archivoUrl: form.archivoUrl,
+          archivoUrl,
           precioBase: Number(form.precioBase),
           formato: form.formato,
           categoria: form.categoria,
@@ -224,6 +263,10 @@ export function useProductForm() {
     uploadingImage,
     fileInputRef,
     handleFileChange,
+    archivoFile,
+    uploadingArchivo,
+    archivoFileInputRef,
+    handleArchivoFileChange,
     loading,
     confirmOpen,
     setConfirmOpen,
