@@ -57,9 +57,10 @@ function useModelSizeGuard(url: string, enabled: boolean): SizeGuardStatus {
   // Result is tagged with the inputs it was computed for, so a stale result
   // from a previous url/enabled pair is treated as "checking" during render
   // instead of resetting state imperatively from inside the effect.
-  const [result, setResult] = useState<{ key: string; status: SizeGuardStatus }>(
-    { key, status: "checking" },
-  );
+  const [result, setResult] = useState<{
+    key: string;
+    status: SizeGuardStatus;
+  }>({ key, status: "checking" });
   const status = result.key === key ? result.status : "checking";
 
   useEffect(() => {
@@ -236,8 +237,10 @@ function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
           dpr={[1, 2]}
           camera={{ position: [0, 0, 5], fov: 50 }}
         >
-          <ambientLight intensity={0.6} /> {/* NOSONAR - react-three-fiber intrinsic prop */}
-          <directionalLight position={[5, 10, 7]} intensity={1} /> {/* NOSONAR - react-three-fiber intrinsic props */}
+          <ambientLight intensity={0.6} />{" "}
+          {/* NOSONAR - react-three-fiber intrinsic prop */}
+          <directionalLight position={[5, 10, 7]} intensity={1} />{" "}
+          {/* NOSONAR - react-three-fiber intrinsic props */}
           <Suspense fallback={<CanvasLoader />}>
             <Bounds fit clip observe margin={1.2}>
               <Center>
