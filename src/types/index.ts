@@ -39,7 +39,8 @@ export type FormFieldType =
   | "password"
   | "number"
   | "textarea"
-  | "select";
+  | "select"
+  | "file";
 
 // MEC3D Domain types
 export type ProductCategory =
