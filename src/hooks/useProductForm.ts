@@ -25,6 +25,10 @@ const INITIAL_FORM: ProductForm = {
   specInfill: "",
 };
 
+function isValidPrecio(precioBase: string): boolean {
+  return !!precioBase && !Number.isNaN(Number(precioBase)) && Number(precioBase) > 0;
+}
+
 export function useProductForm() {
   const { id } = useParams<{ id?: string }>();
   const isEdit = !!id;
@@ -115,13 +119,13 @@ export function useProductForm() {
     }
   };
 
-  const ARCHIVO_EXTENSIONS = [".stl", ".3mf", ".obj", ".step", ".stp"];
+  const ARCHIVO_EXTENSIONS = new Set([".stl", ".3mf", ".obj", ".step", ".stp"]);
 
   const handleArchivoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-    if (!ARCHIVO_EXTENSIONS.includes(extension)) {
+    if (!ARCHIVO_EXTENSIONS.has(extension)) {
       addToast("Formato no permitido. Usá STL, 3MF, OBJ, STEP o STP", "error");
       return;
     }
@@ -141,11 +145,7 @@ export function useProductForm() {
     if (!form.descripcion.trim())
       newErrors.descripcion = "La descripción es obligatoria";
     if (!form.categoria) newErrors.categoria = "Seleccioná una categoría";
-    if (
-      !form.precioBase ||
-      Number.isNaN(Number(form.precioBase)) ||
-      Number(form.precioBase) <= 0
-    )
+    if (!isValidPrecio(form.precioBase))
       newErrors.precioBase = "Ingresá un precio válido";
     if (!form.formato) newErrors.formato = "Seleccioná un formato";
     if (!form.archivoUrl.trim() && !archivoFile)

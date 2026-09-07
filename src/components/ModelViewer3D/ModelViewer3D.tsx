@@ -29,7 +29,7 @@ function disposeObject3D(object: THREE.Object3D): void {
   });
 }
 
-function StlModel({ url }: { url: string }) {
+function StlModel({ url }: Readonly<{ url: string }>) {
   const geometry = useLoader(STLLoader, url);
 
   useEffect(() => {
@@ -37,30 +37,34 @@ function StlModel({ url }: { url: string }) {
   }, [geometry]);
 
   return (
-    <mesh geometry={geometry} castShadow receiveShadow>
+    <mesh
+      geometry={geometry} // NOSONAR - react-three-fiber intrinsic prop, not a DOM attribute
+      castShadow // NOSONAR - react-three-fiber intrinsic prop, not a DOM attribute
+      receiveShadow // NOSONAR - react-three-fiber intrinsic prop, not a DOM attribute
+    >
       <meshStandardMaterial color="#9ca3af" />
     </mesh>
   );
 }
 
-function ObjModel({ url }: { url: string }) {
+function ObjModel({ url }: Readonly<{ url: string }>) {
   const object = useLoader(OBJLoader, url);
 
   useEffect(() => {
     return () => disposeObject3D(object);
   }, [object]);
 
-  return <primitive object={object} />;
+  return <primitive object={object} />; // NOSONAR - react-three-fiber intrinsic prop, not a DOM attribute
 }
 
-function ThreeMfModel({ url }: { url: string }) {
+function ThreeMfModel({ url }: Readonly<{ url: string }>) {
   const object = useLoader(ThreeMFLoader, url);
 
   useEffect(() => {
     return () => disposeObject3D(object);
   }, [object]);
 
-  return <primitive object={object} />;
+  return <primitive object={object} />; // NOSONAR - react-three-fiber intrinsic prop, not a DOM attribute
 }
 
 interface SceneModelProps {
@@ -68,7 +72,7 @@ interface SceneModelProps {
   format: SupportedFormat;
 }
 
-function SceneModel({ url, format }: SceneModelProps) {
+function SceneModel({ url, format }: Readonly<SceneModelProps>) {
   switch (format) {
     case "STL":
       return <StlModel url={url} />;
@@ -142,8 +146,8 @@ function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
           dpr={[1, 2]}
           camera={{ position: [0, 0, 5], fov: 50 }}
         >
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[5, 10, 7]} intensity={1} />
+          <ambientLight intensity={0.6} /> {/* NOSONAR - react-three-fiber intrinsic prop */}
+          <directionalLight position={[5, 10, 7]} intensity={1} /> {/* NOSONAR - react-three-fiber intrinsic props */}
           <Suspense fallback={<CanvasLoader />}>
             <Bounds fit clip observe margin={1.2}>
               <Center>
