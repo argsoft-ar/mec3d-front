@@ -4,3 +4,4 @@ export * from "./auth.interface";
 export * from "./product.interface";
 export * from "./form.interface";
 export * from "./georef.interface";
+export * from "./modelViewer.interface";

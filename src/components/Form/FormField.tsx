@@ -1,15 +1,16 @@
 import { useState } from "react";
 import type React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle } from "lucide-react";
 import type { FormFieldType, SelectOption } from "../../types";
+import Button from "../Button/Button";
 import "./Form.css";
 
 interface FormFieldProps {
   label: string;
   name: string;
   type?: FormFieldType;
-  value: string;
-  onChange: (
+  value?: string;
+  onChange?: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
@@ -23,13 +24,18 @@ interface FormFieldProps {
   rightElement?: React.ReactNode;
   toggleable?: boolean;
   hint?: React.ReactNode;
+  accept?: string;
+  fileInputRef?: React.RefObject<HTMLInputElement | null>;
+  onFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileName?: string;
+  fileSelected?: boolean;
 }
 
 function FormField({
   label,
   name,
   type = "text",
-  value,
+  value = "",
   onChange,
   placeholder,
   options = [],
@@ -40,6 +46,11 @@ function FormField({
   rightElement,
   toggleable = false,
   hint,
+  accept,
+  fileInputRef,
+  onFileChange,
+  fileName,
+  fileSelected = false,
 }: Readonly<FormFieldProps>) {
   const fieldId = `field-${name}`;
   const errorId = `${fieldId}-error`;
@@ -53,6 +64,41 @@ function FormField({
   }
 
   function renderField() {
+    if (type === "file") {
+      return (
+        <div className="form-field__file">
+          <input
+            id={fieldId}
+            name={name}
+            type="file"
+            accept={accept}
+            ref={fileInputRef}
+            onChange={onFileChange}
+            style={{ display: "none" }}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
+          />
+          <Button
+            title={`Subir ${label}`}
+            variant="primary"
+            type="button"
+            disabled={disabled}
+            onClick={() => fileInputRef?.current?.click()}
+          />
+          {fileSelected && (
+            <div className="form-field__file-success">
+              <CheckCircle
+                size={18}
+                className="form-field__file-success-icon"
+              />
+              <span className="form-field__file-success-text">
+                {fileName || "Archivo cargado"}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    }
     if (type === "textarea") {
       return (
         <textarea

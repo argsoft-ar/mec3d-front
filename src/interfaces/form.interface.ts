@@ -1,3 +1,4 @@
+import type React from "react";
 import type { SelectOption } from "../types";
 
 export interface ProductForm {
@@ -20,11 +21,13 @@ export interface ProductForm {
 export interface FormFieldConfig {
   label: string;
   name: keyof ProductForm;
-  type?: "text" | "number" | "select" | "textarea";
+  type?: "text" | "number" | "select" | "textarea" | "file";
   placeholder?: string;
   required?: boolean;
   fullWidth?: boolean;
   options?: SelectOption[];
+  accept?: string;
+  hint?: React.ReactNode;
 }
 
 export interface ButtonConfig {

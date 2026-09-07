@@ -71,3 +71,22 @@ export async function uploadImage(file: File): Promise<string> {
   const data = (await response.json()) as { url: string };
   return data.url;
 }
+
+export async function uploadModel(file: File): Promise<string> {
+  const token = localStorage.getItem("auth_token");
+  const formData = new FormData();
+  formData.append("archivo", file);
+
+  const response = await fetch(`${BASE_URL}/archivos/modelo`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al subir el archivo 3D");
+  }
+
+  const data = (await response.json()) as { url: string };
+  return data.url;
+}

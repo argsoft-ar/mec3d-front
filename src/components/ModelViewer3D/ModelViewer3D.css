@@ -1,0 +1,42 @@
+.model-viewer-3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background-color: var(--color-surface-container-high);
+  border: 1px solid var(--color-border);
+}
+
+.model-viewer-3d canvas {
+  display: block;
+  outline: none;
+}
+
+.model-viewer-3d__loading {
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.model-viewer-3d__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 480px;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.model-viewer-3d__fallback-text {
+  max-width: 32rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
