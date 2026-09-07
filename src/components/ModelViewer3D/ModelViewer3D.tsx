@@ -223,7 +223,9 @@ function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
 
   return (
     <div className={`model-viewer-3d ${className}`.trim()}>
-      <ModelErrorBoundary fallback={<FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />}>
+      <ModelErrorBoundary
+        fallback={<FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />}
+      >
         <Canvas
           frameloop="demand"
           dpr={[1, 2]}
