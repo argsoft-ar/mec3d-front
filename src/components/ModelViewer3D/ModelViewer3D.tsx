@@ -38,37 +38,42 @@ type SizeGuardStatus = "checking" | "safe" | "blocked";
 // huge, and a missing/unreadable header is treated as "blocked" rather than
 // "safe" — we'd rather show the download fallback than risk freezing the
 // main thread while parsing an unexpectedly large model.
+async function checkModelSize(url: string): Promise<SizeGuardStatus> {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    const contentLength = response.headers.get("content-length");
+    if (!response.ok || contentLength === null) return "blocked";
+    const size = Number(contentLength);
+    return Number.isFinite(size) && size <= MAX_MODEL_SIZE_BYTES
+      ? "safe"
+      : "blocked";
+  } catch {
+    return "blocked";
+  }
+}
+
 function useModelSizeGuard(url: string, enabled: boolean): SizeGuardStatus {
-  const [status, setStatus] = useState<SizeGuardStatus>("checking");
+  const key = `${url}|${enabled}`;
+  // Result is tagged with the inputs it was computed for, so a stale result
+  // from a previous url/enabled pair is treated as "checking" during render
+  // instead of resetting state imperatively from inside the effect.
+  const [result, setResult] = useState<{ key: string; status: SizeGuardStatus }>(
+    { key, status: "checking" },
+  );
+  const status = result.key === key ? result.status : "checking";
 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    setStatus("checking");
 
-    fetch(url, { method: "HEAD" })
-      .then((response) => {
-        if (cancelled) return;
-        const contentLength = response.headers.get("content-length");
-        if (!response.ok || contentLength === null) {
-          setStatus("blocked");
-          return;
-        }
-        const size = Number(contentLength);
-        setStatus(
-          Number.isFinite(size) && size <= MAX_MODEL_SIZE_BYTES
-            ? "safe"
-            : "blocked",
-        );
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("blocked");
-      });
+    checkModelSize(url).then((resolvedStatus) => {
+      if (!cancelled) setResult({ key, status: resolvedStatus });
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [url, enabled]);
+  }, [url, enabled, key]);
 
   return status;
 }
@@ -231,10 +236,8 @@ function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
           dpr={[1, 2]}
           camera={{ position: [0, 0, 5], fov: 50 }}
         >
-          <ambientLight intensity={0.6} />{" "}
-          {/* NOSONAR - react-three-fiber intrinsic prop */}
-          <directionalLight position={[5, 10, 7]} intensity={1} />{" "}
-          {/* NOSONAR - react-three-fiber intrinsic props */}
+          <ambientLight intensity={0.6} /> {/* NOSONAR - react-three-fiber intrinsic prop */}
+          <directionalLight position={[5, 10, 7]} intensity={1} /> {/* NOSONAR - react-three-fiber intrinsic props */}
           <Suspense fallback={<CanvasLoader />}>
             <Bounds fit clip observe margin={1.2}>
               <Center>
