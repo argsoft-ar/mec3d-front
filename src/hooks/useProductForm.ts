@@ -26,7 +26,9 @@ const INITIAL_FORM: ProductForm = {
 };
 
 function isValidPrecio(precioBase: string): boolean {
-  return !!precioBase && !Number.isNaN(Number(precioBase)) && Number(precioBase) > 0;
+  return (
+    !!precioBase && !Number.isNaN(Number(precioBase)) && Number(precioBase) > 0
+  );
 }
 
 export function useProductForm() {
