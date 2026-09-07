@@ -91,8 +91,8 @@ function UnsupportedFormatMessage() {
   return (
     <div className="model-viewer-3d__fallback">
       <p className="model-viewer-3d__fallback-text">
-        Vista previa no disponible para este formato. Descargá el archivo
-        para verlo en tu software CAD.
+        Vista previa no disponible para este formato. Descargá el archivo para
+        verlo en tu software CAD.
       </p>
     </div>
   );
@@ -124,10 +124,7 @@ class ModelErrorBoundary extends Component<
 }
 
 function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
-  const normalizedFormat = useMemo(
-    () => format.trim().toUpperCase(),
-    [format],
-  );
+  const normalizedFormat = useMemo(() => format.trim().toUpperCase(), [format]);
 
   if (!isSupportedFormat(normalizedFormat)) {
     return (

@@ -53,10 +53,7 @@ function AppShell() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Account />} />
             <Route path="/product/:id" element={<DetailProduct />} />
-            <Route
-              path="/product/:id/preview"
-              element={<ProductPreview3D />}
-            />
+            <Route path="/product/:id/preview" element={<ProductPreview3D />} />
             <Route path="/profile/:designerName" element={<Profile />} />
             <Route
               path="/dashboard/products/new"
