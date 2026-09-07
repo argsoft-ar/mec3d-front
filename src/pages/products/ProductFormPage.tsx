@@ -82,7 +82,7 @@ const FORM_FIELDS: FormFieldConfig[] = [
     accept: ".stl,.3mf,.obj,.step,.stp",
     required: true,
     fullWidth: true,
-    hint: "Formatos permitidos: STL, 3MF, OBJ, STEP (máx. 100MB)",
+    hint: "Formatos permitidos: STL, 3MF, OBJ, STEP (máx. 30MB)",
   },
   {
     label: "Título del diseño",

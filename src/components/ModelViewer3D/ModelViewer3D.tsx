@@ -1,7 +1,13 @@
-import { Component, Suspense, useEffect, useMemo } from "react";
+import { Component, Suspense, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
-import { Bounds, Center, Html, OrbitControls } from "@react-three/drei";
+import {
+  Bounds,
+  Center,
+  Html,
+  OrbitControls,
+  useProgress,
+} from "@react-three/drei";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { ThreeMFLoader } from "three/examples/jsm/loaders/3MFLoader.js";
@@ -12,8 +18,59 @@ import "./ModelViewer3D.css";
 const SUPPORTED_FORMATS = ["STL", "OBJ", "3MF"] as const;
 type SupportedFormat = (typeof SUPPORTED_FORMATS)[number];
 
+// Matches the backend's upload cap (see mec3d-back upload.service.ts).
+const MAX_MODEL_SIZE_BYTES = 30 * 1024 * 1024;
+
+const HEAVY_FILE_MESSAGE =
+  "Este archivo es muy pesado para previsualizar en el navegador. Descargalo para verlo en tu software CAD.";
+
+const UNSUPPORTED_FORMAT_MESSAGE =
+  "Vista previa no disponible para este formato. Descargá el archivo para verlo en tu software CAD.";
+
 function isSupportedFormat(format: string): format is SupportedFormat {
   return (SUPPORTED_FORMATS as readonly string[]).includes(format);
+}
+
+type SizeGuardStatus = "checking" | "safe" | "blocked";
+
+// Issues a HEAD request to read Content-Length before any loader touches the
+// file. Pre-existing files uploaded before the 30MB cap existed can still be
+// huge, and a missing/unreadable header is treated as "blocked" rather than
+// "safe" — we'd rather show the download fallback than risk freezing the
+// main thread while parsing an unexpectedly large model.
+function useModelSizeGuard(url: string, enabled: boolean): SizeGuardStatus {
+  const [status, setStatus] = useState<SizeGuardStatus>("checking");
+
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    setStatus("checking");
+
+    fetch(url, { method: "HEAD" })
+      .then((response) => {
+        if (cancelled) return;
+        const contentLength = response.headers.get("content-length");
+        if (!response.ok || contentLength === null) {
+          setStatus("blocked");
+          return;
+        }
+        const size = Number(contentLength);
+        setStatus(
+          Number.isFinite(size) && size <= MAX_MODEL_SIZE_BYTES
+            ? "safe"
+            : "blocked",
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("blocked");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [url, enabled]);
+
+  return status;
 }
 
 function disposeObject3D(object: THREE.Object3D): void {
@@ -84,20 +141,28 @@ function SceneModel({ url, format }: Readonly<SceneModelProps>) {
 }
 
 function CanvasLoader() {
+  const { progress } = useProgress();
   return (
     <Html center>
-      <div className="model-viewer-3d__loading">Cargando modelo…</div>
+      <div className="model-viewer-3d__loading">
+        Cargando modelo… {Math.round(progress)}%
+      </div>
     </Html>
   );
 }
 
-function UnsupportedFormatMessage() {
+function FallbackMessage({ text }: Readonly<{ text: string }>) {
   return (
     <div className="model-viewer-3d__fallback">
-      <p className="model-viewer-3d__fallback-text">
-        Vista previa no disponible para este formato. Descargá el archivo para
-        verlo en tu software CAD.
-      </p>
+      <p className="model-viewer-3d__fallback-text">{text}</p>
+    </div>
+  );
+}
+
+function SizeCheckingIndicator() {
+  return (
+    <div className="model-viewer-3d__fallback">
+      <div className="model-viewer-3d__loading">Comprobando el archivo…</div>
     </div>
   );
 }
@@ -129,18 +194,36 @@ class ModelErrorBoundary extends Component<
 
 function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
   const normalizedFormat = useMemo(() => format.trim().toUpperCase(), [format]);
+  const formatIsSupported = isSupportedFormat(normalizedFormat);
+  const sizeGuardStatus = useModelSizeGuard(url, formatIsSupported);
 
-  if (!isSupportedFormat(normalizedFormat)) {
+  if (!formatIsSupported) {
     return (
       <div className={`model-viewer-3d ${className}`.trim()}>
-        <UnsupportedFormatMessage />
+        <FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />
+      </div>
+    );
+  }
+
+  if (sizeGuardStatus === "checking") {
+    return (
+      <div className={`model-viewer-3d ${className}`.trim()}>
+        <SizeCheckingIndicator />
+      </div>
+    );
+  }
+
+  if (sizeGuardStatus === "blocked") {
+    return (
+      <div className={`model-viewer-3d ${className}`.trim()}>
+        <FallbackMessage text={HEAVY_FILE_MESSAGE} />
       </div>
     );
   }
 
   return (
     <div className={`model-viewer-3d ${className}`.trim()}>
-      <ModelErrorBoundary fallback={<UnsupportedFormatMessage />}>
+      <ModelErrorBoundary fallback={<FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />}>
         <Canvas
           frameloop="demand"
           dpr={[1, 2]}

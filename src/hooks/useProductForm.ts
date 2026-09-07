@@ -31,6 +31,9 @@ function isValidPrecio(precioBase: string): boolean {
   );
 }
 
+// Matches the backend's upload cap (see mec3d-back upload.service.ts).
+const MAX_ARCHIVO_SIZE_BYTES = 30 * 1024 * 1024;
+
 export function useProductForm() {
   const { id } = useParams<{ id?: string }>();
   const isEdit = !!id;
@@ -131,8 +134,8 @@ export function useProductForm() {
       addToast("Formato no permitido. Usá STL, 3MF, OBJ, STEP o STP", "error");
       return;
     }
-    if (file.size > 100 * 1024 * 1024) {
-      addToast("El archivo debe ser menor a 100MB", "error");
+    if (file.size > MAX_ARCHIVO_SIZE_BYTES) {
+      addToast("El archivo debe ser menor a 30MB", "error");
       return;
     }
     setArchivoFile(file);
