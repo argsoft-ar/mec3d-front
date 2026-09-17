@@ -1,5 +1,12 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { Home as HomeIcon, Compass, LayoutDashboard, User } from "lucide-react";
+import {
+  Home as HomeIcon,
+  Compass,
+  LayoutDashboard,
+  User,
+  ShoppingBag,
+  MessageSquare,
+} from "lucide-react";
 import Navbar from "./components/Navbar/Navbar";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Login from "./pages/login/Login";
@@ -11,6 +18,11 @@ import DetailProduct from "./pages/products/DetailProduct";
 import ProductPreview3D from "./pages/products/ProductPreview3D";
 import ProductFormPage from "./pages/products/ProductFormPage";
 import ProductsPage from "./pages/products/ProductsPage";
+import PurchaseDecision from "./pages/products/PurchaseDecision";
+import FabricanteSelection from "./pages/products/FabricanteSelection";
+import MisSolicitudesFabricacion from "./pages/products/MisSolicitudesFabricacion";
+import PurchasesPage from "./pages/account/PurchasesPage";
+import ChatPage from "./pages/chat/ChatPage";
 import Profile from "./pages/profile/Profile";
 import type { NavLink } from "./types";
 import "./index.css";
@@ -31,6 +43,16 @@ const navLinks: NavLink[] = [
     label: "Mi Cuenta",
     path: "/account",
     icon: <User size={18} strokeWidth={1.5} />,
+  },
+  {
+    label: "Mis Compras",
+    path: "/account/purchases",
+    icon: <ShoppingBag size={18} strokeWidth={1.5} />,
+  },
+  {
+    label: "Chat",
+    path: "/chat",
+    icon: <MessageSquare size={18} strokeWidth={1.5} />,
   },
 ];
 
@@ -54,6 +76,21 @@ function AppShell() {
             <Route path="/account" element={<Account />} />
             <Route path="/product/:id" element={<DetailProduct />} />
             <Route path="/product/:id/preview" element={<ProductPreview3D />} />
+            <Route
+              path="/product/:id/purchase"
+              element={<PurchaseDecision />}
+            />
+            <Route
+              path="/product/:id/fabricantes"
+              element={<FabricanteSelection />}
+            />
+            <Route
+              path="/fabricacion/mis-solicitudes"
+              element={<MisSolicitudesFabricacion />}
+            />
+            <Route path="/account/purchases" element={<PurchasesPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/chat/:conversacionId" element={<ChatPage />} />
             <Route path="/profile/:designerName" element={<Profile />} />
             <Route
               path="/dashboard/products/new"

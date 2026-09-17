@@ -1,4 +1,5 @@
 import type React from "react";
+import { Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
@@ -11,9 +12,14 @@ import type { BreadcrumbItem } from "../../components/Breadcrumb/Breadcrumb";
 import type { SelectOption } from "../../types";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
+import PageLoader from "../../components/PageLoader/PageLoader";
 import { useProductForm } from "../../hooks/useProductForm";
 import type { FormFieldConfig, ButtonConfig } from "../../interfaces";
 import "./ProductFormPage.css";
+
+const ModelViewer3D = lazy(
+  () => import("../../components/ModelViewer3D/ModelViewer3D"),
+);
 
 const CATEGORY_OPTIONS: SelectOption[] = [
   { value: "Autos", label: "Autos" },
@@ -183,6 +189,10 @@ function ProductFormPage() {
     uploadingArchivo,
     archivoFileInputRef,
     handleArchivoFileChange,
+    archivoPreviewUrl,
+    archivoPreviewFormat,
+    handleImagePreviewError,
+    handleModelPreviewError,
     loading,
     confirmOpen,
     setConfirmOpen,
@@ -271,7 +281,63 @@ function ProductFormPage() {
           />
           <Card variant="default" className="add-product__card">
             <Form onSubmit={handleSubmit} columns={2}>
-              {FORM_FIELDS.slice(0, 7).map((field) => (
+              <div className="add-product__uploads">
+                <div className="add-product__upload-col">
+                  <FormField
+                    key={FORM_FIELDS[0].name}
+                    label={FORM_FIELDS[0].label}
+                    name={FORM_FIELDS[0].name}
+                    type={FORM_FIELDS[0].type}
+                    value={form[FORM_FIELDS[0].name]}
+                    onChange={handleChange}
+                    required={FORM_FIELDS[0].required}
+                    fullWidth={FORM_FIELDS[0].fullWidth}
+                    error={errors[FORM_FIELDS[0].name]}
+                    hint={FORM_FIELDS[0].hint}
+                    accept={FORM_FIELDS[0].accept}
+                    {...FILE_FIELD_PROPS[FORM_FIELDS[0].name]}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Vista previa de la imagen de portada"
+                      className="add-product__image-preview"
+                      onError={handleImagePreviewError}
+                    />
+                  )}
+                </div>
+                <div className="add-product__upload-col">
+                  <FormField
+                    key={FORM_FIELDS[1].name}
+                    label={FORM_FIELDS[1].label}
+                    name={FORM_FIELDS[1].name}
+                    type={FORM_FIELDS[1].type}
+                    value={form[FORM_FIELDS[1].name]}
+                    onChange={handleChange}
+                    required={FORM_FIELDS[1].required}
+                    fullWidth={FORM_FIELDS[1].fullWidth}
+                    error={errors[FORM_FIELDS[1].name]}
+                    hint={FORM_FIELDS[1].hint}
+                    accept={FORM_FIELDS[1].accept}
+                    {...FILE_FIELD_PROPS[FORM_FIELDS[1].name]}
+                  />
+                  {(archivoPreviewUrl || form.archivoUrl) &&
+                    archivoPreviewFormat && (
+                      <Suspense
+                        fallback={<PageLoader label="Cargando visor 3D..." />}
+                      >
+                        <ModelViewer3D
+                          url={archivoPreviewUrl || form.archivoUrl}
+                          format={archivoPreviewFormat}
+                          className="add-product__model-preview"
+                          onPreviewError={handleModelPreviewError}
+                        />
+                      </Suspense>
+                    )}
+                </div>
+              </div>
+
+              {FORM_FIELDS.slice(2, 7).map((field) => (
                 <FormField
                   key={field.name}
                   label={field.label}
@@ -286,9 +352,6 @@ function ProductFormPage() {
                   error={errors[field.name]}
                   hint={field.hint}
                   accept={field.accept}
-                  {...(field.type === "file"
-                    ? FILE_FIELD_PROPS[field.name]
-                    : {})}
                 />
               ))}
 

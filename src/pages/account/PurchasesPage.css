@@ -1,0 +1,18 @@
+.purchases-page__empty {
+  color: var(--color-text-muted);
+  padding: var(--space-8) 0;
+}
+
+.purchases-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .purchases-page__list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+  }
+}

@@ -39,6 +39,10 @@ type SizeGuardStatus = "checking" | "safe" | "blocked";
 // "safe" — we'd rather show the download fallback than risk freezing the
 // main thread while parsing an unexpectedly large model.
 async function checkModelSize(url: string): Promise<SizeGuardStatus> {
+  // The Fetch spec forbids non-GET methods on blob: URLs, so HEAD always
+  // errors here; local files are already size-validated before the object
+  // URL is created, so we can safely skip the check.
+  if (url.startsWith("blob:")) return "safe";
   try {
     const response = await fetch(url, { method: "HEAD" });
     const contentLength = response.headers.get("content-length");
@@ -176,6 +180,7 @@ function SizeCheckingIndicator() {
 interface ModelErrorBoundaryProps {
   children: ReactNode;
   fallback: ReactNode;
+  onError?: () => void;
 }
 
 interface ModelErrorBoundaryState {
@@ -193,15 +198,32 @@ class ModelErrorBoundary extends Component<
     return { hasError: true };
   }
 
+  componentDidCatch(): void {
+    this.props.onError?.();
+  }
+
   render() {
     return this.state.hasError ? this.props.fallback : this.props.children;
   }
 }
 
-function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
+function ModelViewer3D({
+  url,
+  format,
+  className = "",
+  onPreviewError,
+}: ModelViewer3DProps) {
   const normalizedFormat = useMemo(() => format.trim().toUpperCase(), [format]);
   const formatIsSupported = isSupportedFormat(normalizedFormat);
   const sizeGuardStatus = useModelSizeGuard(url, formatIsSupported);
+
+  useEffect(() => {
+    if (!formatIsSupported) onPreviewError?.();
+  }, [formatIsSupported, onPreviewError]);
+
+  useEffect(() => {
+    if (sizeGuardStatus === "blocked") onPreviewError?.();
+  }, [sizeGuardStatus, onPreviewError]);
 
   if (!formatIsSupported) {
     return (
@@ -231,6 +253,7 @@ function ModelViewer3D({ url, format, className = "" }: ModelViewer3DProps) {
     <div className={`model-viewer-3d ${className}`.trim()}>
       <ModelErrorBoundary
         fallback={<FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />}
+        onError={onPreviewError}
       >
         <Canvas
           frameloop="demand"

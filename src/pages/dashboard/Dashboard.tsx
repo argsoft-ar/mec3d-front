@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { PencilRuler, Package, Star, Eye, Pencil, Trash2 } from "lucide-react";
+import {
+  PencilRuler,
+  Package,
+  Star,
+  Eye,
+  Pencil,
+  Trash2,
+  Info,
+  Hammer,
+} from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
@@ -152,13 +161,22 @@ function Dashboard() {
               Aquí está el resumen de tu actividad
             </p>
           </div>
-          <Button
-            title="Nuevo diseño"
-            variant="primary"
-            size="md"
-            icon={<Package size={16} strokeWidth={1.5} />}
-            onClick={() => navigate("/dashboard/products/new")}
-          />
+          <div className="dashboard__header-actions">
+            <Button
+              title="Mis solicitudes de fabricación"
+              variant="outline"
+              size="md"
+              icon={<Hammer size={16} strokeWidth={1.5} />}
+              onClick={() => navigate("/fabricacion/mis-solicitudes")}
+            />
+            <Button
+              title="Nuevo diseño"
+              variant="primary"
+              size="md"
+              icon={<Package size={16} strokeWidth={1.5} />}
+              onClick={() => navigate("/dashboard/products/new")}
+            />
+          </div>
         </header>
 
         <div className="dashboard__stats">
@@ -211,7 +229,24 @@ function Dashboard() {
         </section>
 
         <section className="dashboard__fabricante">
-          <h2 className="dashboard__section-title">Fabricante</h2>
+          <header className="dashboard__header">
+            <div>
+              <h1 className="dashboard__title">Fabricante</h1>
+              <p className="dashboard__subtitle">
+                Configurá tus materiales y tecnologías para ofrecer tus
+                servicios de producción, con esto podrás recibir pedidos de
+                manera más eficiente y mejorar tu reputación como fabricante.
+              </p>
+            </div>
+          </header>
+          <Card
+            className="dashboard__fabricante-banner"
+            title="¡Atención!"
+            icon={<Info size={20} strokeWidth={1.5} />}
+            text="Te encuentras registrado como fabricante, aparecerás disponible para recibir pedidos, asegurate de contar con stock de materiales siempre para mantener tu reputación."
+            variant="bordered"
+            disableHover
+          />
           {profile && (
             <FabricanteSection
               profile={profile}

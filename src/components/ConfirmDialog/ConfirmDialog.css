@@ -75,6 +75,10 @@
   line-height: 1.5;
 }
 
+.confirm-dialog__content {
+  margin: 0 0 var(--space-6);
+}
+
 /* Actions */
 .confirm-dialog__actions {
   display: flex;
