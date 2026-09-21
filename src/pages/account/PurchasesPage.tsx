@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { KeyRound } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import PurchaseCard from "../../components/PurchaseCard/PurchaseCard";
-import FormField from "../../components/Form/FormField";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
 import { compraService, descargarCompra } from "../../services/compra.service";
+import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
 import type { MisComprasItem } from "../../interfaces";
+import type { PurchaseDeliveryStage } from "../../components/PurchaseCard/PurchaseCard.types";
 import "./PurchasesPage.css";
 
 const BREADCRUMB_ITEMS = [
@@ -18,14 +21,25 @@ const BREADCRUMB_ITEMS = [
   { label: "Mis Compras" },
 ];
 
+function deliveryStageFor(item: MisComprasItem): PurchaseDeliveryStage {
+  if (item.ordenFabricacionEstado === "completado") return "completado";
+  if (item.ordenFabricacionEstado === "confirmada") return "confirmada";
+  if (item.ordenFabricacionEstado === "trato_cerrado") return "trato_cerrado";
+  return "none";
+}
+
 function PurchasesPage() {
+  const navigate = useNavigate();
   const { toasts, addToast, removeToast } = useToast();
   const [purchases, setPurchases] = useState<MisComprasItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [tokenInput, setTokenInput] = useState("");
-  const [submittingToken, setSubmittingToken] = useState(false);
+  const [confirmingItem, setConfirmingItem] = useState<MisComprasItem | null>(
+    null,
+  );
+  const [codigo, setCodigo] = useState<string | null>(null);
+  const [loadingCodigo, setLoadingCodigo] = useState(false);
+  const [submittingConfirm, setSubmittingConfirm] = useState(false);
 
   useEffect(() => {
     compraService
@@ -48,25 +62,52 @@ function PurchasesPage() {
     }
   }
 
-  function openConfirmDelivery(id: string) {
-    setConfirmingId(id);
-    setTokenInput("");
+  function handleSolicitarFabricacion(item: MisComprasItem) {
+    navigate(`/product/${item.idModelo}/fabricantes`, {
+      state: { compraId: item.id },
+    });
   }
 
-  async function handleConfirmDelivery(id: string) {
-    if (!tokenInput.trim()) return;
-    setSubmittingToken(true);
+  async function openConfirmDelivery(item: MisComprasItem) {
+    setConfirmingItem(item);
+    setCodigo(null);
+    if (!item.ordenFabricacionId) return;
+    setLoadingCodigo(true);
     try {
-      await compraService.confirmarEntrega(id, tokenInput.trim());
-      setPurchases((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, entregaConfirmada: true } : p)),
+      const res = await ordenFabricacionService.codigoEntrega(
+        item.ordenFabricacionId,
       );
-      addToast("Entrega confirmada", "success");
-      setConfirmingId(null);
+      setCodigo(res.data?.codigoEntrega ?? null);
     } catch {
-      addToast("Token inválido o error al confirmar", "error");
+      addToast("No se pudo obtener el código de entrega", "error");
     } finally {
-      setSubmittingToken(false);
+      setLoadingCodigo(false);
+    }
+  }
+
+  async function handleConfirmDelivery() {
+    if (!confirmingItem?.ordenFabricacionId) return;
+    setSubmittingConfirm(true);
+    try {
+      await ordenFabricacionService.declararEntrega(
+        confirmingItem.ordenFabricacionId,
+      );
+      setPurchases((prev) =>
+        prev.map((p) =>
+          p.id === confirmingItem.id
+            ? { ...p, ordenFabricacionEstado: "confirmada" }
+            : p,
+        ),
+      );
+      addToast(
+        "Entrega confirmada, esperando validación del fabricante",
+        "success",
+      );
+      setConfirmingItem(null);
+    } catch {
+      addToast("No se pudo confirmar la entrega", "error");
+    } finally {
+      setSubmittingConfirm(false);
     }
   }
 
@@ -92,34 +133,32 @@ function PurchasesPage() {
               title={item.diseno.titulo}
               format={item.diseno.formato ?? ""}
               pricePaid={item.precioPagado}
-              entregaConfirmada={item.entregaConfirmada}
+              deliveryStage={deliveryStageFor(item)}
               downloading={downloadingId === item.id}
               onDownload={() => handleDownload(item)}
-              onConfirmarEntrega={() => openConfirmDelivery(item.id)}
+              onSolicitarFabricacion={() => handleSolicitarFabricacion(item)}
+              onConfirmarEntrega={() => openConfirmDelivery(item)}
             />
           ))}
         </div>
       )}
 
       <ConfirmDialog
-        open={confirmingId !== null}
+        open={confirmingItem !== null}
         title="Confirmar entrega"
-        message="Pegá el código de verificación que recibiste al comprar para confirmar la entrega y liberar los fondos."
-        confirmLabel="Confirmar"
+        message="Brindale estos 6 dígitos al fabricante para confirmar que recibiste la pieza. No lo hagas si todavía no la recibiste."
+        confirmLabel="Confirmar entrega"
         cancelLabel="Cancelar"
-        variant="info"
-        loading={submittingToken}
-        confirmDisabled={!tokenInput.trim()}
-        onConfirm={() => confirmingId && handleConfirmDelivery(confirmingId)}
-        onCancel={() => setConfirmingId(null)}
+        variant="warning"
+        loading={submittingConfirm}
+        confirmDisabled={loadingCodigo || !codigo}
+        onConfirm={handleConfirmDelivery}
+        onCancel={() => setConfirmingItem(null)}
       >
-        <FormField
-          label="Código de verificación"
-          name="token"
-          value={tokenInput}
-          onChange={(e) => setTokenInput(e.target.value)}
-          placeholder="Pegá el código que recibiste al comprar"
-        />
+        <div className="purchases-page__codigo-display">
+          <KeyRound size={16} strokeWidth={2} />
+          <span>{loadingCodigo ? "Cargando código..." : (codigo ?? "—")}</span>
+        </div>
       </ConfirmDialog>
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />

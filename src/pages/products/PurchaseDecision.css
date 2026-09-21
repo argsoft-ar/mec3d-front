@@ -5,27 +5,6 @@
   margin-bottom: var(--space-8);
 }
 
-.purchase-decision__option-body {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
-  color: var(--color-primary);
-}
-
-.purchase-decision__option-body h3 {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.purchase-decision__option-body p {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-}
-
 .purchase-decision__token {
   margin-bottom: var(--space-8);
 }

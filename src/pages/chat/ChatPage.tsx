@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { Send } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -8,40 +7,17 @@ import Button from "../../components/Button/Button";
 import FormField from "../../components/Form/FormField";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
+import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "../../hooks/useToast";
-import { chatService } from "../../services/chat.service";
-import { chatSocketService } from "../../services/chat-socket.service";
-import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
-import type { Mensaje, DealClosedPayload } from "../../interfaces";
+import { useConversaciones } from "../../hooks/useConversaciones";
+import { useChatThread } from "../../hooks/useChatThread";
+import type { ConversacionResumen } from "../../interfaces";
 import "./ChatPage.css";
 
-const RECENTS_KEY = "mec3d_recent_conversations";
 const BREADCRUMB_ITEMS = [{ label: "Inicio", path: "/" }, { label: "Chat" }];
-
-interface RecentConversation {
-  id: string;
-  ordenFabricacionId?: string;
-  lastOpened: string;
-}
 
 interface LocationState {
   ordenFabricacionId?: string;
-}
-
-function getRecents(): RecentConversation[] {
-  try {
-    const raw = localStorage.getItem(RECENTS_KEY);
-    return raw ? (JSON.parse(raw) as RecentConversation[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRecent(entry: RecentConversation): RecentConversation[] {
-  const rest = getRecents().filter((r) => r.id !== entry.id);
-  const updated = [entry, ...rest].slice(0, 20);
-  localStorage.setItem(RECENTS_KEY, JSON.stringify(updated));
-  return updated;
 }
 
 function getCurrentUserId(): string | null {
@@ -58,7 +34,8 @@ interface ChatThreadProps {
   conversacionId: string;
   ordenFabricacionId?: string;
   currentUserId: string | null;
-  onOpened: (entry: RecentConversation) => void;
+  conversacion?: ConversacionResumen;
+  onDealUpdate: () => void;
   addToast: (
     message: string,
     type: "success" | "error" | "warning" | "info",
@@ -66,131 +43,59 @@ interface ChatThreadProps {
 }
 
 // Montado con key={conversacionId} desde ChatPage: al cambiar de conversación
-// se remonta por completo, así el estado (mensajes, loading, precio) arranca
-// limpio sin necesitar resets síncronos dentro de un efecto.
+// se remonta por completo, así el estado del hilo (mensajes, precio) arranca limpio.
 function ChatThread({
   conversacionId,
   ordenFabricacionId,
   currentUserId,
-  onOpened,
+  conversacion,
+  onDealUpdate,
   addToast,
 }: Readonly<ChatThreadProps>) {
-  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
-  const [loadingMensajes, setLoadingMensajes] = useState(true);
-  const [composerText, setComposerText] = useState("");
-  const [sending, setSending] = useState(false);
-  const [precioAcordado, setPrecioAcordado] = useState<number | null>(null);
-  const [precioInput, setPrecioInput] = useState("");
-  const [cerrandoTrato, setCerrandoTrato] = useState(false);
-  const threadEndRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    chatService
-      .getMensajes(conversacionId)
-      .then((res) => setMensajes([...res.data].reverse()))
-      .catch(() => addToast("No se pudo cargar el historial", "error"))
-      .finally(() => setLoadingMensajes(false));
-
-    onOpened({
-      id: conversacionId,
-      ordenFabricacionId,
-      lastOpened: new Date().toISOString(),
-    });
-
-    chatSocketService.joinConversacion(conversacionId).then((ack) => {
-      if (!ack.ok) addToast(ack.error ?? "No se pudo unir al chat", "error");
-    });
-
-    const offNuevoMensaje = chatSocketService.onNuevoMensaje((mensaje) => {
-      if (mensaje.conversacionId !== conversacionId) return;
-      setMensajes((prev) =>
-        prev.some((m) => m.id === mensaje.id) ? prev : [...prev, mensaje],
-      );
-    });
-
-    const offDealClosed = chatSocketService.onDealClosed(
-      (payload: DealClosedPayload) => {
-        if (payload.ordenFabricacionId !== ordenFabricacionId) return;
-        setPrecioAcordado(payload.precioAcordado);
-        setMensajes((prev) =>
-          prev.some((m) => m.id === payload.mensaje.id)
-            ? prev
-            : [...prev, payload.mensaje],
-        );
-        addToast("¡Trato cerrado!", "success");
-      },
-    );
-
-    return () => {
-      offNuevoMensaje();
-      offDealClosed();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversacionId]);
-
-  useEffect(() => {
-    threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensajes]);
-
-  async function handleSend() {
-    if (!composerText.trim()) return;
-    setSending(true);
-    try {
-      const ack = await chatSocketService.enviarMensaje(
-        conversacionId,
-        composerText.trim(),
-      );
-      if (!ack.ok) {
-        addToast(ack.error ?? "No se pudo enviar el mensaje", "error");
-      } else {
-        setComposerText("");
-      }
-    } finally {
-      setSending(false);
-    }
-  }
-
-  async function handleCerrarTrato() {
-    if (!ordenFabricacionId) {
-      addToast(
-        "No hay una orden de fabricación asociada a este chat",
-        "warning",
-      );
-      return;
-    }
-    const precio = Number.parseFloat(precioInput);
-    if (Number.isNaN(precio) || precio <= 0) {
-      addToast("Ingresá un precio válido", "warning");
-      return;
-    }
-    setCerrandoTrato(true);
-    try {
-      const res = await ordenFabricacionService.cerrarTrato(
-        ordenFabricacionId,
-        precio,
-      );
-      if (
-        res.data?.estado === "trato_cerrado" &&
-        res.data.precioAcordado !== null
-      ) {
-        setPrecioAcordado(res.data.precioAcordado);
-        addToast("¡Trato cerrado!", "success");
-      } else {
-        addToast("Precio confirmado, esperando a la otra parte", "info");
-      }
-    } catch {
-      addToast("No se pudo cerrar el trato", "error");
-    } finally {
-      setCerrandoTrato(false);
-    }
-  }
+  const {
+    mensajes,
+    loadingMensajes,
+    threadEndRef,
+    composerText,
+    setComposerText,
+    sending,
+    handleSend,
+    precioInput,
+    setPrecioInput,
+    confirmOpen,
+    setConfirmOpen,
+    cerrandoTrato,
+    handleConfirmarCierre,
+    proponerOpen,
+    proponiendoPrecio,
+    handleAbrirProponerModal,
+    handleCerrarProponerModal,
+    handleProponerPrecio,
+    codigoEntrega,
+    loadingCodigo,
+    handleVerCodigoEntrega,
+    dealClosed,
+    precioAcordadoValue,
+  } = useChatThread({
+    conversacionId,
+    ordenFabricacionId,
+    conversacion,
+    onDealUpdate,
+    addToast,
+  });
 
   return (
     <>
+      {conversacion?.productoTitulo && (
+        <h3 className="chat-page__product-title">
+          {conversacion.productoTitulo}
+        </h3>
+      )}
+
       <div className="chat-page__deal-bar">
         <span>
-          {precioAcordado !== null
-            ? `Trato cerrado en $${precioAcordado}`
+          {dealClosed
+            ? `Trato cerrado en $${precioAcordadoValue}`
             : "Negociación en curso"}
         </span>
         {!ordenFabricacionId && (
@@ -201,6 +106,25 @@ function ChatThread({
         )}
       </div>
 
+      {conversacion?.miRol === "comprador" &&
+        (conversacion?.estadoOrden === "trato_cerrado" ||
+          conversacion?.estadoOrden === "confirmada") && (
+          <div className="chat-page__delivery-code">
+            {codigoEntrega ? (
+              <span className="chat-page__delivery-code-value">
+                Código de entrega: <strong>{codigoEntrega}</strong>
+              </span>
+            ) : (
+              <Button
+                title="Ver código de entrega"
+                variant="outline"
+                loading={loadingCodigo}
+                onClick={handleVerCodigoEntrega}
+              />
+            )}
+          </div>
+        )}
+
       {loadingMensajes ? (
         <PageLoader />
       ) : (
@@ -209,11 +133,13 @@ function ChatThread({
             <div
               key={m.id}
               className={`chat-page__message${
-                m.tipo === "sistema"
-                  ? " chat-page__message--system"
-                  : m.remitenteId === currentUserId
-                    ? " chat-page__message--own"
-                    : ""
+                m.tipo === "propuesta_precio"
+                  ? " chat-page__message--proposal"
+                  : m.tipo === "sistema"
+                    ? " chat-page__message--system"
+                    : m.remitenteId === currentUserId
+                      ? " chat-page__message--own"
+                      : ""
               }`}
             >
               <p>{m.contenido}</p>
@@ -232,55 +158,118 @@ function ChatThread({
           onKeyDown={(e) => {
             if (e.key === "Enter") handleSend();
           }}
-          disabled={precioAcordado !== null}
+          disabled={dealClosed}
         />
         <Button
           title="Enviar"
           icon={<Send size={16} strokeWidth={2} />}
           variant="primary"
           loading={sending}
-          disabled={precioAcordado !== null}
+          disabled={dealClosed}
           onClick={handleSend}
         />
       </div>
 
-      <div className="chat-page__negotiation">
+      {!dealClosed &&
+        (conversacion?.miRol === "comprador" ? (
+          <div className="chat-page__negotiation">
+            <p className="chat-page__negotiation-status">
+              {conversacion?.precioPropuestoFabricante != null
+                ? `El fabricante propuso $${conversacion.precioPropuestoFabricante}`
+                : "El fabricante todavía no propuso un precio."}
+            </p>
+            <Button
+              title="Cerrar trato"
+              variant="primary"
+              disabled={conversacion?.precioPropuestoFabricante == null}
+              onClick={() => setConfirmOpen(true)}
+            />
+          </div>
+        ) : (
+          <div className="chat-page__negotiation">
+            <p className="chat-page__negotiation-status">
+              {conversacion?.precioPropuestoFabricante != null
+                ? `Propusiste $${conversacion.precioPropuestoFabricante}`
+                : "Todavía no propusiste un precio."}
+            </p>
+            <div className="chat-page__negotiation-actions">
+              <Button
+                title="Proponer precio"
+                variant="outline"
+                onClick={handleAbrirProponerModal}
+              />
+              <Button
+                title="Cerrar trato"
+                variant="primary"
+                disabled={conversacion?.precioPropuestoFabricante == null}
+                onClick={() => setConfirmOpen(true)}
+              />
+            </div>
+          </div>
+        ))}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Cerrar trato"
+        message={
+          conversacion?.miRol === "comprador"
+            ? "¿Confirmás cerrar el trato con el fabricante al precio declarado?"
+            : "¿Confirmás cerrar el trato al precio que propusiste?"
+        }
+        details={[
+          {
+            label: "Precio",
+            value: `$${conversacion?.precioPropuestoFabricante}`,
+          },
+        ]}
+        confirmLabel="Confirmar y aceptar"
+        variant="info"
+        loading={cerrandoTrato}
+        onConfirm={handleConfirmarCierre}
+        onCancel={() => setConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={proponerOpen}
+        title="Proponer precio de fabricación"
+        message="Ingresá el precio que le vas a proponer al comprador por fabricar este diseño."
+        confirmLabel="Proponer precio"
+        variant="info"
+        loading={proponiendoPrecio}
+        confirmDisabled={!precioInput.trim()}
+        onConfirm={handleProponerPrecio}
+        onCancel={handleCerrarProponerModal}
+      >
         <FormField
-          label="Precio a proponer/confirmar"
-          name="precio-cerrar"
+          label="Precio"
+          name="precio-proponer"
           type="number"
           value={precioInput}
           onChange={(e) => setPrecioInput(e.target.value)}
-          disabled={precioAcordado !== null}
+          placeholder="Ej: 15000"
         />
-        <Button
-          title={precioAcordado !== null ? "Trato cerrado" : "Cerrar trato"}
-          variant="primary"
-          disabled={precioAcordado !== null}
-          loading={cerrandoTrato}
-          onClick={handleCerrarTrato}
-        />
-      </div>
+      </ConfirmDialog>
     </>
   );
 }
 
 function ChatPage() {
   const { conversacionId } = useParams<{ conversacionId?: string }>();
-  const navigate = useNavigate();
   const location = useLocation();
   const { toasts, addToast, removeToast } = useToast();
   const currentUserId = getCurrentUserId();
   const stateOrdenId = (location.state as LocationState | null)
     ?.ordenFabricacionId;
 
-  const [recents, setRecents] = useState<RecentConversation[]>(getRecents);
-  const [manualId, setManualId] = useState("");
+  const {
+    conversaciones,
+    loading: loadingConversaciones,
+    refresh: refreshConversaciones,
+  } = useConversaciones(addToast);
 
-  function handleOpenManual() {
-    if (!manualId.trim()) return;
-    navigate(`/chat/${manualId.trim()}`);
-  }
+  const activeConversacion = conversaciones.find(
+    (c) => c.id === conversacionId,
+  );
 
   return (
     <Layout>
@@ -293,35 +282,36 @@ function ChatPage() {
 
       <div className="chat-page">
         <aside className="chat-page__sidebar">
-          <div className="chat-page__manual-open">
-            <FormField
-              label="Abrir conversación por ID"
-              name="manual-conversacion"
-              value={manualId}
-              onChange={(e) => setManualId(e.target.value)}
-              placeholder="ID de conversación"
-            />
-            <Button
-              title="Abrir"
-              variant="outline"
-              onClick={handleOpenManual}
-            />
-          </div>
-
           <ul className="chat-page__recents">
-            {recents.length === 0 && (
+            {conversaciones.length === 0 && (
               <li className="chat-page__recents-empty">
-                Sin conversaciones recientes.
+                {loadingConversaciones
+                  ? "Cargando conversaciones..."
+                  : "Sin conversaciones recientes."}
               </li>
             )}
-            {recents.map((r) => (
-              <li key={r.id}>
+            {conversaciones.map((c) => (
+              <li key={c.id}>
                 <Link
-                  className={`chat-page__recent-link${r.id === conversacionId ? " chat-page__recent-link--active" : ""}`}
-                  to={`/chat/${r.id}`}
-                  state={{ ordenFabricacionId: r.ordenFabricacionId }}
+                  className={`chat-page__recent-link${c.id === conversacionId ? " chat-page__recent-link--active" : ""}`}
+                  to={`/chat/${c.id}`}
+                  state={{ ordenFabricacionId: c.ordenFabricacionId }}
                 >
-                  {r.id}
+                  <span className="chat-page__recent-name">
+                    {c.contraparte.username ||
+                      c.contraparte.tagline ||
+                      "Usuario"}
+                  </span>
+                  {c.productoTitulo && (
+                    <span className="chat-page__recent-product">
+                      {c.productoTitulo}
+                    </span>
+                  )}
+                  {c.ultimoMensaje && (
+                    <span className="chat-page__recent-preview">
+                      {c.ultimoMensaje.contenido}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
@@ -335,12 +325,13 @@ function ChatPage() {
               conversacionId={conversacionId}
               ordenFabricacionId={stateOrdenId}
               currentUserId={currentUserId}
-              onOpened={(entry) => setRecents(saveRecent(entry))}
+              conversacion={activeConversacion}
+              onDealUpdate={refreshConversaciones}
               addToast={addToast}
             />
           ) : (
             <p className="chat-page__placeholder">
-              Seleccioná o pegá un ID de conversación para empezar a chatear.
+              Seleccioná una conversación para empezar a chatear.
             </p>
           )}
         </section>

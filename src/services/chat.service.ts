@@ -1,4 +1,9 @@
-import type { PaginatedResponse, Mensaje } from "../interfaces";
+import type {
+  ApiResponse,
+  ConversacionResumen,
+  PaginatedResponse,
+  Mensaje,
+} from "../interfaces";
 import { request } from "./http.client";
 
 export const chatService = {
@@ -6,4 +11,7 @@ export const chatService = {
     request<PaginatedResponse<Mensaje>>(
       `/conversaciones/${conversacionId}/mensajes?page=${page}&limit=${limit}`,
     ),
+
+  misConversaciones: () =>
+    request<ApiResponse<ConversacionResumen[]>>("/conversaciones/mias"),
 };

@@ -21,11 +21,14 @@
   border-color: var(--color-primary);
 }
 
-.fabricante-selection__card-title {
+.fabricante-selection__card .card__title {
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin: 0;
+}
+
+.fabricante-selection__card .card__text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding-top: 0;
 }
 
 .fabricante-selection__stat {

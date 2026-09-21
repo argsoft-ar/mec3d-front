@@ -2,6 +2,9 @@ import { getSocket } from "./socket.client";
 import type {
   Mensaje,
   DealClosedPayload,
+  PrecioPropuestoPayload,
+  OrdenCompletadaPayload,
+  EntregaDeclaradaPayload,
   JoinConversacionAck,
   EnviarMensajeAck,
 } from "../interfaces";
@@ -42,5 +45,29 @@ export const chatSocketService = {
     const socket = getSocket();
     socket.on("deal-closed", cb);
     return () => socket.off("deal-closed", cb);
+  },
+
+  onPrecioPropuesto: (
+    cb: (payload: PrecioPropuestoPayload) => void,
+  ): (() => void) => {
+    const socket = getSocket();
+    socket.on("precio-propuesto", cb);
+    return () => socket.off("precio-propuesto", cb);
+  },
+
+  onOrdenCompletada: (
+    cb: (payload: OrdenCompletadaPayload) => void,
+  ): (() => void) => {
+    const socket = getSocket();
+    socket.on("orden-completada", cb);
+    return () => socket.off("orden-completada", cb);
+  },
+
+  onEntregaDeclarada: (
+    cb: (payload: EntregaDeclaradaPayload) => void,
+  ): (() => void) => {
+    const socket = getSocket();
+    socket.on("entrega-declarada", cb);
+    return () => socket.off("entrega-declarada", cb);
   },
 };

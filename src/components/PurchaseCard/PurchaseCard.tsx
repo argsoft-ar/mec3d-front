@@ -1,4 +1,4 @@
-import { Download, ShieldCheck } from "lucide-react";
+import { Download, Hammer, ShieldCheck, Clock } from "lucide-react";
 import Button from "../Button/Button";
 import { formatPrice, parseFormatTags } from "../../utils/format.util";
 import type { PurchaseCardProps } from "./PurchaseCard.types";
@@ -9,9 +9,10 @@ const PurchaseCard = ({
   title,
   format,
   pricePaid,
-  entregaConfirmada,
+  deliveryStage,
   downloading = false,
   onDownload,
+  onSolicitarFabricacion,
   onConfirmarEntrega,
   className = "",
 }: PurchaseCardProps) => (
@@ -42,18 +43,31 @@ const PurchaseCard = ({
           loading={downloading}
           onClick={onDownload}
         />
-        {entregaConfirmada ? (
+        {deliveryStage === "none" && onSolicitarFabricacion && (
+          <Button
+            title="Fabricar"
+            variant="outline"
+            icon={<Hammer size={16} strokeWidth={2} />}
+            onClick={onSolicitarFabricacion}
+          />
+        )}
+        {deliveryStage === "completado" && (
           <span className="purchase-card__delivery-status purchase-card__delivery-status--confirmed">
             <ShieldCheck size={14} strokeWidth={2} /> Entrega confirmada
           </span>
-        ) : (
-          onConfirmarEntrega && (
-            <Button
-              title="Confirmar entrega"
-              variant="outline"
-              onClick={onConfirmarEntrega}
-            />
-          )
+        )}
+        {deliveryStage === "confirmada" && (
+          <span className="purchase-card__delivery-status purchase-card__delivery-status--pending">
+            <Clock size={14} strokeWidth={2} /> Esperando validación del
+            fabricante
+          </span>
+        )}
+        {deliveryStage === "trato_cerrado" && onConfirmarEntrega && (
+          <Button
+            title="Confirmar entrega"
+            variant="outline"
+            onClick={onConfirmarEntrega}
+          />
         )}
       </div>
     </div>

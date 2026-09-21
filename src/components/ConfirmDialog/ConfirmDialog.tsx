@@ -12,6 +12,8 @@ export interface ConfirmDialogProps {
   readonly variant?: "danger" | "warning" | "info";
   readonly loading?: boolean;
   readonly confirmDisabled?: boolean;
+  /** Optional list of label/value rows rendered between the message and the children */
+  readonly details?: { label: string; value: string }[];
   /** Optional extra content (e.g. an input field) rendered between the message and the actions */
   readonly children?: React.ReactNode;
   readonly onConfirm: () => void;
@@ -36,6 +38,7 @@ export default function ConfirmDialog({
   variant = "info",
   loading = false,
   confirmDisabled = false,
+  details,
   children,
   onConfirm,
   onCancel,
@@ -71,6 +74,16 @@ export default function ConfirmDialog({
           {title}
         </h2>
         <p className="confirm-dialog__message">{message}</p>
+        {details && details.length > 0 && (
+          <dl className="confirm-dialog__details">
+            {details.map((d) => (
+              <div key={d.label} className="confirm-dialog__details-row">
+                <dt>{d.label}</dt>
+                <dd>{d.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
         {children && <div className="confirm-dialog__content">{children}</div>}
         <div className="confirm-dialog__actions">
           <Button

@@ -88,6 +88,10 @@
   color: var(--color-success);
 }
 
+.purchase-card__delivery-status--pending {
+  color: var(--color-warning);
+}
+
 @media (max-width: 480px) {
   .purchase-card {
     flex-direction: column;

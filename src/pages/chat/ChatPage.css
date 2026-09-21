@@ -13,12 +13,6 @@
   padding-right: var(--space-4);
 }
 
-.chat-page__manual-open {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
 .chat-page__recents {
   list-style: none;
   display: flex;
@@ -43,12 +37,34 @@
   white-space: nowrap;
 }
 
+.chat-page__recent-name {
+  font-weight: var(--font-weight-medium);
+}
+
+.chat-page__recent-preview {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-page__recent-product {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-primary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .chat-page__recent-link:hover {
   background-color: var(--color-surface-container-low);
 }
 
 .chat-page__recent-link--active {
-  background-color: var(--color-primary-container);
+  background-color: var(--color-surface-container-low);
   color: var(--color-on-primary-container);
   font-weight: var(--font-weight-semibold);
 }
@@ -63,6 +79,12 @@
   color: var(--color-text-muted);
 }
 
+.chat-page__product-title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
 .chat-page__deal-bar {
   display: flex;
   flex-direction: column;
@@ -75,6 +97,16 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
+}
+
+.chat-page__delivery-code {
+  display: flex;
+  align-items: center;
+}
+
+.chat-page__delivery-code-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .chat-page__messages {
@@ -103,19 +135,31 @@
 .chat-page__message p {
   margin: 0;
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
 }
 
 .chat-page__message--own {
   align-self: flex-end;
-  background-color: var(--color-primary-container);
-  border-color: var(--color-primary);
+  background-color: var(--color-secondary-container);
+  border-color: var(--color-text-primary);
 }
 
 .chat-page__message--system {
   align-self: center;
   background-color: var(--color-surface-alt);
   font-style: italic;
+}
+
+.chat-page__message--proposal {
+  align-self: center;
+  max-width: 85%;
+  background-color: var(--color-primary-container);
+  border-color: var(--color-primary);
+}
+
+.chat-page__message--proposal p {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-surface);
 }
 
 .chat-page__composer {
@@ -144,6 +188,18 @@
 
 .chat-page__negotiation .form-field {
   flex: 1;
+}
+
+.chat-page__negotiation-status {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.chat-page__negotiation-actions {
+  display: flex;
+  gap: var(--space-2);
 }
 
 @media (max-width: 768px) {

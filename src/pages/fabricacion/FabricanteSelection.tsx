@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { MapPin, Star } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
@@ -10,11 +10,39 @@ import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
 import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
+import { georefService } from "../../services/georef.service";
+import { getProvinciaPrefix, getPartidoPrefix } from "../../utils/zona.util";
 import type { FabricanteSugerido } from "../../interfaces";
 import "./FabricanteSelection.css";
 
 interface LocationState {
   compraId?: string;
+}
+
+async function resolveZonaLabel(zonaId: number): Promise<string> {
+  const fallback = `Zona ${zonaId}`;
+  try {
+    const provinciaPrefix = getProvinciaPrefix(zonaId);
+    if (!provinciaPrefix) return fallback;
+
+    const provinciasRes = await georefService.getProvincias();
+    const provincia = provinciasRes.data?.find((p) => p.id === provinciaPrefix);
+    if (!provincia) return fallback;
+
+    const partidoPrefix = getPartidoPrefix(zonaId);
+    if (!partidoPrefix) return provincia.nombre;
+
+    const departamentosRes =
+      await georefService.getDepartamentos(provinciaPrefix);
+    const departamento = departamentosRes.data?.find(
+      (d) => d.id === partidoPrefix,
+    );
+    if (!departamento) return provincia.nombre;
+
+    return `${departamento.nombre}, ${provincia.nombre}`;
+  } catch {
+    return fallback;
+  }
 }
 
 function FabricanteSelection() {
@@ -28,6 +56,8 @@ function FabricanteSelection() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
+  const [zonaLabels, setZonaLabels] = useState<Map<number, string>>(new Map());
+  const resolvedZonasRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +67,23 @@ function FabricanteSelection() {
       .catch(() => addToast("No se pudieron cargar los fabricantes", "error"))
       .finally(() => setLoading(false));
   }, [id, addToast]);
+
+  useEffect(() => {
+    const uniqueZonaIds = Array.from(
+      new Set(
+        fabricantes
+          .map((f) => f.zonaId)
+          .filter((zonaId): zonaId is number => zonaId !== null),
+      ),
+    ).filter((zonaId) => !resolvedZonasRef.current.has(zonaId));
+
+    uniqueZonaIds.forEach((zonaId) => {
+      resolvedZonasRef.current.add(zonaId);
+      resolveZonaLabel(zonaId).then((label) => {
+        setZonaLabels((prev) => new Map(prev).set(zonaId, label));
+      });
+    });
+  }, [fabricantes]);
 
   function toggle(fabricanteId: string) {
     setSelected((prev) => {
@@ -55,9 +102,17 @@ function FabricanteSelection() {
         compraId,
         Array.from(selected),
       );
-      navigate("/fabricacion/mis-solicitudes", {
-        state: { ordenes: res.data },
-      });
+      const ordenes = res.data ?? [];
+      const primera = ordenes[0];
+      if (primera) {
+        navigate(`/chat/${primera.conversacionId}`, {
+          state: { ordenFabricacionId: primera.id },
+        });
+      } else {
+        navigate("/fabricacion/mis-solicitudes", {
+          state: { ordenes },
+        });
+      }
     } catch {
       addToast("No se pudieron solicitar las cotizaciones", "error");
     } finally {
@@ -107,25 +162,35 @@ function FabricanteSelection() {
         <div className="fabricante-selection__grid">
           {fabricantes.map((f) => {
             const isSelected = selected.has(f.id);
+            const title = f.username || f.tagline || "Fabricante";
+            const showTagline =
+              !!f.username && !!f.tagline && f.tagline !== f.username;
+            const zonaLabel =
+              f.zonaId !== null
+                ? (zonaLabels.get(f.zonaId) ?? `Zona ${f.zonaId}`)
+                : null;
             return (
               <Card
                 key={f.id}
-                variant={isSelected ? "elevated" : "default"}
+                variant="contact"
+                title={title}
+                text={showTagline ? f.tagline! : undefined}
                 onClick={() => toggle(f.id)}
                 className={`fabricante-selection__card${isSelected ? " fabricante-selection__card--selected" : ""}`}
-              >
-                <h3 className="fabricante-selection__card-title">
-                  {f.tagline || "Fabricante"}
-                </h3>
-                <span className="fabricante-selection__stat">
-                  <Star size={14} strokeWidth={2} /> {f.puntuacion.toFixed(1)}
-                </span>
-                {f.zonaId !== null && (
-                  <span className="fabricante-selection__stat">
-                    <MapPin size={14} strokeWidth={2} /> Zona {f.zonaId}
-                  </span>
-                )}
-              </Card>
+                footer={
+                  <>
+                    <span className="fabricante-selection__stat">
+                      <Star size={14} strokeWidth={2} />{" "}
+                      {f.puntuacion.toFixed(1)}
+                    </span>
+                    {zonaLabel !== null && (
+                      <span className="fabricante-selection__stat">
+                        <MapPin size={14} strokeWidth={2} /> {zonaLabel}
+                      </span>
+                    )}
+                  </>
+                }
+              />
             );
           })}
         </div>

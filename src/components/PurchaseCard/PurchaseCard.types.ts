@@ -1,3 +1,9 @@
+export type PurchaseDeliveryStage =
+  | "none"
+  | "trato_cerrado"
+  | "confirmada"
+  | "completado";
+
 export interface PurchaseCardProps {
   /** Purchased design thumbnail */
   imageUrl: string;
@@ -7,12 +13,14 @@ export interface PurchaseCardProps {
   format: string;
   /** Price paid for the purchase */
   pricePaid: number;
-  /** Whether the escrow delivery was already confirmed */
-  entregaConfirmada: boolean;
+  /** Estado de la orden de fabricación ganadora, si el comprador pidió fabricación */
+  deliveryStage: PurchaseDeliveryStage;
   /** Disables the download button while a download is in flight */
   downloading?: boolean;
   onDownload: () => void;
-  /** Omit to hide the "Confirmar entrega" action */
+  /** Solo se usa cuando deliveryStage === "none" (todavía no se pidió fabricación) */
+  onSolicitarFabricacion?: () => void;
+  /** Solo se usa cuando deliveryStage === "trato_cerrado" */
   onConfirmarEntrega?: () => void;
   className?: string;
 }

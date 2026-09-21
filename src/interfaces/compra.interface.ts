@@ -1,3 +1,5 @@
+import type { EstadoOrdenFabricacion } from "./orden-fabricacion.interface";
+
 export interface Compra {
   id: string;
   idComprador: string;
@@ -20,16 +22,12 @@ export interface CompraDisenoInfo {
 
 export interface MisComprasItem extends Compra {
   diseno: CompraDisenoInfo;
+  /** Orden de fabricación ganadora (trato_cerrado/confirmada/completado), si existe. */
+  ordenFabricacionId: string | null;
+  ordenFabricacionEstado: EstadoOrdenFabricacion | null;
 }
 
 export interface CrearCompraResponse {
-  message: string;
-  data: Compra;
-  /** Token de escrow en texto plano; se muestra una única vez. */
-  tokenVerificacion: string;
-}
-
-export interface ConfirmarEntregaResponse {
   message: string;
   data: Compra;
 }

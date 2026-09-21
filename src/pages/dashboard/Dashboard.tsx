@@ -162,13 +162,15 @@ function Dashboard() {
             </p>
           </div>
           <div className="dashboard__header-actions">
-            <Button
-              title="Mis solicitudes de fabricación"
-              variant="outline"
-              size="md"
-              icon={<Hammer size={16} strokeWidth={1.5} />}
-              onClick={() => navigate("/fabricacion/mis-solicitudes")}
-            />
+            {profile?.rolPrincipal === "fabricante" && (
+              <Button
+                title="Mis solicitudes de fabricación"
+                variant="outline"
+                size="md"
+                icon={<Hammer size={16} strokeWidth={1.5} />}
+                onClick={() => navigate("/fabricacion/mis-solicitudes")}
+              />
+            )}
             <Button
               title="Nuevo diseño"
               variant="primary"
@@ -239,14 +241,16 @@ function Dashboard() {
               </p>
             </div>
           </header>
-          <Card
-            className="dashboard__fabricante-banner"
-            title="¡Atención!"
-            icon={<Info size={20} strokeWidth={1.5} />}
-            text="Te encuentras registrado como fabricante, aparecerás disponible para recibir pedidos, asegurate de contar con stock de materiales siempre para mantener tu reputación."
-            variant="bordered"
-            disableHover
-          />
+          {profile?.rolPrincipal === "fabricante" && (
+            <Card
+              className="dashboard__fabricante-banner"
+              title="¡Atención!"
+              icon={<Info size={20} strokeWidth={1.5} />}
+              text="Te encuentras registrado como fabricante, aparecerás disponible para recibir pedidos, asegurate de contar con stock de materiales siempre para mantener tu reputación."
+              variant="bordered"
+              disableHover
+            />
+          )}
           {profile && (
             <FabricanteSection
               profile={profile}

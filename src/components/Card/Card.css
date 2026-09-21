@@ -156,3 +156,49 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
+
+/* Option variant */
+.card--option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  border: 2px solid var(--color-border);
+  box-shadow: none;
+}
+
+.card--option .card__header {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card--option .card__text {
+  flex: 1;
+}
+
+.card--option .card__footer {
+  border-top: none;
+  margin-top: var(--space-4);
+  padding-top: 0;
+  justify-content: stretch;
+  width: 100%;
+}
+
+/* Contact variant */
+.card--contact {
+  border: 2px solid var(--color-border);
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.card--contact .card__footer {
+  border-top: none;
+  margin-top: var(--space-3);
+  padding-top: 0;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-start;
+}

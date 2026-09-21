@@ -1,8 +1,4 @@
-import type {
-  CrearCompraResponse,
-  MisComprasItem,
-  ConfirmarEntregaResponse,
-} from "../interfaces";
+import type { CrearCompraResponse, MisComprasItem } from "../interfaces";
 import { BASE_URL, request } from "./http.client";
 
 export const compraService = {
@@ -13,15 +9,6 @@ export const compraService = {
     }),
 
   misCompras: () => request<MisComprasItem[]>("/compras/mis-compras"),
-
-  confirmarEntrega: (compraId: string, token: string) =>
-    request<ConfirmarEntregaResponse>(
-      `/compras/${compraId}/confirmar-entrega`,
-      {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      },
-    ),
 };
 
 // El endpoint de descarga responde con un 302 y requiere el JWT como header
