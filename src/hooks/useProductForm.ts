@@ -34,6 +34,25 @@ function isValidPrecio(precioBase: string): boolean {
 // Matches the backend's upload cap (see mec3d-back upload.service.ts).
 const MAX_ARCHIVO_SIZE_BYTES = 30 * 1024 * 1024;
 
+// Maps a filename/URL extension to the format expected by ModelViewer3D, independent of `form.formato`.
+function getModelFormatFromName(name: string): string {
+  const extension = name.slice(name.lastIndexOf(".")).toLowerCase();
+  switch (extension) {
+    case ".stl":
+      return "STL";
+    case ".3mf":
+      return "3MF";
+    case ".obj":
+      return "OBJ";
+    case ".step":
+      return "STEP";
+    case ".stp":
+      return "STP";
+    default:
+      return "";
+  }
+}
+
 export function useProductForm() {
   const { id } = useParams<{ id?: string }>();
   const isEdit = !!id;
@@ -47,6 +66,7 @@ export function useProductForm() {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [archivoFile, setArchivoFile] = useState<File | null>(null);
+  const [archivoPreviewUrl, setArchivoPreviewUrl] = useState<string>("");
   const [uploadingArchivo, setUploadingArchivo] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
@@ -59,6 +79,12 @@ export function useProductForm() {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
+
+  useEffect(() => {
+    return () => {
+      if (archivoPreviewUrl) URL.revokeObjectURL(archivoPreviewUrl);
+    };
+  }, [archivoPreviewUrl]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -139,9 +165,23 @@ export function useProductForm() {
       return;
     }
     setArchivoFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setArchivoPreviewUrl(objectUrl);
     if (errors.archivoUrl) {
       setErrors((prev) => ({ ...prev, archivoUrl: undefined }));
     }
+  };
+
+  const archivoPreviewFormat = archivoFile
+    ? getModelFormatFromName(archivoFile.name)
+    : getModelFormatFromName(form.archivoUrl);
+
+  const handleImagePreviewError = () => {
+    addToast("No se pudo previsualizar la imagen", "error");
+  };
+
+  const handleModelPreviewError = () => {
+    addToast("No se pudo previsualizar el modelo 3D", "error");
   };
 
   const validate = (): boolean => {
@@ -269,9 +309,13 @@ export function useProductForm() {
     fileInputRef,
     handleFileChange,
     archivoFile,
+    archivoPreviewUrl,
+    archivoPreviewFormat,
     uploadingArchivo,
     archivoFileInputRef,
     handleArchivoFileChange,
+    handleImagePreviewError,
+    handleModelPreviewError,
     loading,
     confirmOpen,
     setConfirmOpen,

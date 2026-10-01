@@ -212,7 +212,7 @@ function FabricanteSection({
             <Button
               title="Agregar tecnología"
               variant="primary"
-              size="sm"
+              size="md"
               icon={<Plus size={14} strokeWidth={2} />}
               loading={savingTecnologias}
               disabled={!selectedTecnologia}
@@ -259,7 +259,7 @@ function FabricanteSection({
             <Button
               title="Agregar material"
               variant="primary"
-              size="sm"
+              size="md"
               icon={<Plus size={14} strokeWidth={2} />}
               loading={savingMateriales}
               disabled={!selectedMaterial}
