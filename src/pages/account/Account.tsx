@@ -12,7 +12,11 @@ import { useGeoref } from "../../hooks/useGeoref";
 import { useUsernameAvailability } from "../../hooks/useUsernameAvailability";
 import { usuarioService } from "../../services/usuario.service";
 import { toZonaId } from "../../services/georef.service";
-import type { ApiError, PerfilCompleto } from "../../interfaces";
+import type {
+  ApiError,
+  PerfilCompleto,
+  UpdateProfileDTO,
+} from "../../interfaces";
 import type { SelectOption } from "../../types";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import UsernameStatus from "../../components/UsernameStatus/UsernameStatus";
@@ -138,12 +142,29 @@ function Account() {
   async function handleSaveProfile() {
     setSavingProfile(true);
     try {
-      const zonaId = localidadId ? toZonaId(localidadId) : undefined;
-      const updated = await usuarioService.updateProfile({
-        ...profileForm,
-        zonaId,
-        georefLocalidadId: localidadId || undefined,
-      });
+      const payload: UpdateProfileDTO = {};
+      const textFields: (keyof typeof EMPTY_PROFILE_FORM)[] = [
+        "username",
+        "tagline",
+        "descripcion",
+        "experiencia",
+        "cuentaMercadopago",
+        "telefono",
+        "direccion",
+      ];
+      for (const field of textFields) {
+        const value = profileForm[field];
+        const original = profile?.[field] ?? "";
+        if (value === original) continue;
+        // never resend an empty username, backend treats "" as an explicit taken-check
+        if (field === "username" && value === "") continue;
+        payload[field] = value;
+      }
+      if (localidadId && localidadId !== profile?.georefLocalidadId) {
+        payload.zonaId = toZonaId(localidadId);
+        payload.georefLocalidadId = localidadId;
+      }
+      const updated = await usuarioService.updateProfile(payload);
       setProfile(updated);
       addToast("Perfil actualizado", "success");
     } catch (err) {

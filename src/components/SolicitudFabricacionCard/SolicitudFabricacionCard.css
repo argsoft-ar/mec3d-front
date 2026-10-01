@@ -1,0 +1,97 @@
+.solicitud-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: box-shadow var(--transition-base);
+  min-width: 300px;
+}
+
+.solicitud-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.solicitud-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.solicitud-card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.solicitud-card__badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  color: var(--color-on-primary);
+  background-color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.solicitud-card__badge--trato_cerrado,
+.solicitud-card__badge--completado {
+  background-color: var(--color-success);
+}
+
+.solicitud-card__badge--confirmada {
+  background-color: var(--color-info);
+}
+
+.solicitud-card__badge--en_negociacion {
+  background-color: var(--color-warning);
+}
+
+.solicitud-card__badge--cancelado,
+.solicitud-card__badge--rechazado {
+  background-color: var(--color-danger);
+}
+
+.solicitud-card__price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.solicitud-card__price-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.solicitud-card__price-value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.solicitud-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.solicitud-card__actions .btn {
+  flex: 1 1 140px;
+}
+
+@media (max-width: 480px) {
+  .solicitud-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

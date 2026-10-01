@@ -1,0 +1,22 @@
+.purchase-decision__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.purchase-decision__token {
+  margin-bottom: var(--space-8);
+}
+
+.purchase-decision__actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .purchase-decision__options {
+    grid-template-columns: 1fr;
+  }
+}

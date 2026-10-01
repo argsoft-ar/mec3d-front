@@ -175,7 +175,7 @@ function DetailProduct() {
                   onClick={
                     action.title === "Vista previa 3D"
                       ? () => navigate(`/product/${id}/preview`)
-                      : undefined
+                      : () => navigate(`/product/${id}/purchase`)
                   }
                 />
               ))}
