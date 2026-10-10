@@ -42,3 +42,17 @@ export function cacheDel(key: string): void {
     // storage quota exceeded or private browsing
   }
 }
+
+/** Borra todas las entradas de la app (p. ej. perfil) al cerrar sesión. */
+export function cacheClear(): void {
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith(PREFIX)) keys.push(key);
+    }
+    keys.forEach((key) => sessionStorage.removeItem(key));
+  } catch {
+    // private browsing
+  }
+}

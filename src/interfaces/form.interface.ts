@@ -9,18 +9,27 @@ export interface ProductForm {
   formato: string;
   imagenUrl: string;
   archivoUrl: string;
-  specMaterial: string;
+  tecnologia: string;
+  materiales: string[];
   specDimensiones: string;
   specDificultad: string;
+  /** Horas enteras como texto del input numérico; se convierte a number al enviar. */
   specTiempoImpresion: string;
   specSoportes: string;
   specLayer: string;
   specInfill: string;
 }
 
+/** Claves del formulario cuyo valor es un string (editables con FormField). */
+export type ProductFormTextKey = {
+  [K in keyof ProductForm]: ProductForm[K] extends string ? K : never;
+}[keyof ProductForm];
+
+export type ProductFormErrors = Partial<Record<keyof ProductForm, string>>;
+
 export interface FormFieldConfig {
   label: string;
-  name: keyof ProductForm;
+  name: ProductFormTextKey;
   type?: "text" | "number" | "select" | "textarea" | "file";
   placeholder?: string;
   required?: boolean;
@@ -28,6 +37,12 @@ export interface FormFieldConfig {
   options?: SelectOption[];
   accept?: string;
   hint?: React.ReactNode;
+  min?: number;
+  max?: number;
+  step?: number | "any";
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  /** Teclas (KeyboardEvent.key) que el input descarta al escribirse. */
+  blockedKeys?: readonly string[];
 }
 
 export interface ButtonConfig {

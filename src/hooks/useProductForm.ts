@@ -1,12 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "./useToast";
+import { useCatalogoDiseno } from "./useCatalogoDiseno";
 import {
   productService,
   uploadImage,
   uploadModel,
 } from "../services/product.service";
-import type { UpdateProductPayload, ProductForm } from "../interfaces";
+import {
+  MAX_MATERIALES_POR_DISENO,
+  MAX_PRECIO_BASE,
+  MAX_PRINT_HOURS,
+  MIN_PRINT_HOURS,
+} from "../utils/product.util";
+import type {
+  UpdateProductPayload,
+  ProductForm,
+  ProductFormErrors,
+} from "../interfaces";
 
 const INITIAL_FORM: ProductForm = {
   titulo: "",
@@ -16,7 +27,8 @@ const INITIAL_FORM: ProductForm = {
   formato: "",
   imagenUrl: "",
   archivoUrl: "",
-  specMaterial: "",
+  tecnologia: "",
+  materiales: [],
   specDimensiones: "",
   specDificultad: "",
   specTiempoImpresion: "",
@@ -25,10 +37,17 @@ const INITIAL_FORM: ProductForm = {
   specInfill: "",
 };
 
+// El backend admite hasta 2 decimales; el regex descarta notación exponencial y signos.
 function isValidPrecio(precioBase: string): boolean {
-  return (
-    !!precioBase && !Number.isNaN(Number(precioBase)) && Number(precioBase) > 0
-  );
+  if (!/^\d+(\.\d{1,2})?$/.test(precioBase)) return false;
+  const precio = Number(precioBase);
+  return Number.isFinite(precio) && precio > 0 && precio <= MAX_PRECIO_BASE;
+}
+
+function isValidPrintHours(value: string): boolean {
+  if (!/^\d+$/.test(value)) return false;
+  const hours = Number(value);
+  return hours >= MIN_PRINT_HOURS && hours <= MAX_PRINT_HOURS;
 }
 
 // Matches the backend's upload cap (see mec3d-back upload.service.ts).
@@ -60,7 +79,7 @@ export function useProductForm() {
   const { toasts, addToast, removeToast } = useToast();
 
   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
-  const [errors, setErrors] = useState<Partial<ProductForm>>({});
+  const [errors, setErrors] = useState<ProductFormErrors>({});
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -73,6 +92,18 @@ export function useProductForm() {
   const [notFound, setNotFound] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const archivoFileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    tecnologiaOptions,
+    materialOptions,
+    loadingMateriales,
+    error: catalogoError,
+  } = useCatalogoDiseno(form.tecnologia);
+
+  useEffect(() => {
+    if (catalogoError) {
+      addToast("No se pudo cargar el catálogo de tecnologías y materiales", "error");
+    }
+  }, [catalogoError, addToast]);
 
   useEffect(() => {
     return () => {
@@ -104,10 +135,13 @@ export function useProductForm() {
           formato: product.format,
           imagenUrl: product.imageUrl ?? "",
           archivoUrl: product.archivoUrl ?? "",
-          specMaterial: product.specs?.material ?? "",
+          tecnologia: product.tecnologia ?? "",
+          materiales: [...(product.materiales ?? [])],
           specDimensiones: product.specs?.dimensiones ?? "",
           specDificultad: product.specs?.dificultad ?? "",
-          specTiempoImpresion: product.specs?.tiempoImpresion ?? "",
+          specTiempoImpresion: product.specs
+            ? String(product.specs.tiempoImpresion)
+            : "",
           specSoportes: product.specs?.soportes ?? "",
           specLayer: product.specs?.configuracion.layer ?? "",
           specInfill: product.specs?.configuracion.infill ?? "",
@@ -129,9 +163,26 @@ export function useProductForm() {
     >,
   ) => {
     const { name, value } = e.target;
+    if (name === "tecnologia") {
+      // Cada material pertenece a una única tecnología: al cambiarla ninguno de los elegidos sigue siendo válido.
+      setForm((prev) => ({ ...prev, tecnologia: value, materiales: [] }));
+      setErrors((prev) => ({
+        ...prev,
+        tecnologia: undefined,
+        materiales: undefined,
+      }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name as keyof ProductForm]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleMaterialesChange = (materiales: string[]) => {
+    setForm((prev) => ({ ...prev, materiales }));
+    if (errors.materiales) {
+      setErrors((prev) => ({ ...prev, materiales: undefined }));
     }
   };
 
@@ -185,25 +236,36 @@ export function useProductForm() {
   };
 
   const validate = (): boolean => {
-    const newErrors: Partial<ProductForm> = {};
+    const newErrors: ProductFormErrors = {};
     if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
     if (!form.descripcion.trim())
       newErrors.descripcion = "La descripción es obligatoria";
     if (!form.categoria) newErrors.categoria = "Seleccioná una categoría";
     if (!isValidPrecio(form.precioBase))
-      newErrors.precioBase = "Ingresá un precio válido";
+      newErrors.precioBase = `Ingresá un precio mayor a 0 y hasta ${MAX_PRECIO_BASE.toLocaleString("es-AR")}, con máximo 2 decimales`;
     if (!form.formato) newErrors.formato = "Seleccioná un formato";
     if (!form.archivoUrl.trim() && !archivoFile)
       newErrors.archivoUrl = "Subí el archivo de diseño 3D";
     if (!form.imagenUrl && !imageFile)
       newErrors.imagenUrl = "La imagen es obligatoria";
-    if (!form.specMaterial) newErrors.specMaterial = "Seleccioná un material";
+    if (!form.tecnologia) newErrors.tecnologia = "Seleccioná una tecnología";
+    if (form.materiales.length === 0) {
+      newErrors.materiales = "Seleccioná al menos un material";
+    } else if (form.materiales.length > MAX_MATERIALES_POR_DISENO) {
+      newErrors.materiales = `Podés elegir hasta ${MAX_MATERIALES_POR_DISENO} materiales`;
+    } else if (
+      materialOptions.length > 0 &&
+      form.materiales.some((m) => !materialOptions.some((o) => o.value === m))
+    ) {
+      newErrors.materiales =
+        "Hay materiales que no corresponden a la tecnología elegida";
+    }
     if (!form.specDimensiones.trim())
       newErrors.specDimensiones = "Las dimensiones son obligatorias";
     if (!form.specDificultad)
       newErrors.specDificultad = "Seleccioná la dificultad";
-    if (!form.specTiempoImpresion.trim())
-      newErrors.specTiempoImpresion = "El tiempo de impresión es obligatorio";
+    if (!isValidPrintHours(form.specTiempoImpresion))
+      newErrors.specTiempoImpresion = `Ingresá un número entero de horas entre ${MIN_PRINT_HOURS} y ${MAX_PRINT_HOURS}`;
     if (!form.specSoportes)
       newErrors.specSoportes = "Seleccioná la opción de soportes";
     if (!form.specLayer) newErrors.specLayer = "Seleccioná la altura de capa";
@@ -246,10 +308,9 @@ export function useProductForm() {
         }
       }
       const especificaciones = {
-        material: form.specMaterial,
         dimensiones: form.specDimensiones,
         dificultad: form.specDificultad,
-        tiempoImpresion: form.specTiempoImpresion,
+        tiempoImpresion: Number(form.specTiempoImpresion),
         soportes: form.specSoportes,
         configuracion: {
           layer: form.specLayer,
@@ -265,6 +326,8 @@ export function useProductForm() {
           precioBase: Number(form.precioBase),
           formato: form.formato,
           categoria: form.categoria,
+          tecnologia: form.tecnologia,
+          materiales: form.materiales,
           especificaciones,
         };
         await productService.update(id, payload);
@@ -280,6 +343,8 @@ export function useProductForm() {
           precioBase: Number(form.precioBase),
           formato: form.formato,
           categoria: form.categoria,
+          tecnologia: form.tecnologia,
+          materiales: form.materiales,
           especificaciones,
         });
         navigate("/dashboard", {
@@ -303,6 +368,10 @@ export function useProductForm() {
     form,
     errors,
     handleChange,
+    handleMaterialesChange,
+    tecnologiaOptions,
+    materialOptions,
+    loadingMateriales,
     imageFile,
     imagePreview,
     uploadingImage,

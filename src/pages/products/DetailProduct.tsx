@@ -9,12 +9,16 @@ import {
   Clock,
   Wrench,
   SlidersHorizontal,
+  Cpu,
+  type LucideIcon,
 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
 import DesignerHeroCard from "../../components/DesignerHeroCard/DesignerHeroCard";
+import MaterialTagList from "../../components/MaterialTag/MaterialTagList";
 import { productService } from "../../services/product.service";
+import { formatPrintHours } from "../../utils/product.util";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
 import PageLoader from "../../components/PageLoader/PageLoader";
@@ -37,6 +41,12 @@ const ACTIONS: ActionItem[] = [
     variant: "outline",
   },
 ];
+
+interface SpecItem {
+  Icon: LucideIcon;
+  title: string;
+  value: ReactNode;
+}
 
 interface StarProps {
   rating: number;
@@ -117,6 +127,36 @@ function DetailProduct() {
         designerProducts.length
       : product.rating;
 
+  const specItems: SpecItem[] = [
+    { Icon: Cpu, title: "Tecnología", value: <span>{product.tecnologia}</span> },
+    {
+      Icon: Box,
+      title: "Materiales",
+      value: <MaterialTagList items={product.materiales} />,
+    },
+  ];
+  if (product.specs) {
+    const { dimensiones, dificultad, tiempoImpresion, soportes, configuracion } =
+      product.specs;
+    specItems.push(
+      { Icon: Ruler, title: "Dimensiones", value: <span>{dimensiones}</span> },
+      { Icon: Gauge, title: "Dificultad", value: <span>{dificultad}</span> },
+      {
+        Icon: Clock,
+        title: "Tiempo de Impresión",
+        value: <span>{formatPrintHours(tiempoImpresion)}</span>,
+      },
+      { Icon: Wrench, title: "Soportes", value: <span>{soportes}</span> },
+      {
+        Icon: SlidersHorizontal,
+        title: "Configuración",
+        value: (
+          <span>{`Layer: ${configuracion.layer} · Infill: ${configuracion.infill}`}</span>
+        ),
+      },
+    );
+  }
+
   return (
     <Layout>
       <div className="detail-product">
@@ -189,43 +229,16 @@ function DetailProduct() {
             Especificaciones Técnicas
           </h2>
           <div className="detail-product__specs-grid">
-            {product.specs &&
-              (() => {
-                const {
-                  material,
-                  dimensiones,
-                  dificultad,
-                  tiempoImpresion,
-                  soportes,
-                  configuracion,
-                } = product.specs;
-                const items = [
-                  { Icon: Box, title: "Material", value: material },
-                  { Icon: Ruler, title: "Dimensiones", value: dimensiones },
-                  { Icon: Gauge, title: "Dificultad", value: dificultad },
-                  {
-                    Icon: Clock,
-                    title: "Tiempo de Impresión",
-                    value: tiempoImpresion,
-                  },
-                  { Icon: Wrench, title: "Soportes", value: soportes },
-                  {
-                    Icon: SlidersHorizontal,
-                    title: "Configuración",
-                    value: `Layer: ${configuracion.layer} · Infill: ${configuracion.infill}`,
-                  },
-                ];
-                return items.map(({ Icon, title, value }) => (
-                  <Card
-                    key={title}
-                    variant="spec"
-                    title={title}
-                    icon={<Icon size={16} strokeWidth={2} />}
-                  >
-                    <span>{value}</span>
-                  </Card>
-                ));
-              })()}
+            {specItems.map(({ Icon, title, value }) => (
+              <Card
+                key={title}
+                variant="spec"
+                title={title}
+                icon={<Icon size={16} strokeWidth={2} />}
+              >
+                {value}
+              </Card>
+            ))}
           </div>
         </section>
 

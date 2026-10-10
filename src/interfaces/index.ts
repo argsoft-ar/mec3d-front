@@ -5,6 +5,8 @@ export * from "./product.interface";
 export * from "./form.interface";
 export * from "./georef.interface";
 export * from "./modelViewer.interface";
+export * from "./pago.interface";
 export * from "./compra.interface";
 export * from "./orden-fabricacion.interface";
 export * from "./chat.interface";
+export * from "./admin.interface";

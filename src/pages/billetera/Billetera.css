@@ -1,0 +1,55 @@
+.billetera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.billetera__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  background-color: var(--color-warning-light);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.billetera__notice a {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.billetera__retention {
+  color: var(--color-warning);
+  font-weight: var(--font-weight-semibold);
+}
+
+.billetera__fees {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.billetera__filter {
+  max-width: 280px;
+}
+
+.billetera__table--loading {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.billetera__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--color-danger);
+}
+
+.billetera__error-inline {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}

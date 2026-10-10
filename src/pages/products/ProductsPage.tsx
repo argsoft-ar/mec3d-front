@@ -164,6 +164,8 @@ function ProductsPage() {
             rating={product.rating}
             downloads={product.downloads}
             price={product.price}
+            tecnologia={product.tecnologia}
+            materiales={product.materiales}
             badge={(() => {
               if (userZonaId === null || product.designer.zonaId == null)
                 return undefined;

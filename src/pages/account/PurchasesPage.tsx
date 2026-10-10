@@ -1,16 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { KeyRound } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import PurchaseCard from "../../components/PurchaseCard/PurchaseCard";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
+import CodigoEntregaDialog from "../../components/CodigoEntregaDialog/CodigoEntregaDialog";
+import MotivoDialog from "../../components/MotivoDialog/MotivoDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
+import { useCheckout } from "../../hooks/useCheckout";
+import { useCodigoEntrega } from "../../hooks/useCodigoEntrega";
+import { useDisputa } from "../../hooks/useDisputa";
 import { compraService, descargarCompra } from "../../services/compra.service";
+import { getErrorMessage } from "../../services/http.client";
 import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
+import { MAX_MOTIVO_DISPUTA } from "../../interfaces";
 import type { MisComprasItem } from "../../interfaces";
 import type { PurchaseDeliveryStage } from "../../components/PurchaseCard/PurchaseCard.types";
 import "./PurchasesPage.css";
@@ -23,6 +29,7 @@ const BREADCRUMB_ITEMS = [
 
 function deliveryStageFor(item: MisComprasItem): PurchaseDeliveryStage {
   if (item.ordenFabricacionEstado === "completado") return "completado";
+  if (item.ordenFabricacionEstado === "en_disputa") return "en_disputa";
   if (item.ordenFabricacionEstado === "confirmada") return "confirmada";
   if (item.ordenFabricacionEstado === "trato_cerrado") return "trato_cerrado";
   return "none";
@@ -37,9 +44,20 @@ function PurchasesPage() {
   const [confirmingItem, setConfirmingItem] = useState<MisComprasItem | null>(
     null,
   );
-  const [codigo, setCodigo] = useState<string | null>(null);
-  const [loadingCodigo, setLoadingCodigo] = useState(false);
   const [submittingConfirm, setSubmittingConfirm] = useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const { pagar } = useCheckout(addToast);
+  const codigoEntrega = useCodigoEntrega(addToast);
+  const marcarEnDisputa = useCallback((ordenId: string) => {
+    setPurchases((prev) =>
+      prev.map((p) =>
+        p.ordenFabricacionId === ordenId
+          ? { ...p, ordenFabricacionEstado: "en_disputa" }
+          : p,
+      ),
+    );
+  }, []);
+  const disputa = useDisputa(addToast, marcarEnDisputa);
 
   useEffect(() => {
     compraService
@@ -55,35 +73,26 @@ function PurchasesPage() {
       const ext =
         item.diseno.formato?.split(",")[0]?.trim().toLowerCase() || "zip";
       await descargarCompra(item.id, `${item.diseno.titulo}.${ext}`);
-    } catch {
-      addToast("Error al descargar el archivo", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "Error al descargar el archivo"), "error");
     } finally {
       setDownloadingId(null);
     }
   }
 
+  async function handlePagar(item: MisComprasItem) {
+    setPayingId(item.id);
+    const redirigido = await pagar(item.id);
+    // Si se redirige a Mercado Pago, la página se descarga y el botón queda en carga.
+    if (!redirigido) setPayingId(null);
+  }
+
   function handleSolicitarFabricacion(item: MisComprasItem) {
     navigate(`/product/${item.idModelo}/fabricantes`, {
-      state: { compraId: item.id },
+      state: { compraId: item.id, material: item.material },
     });
   }
 
-  async function openConfirmDelivery(item: MisComprasItem) {
-    setConfirmingItem(item);
-    setCodigo(null);
-    if (!item.ordenFabricacionId) return;
-    setLoadingCodigo(true);
-    try {
-      const res = await ordenFabricacionService.codigoEntrega(
-        item.ordenFabricacionId,
-      );
-      setCodigo(res.data?.codigoEntrega ?? null);
-    } catch {
-      addToast("No se pudo obtener el código de entrega", "error");
-    } finally {
-      setLoadingCodigo(false);
-    }
-  }
 
   async function handleConfirmDelivery() {
     if (!confirmingItem?.ordenFabricacionId) return;
@@ -104,8 +113,8 @@ function PurchasesPage() {
         "success",
       );
       setConfirmingItem(null);
-    } catch {
-      addToast("No se pudo confirmar la entrega", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "No se pudo confirmar la entrega"), "error");
     } finally {
       setSubmittingConfirm(false);
     }
@@ -132,12 +141,27 @@ function PurchasesPage() {
               imageUrl={item.diseno.imagenUrl ?? ""}
               title={item.diseno.titulo}
               format={item.diseno.formato ?? ""}
+              material={item.material}
               pricePaid={item.precioPagado}
+              tipo={item.tipo}
+              estadoCompra={item.estado}
               deliveryStage={deliveryStageFor(item)}
               downloading={downloadingId === item.id}
+              paying={payingId === item.id}
               onDownload={() => handleDownload(item)}
+              onPagar={() => handlePagar(item)}
               onSolicitarFabricacion={() => handleSolicitarFabricacion(item)}
-              onConfirmarEntrega={() => openConfirmDelivery(item)}
+              onConfirmarEntrega={() => setConfirmingItem(item)}
+              onGenerarCodigo={
+                item.ordenFabricacionId
+                  ? () => codigoEntrega.abrir(item.ordenFabricacionId as string)
+                  : undefined
+              }
+              onAbrirDisputa={
+                item.ordenFabricacionId
+                  ? () => disputa.abrir(item.ordenFabricacionId as string)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -146,20 +170,41 @@ function PurchasesPage() {
       <ConfirmDialog
         open={confirmingItem !== null}
         title="Confirmar entrega"
-        message="Brindale estos 6 dígitos al fabricante para confirmar que recibiste la pieza. No lo hagas si todavía no la recibiste."
+        message="Confirmá solo si ya recibiste la pieza. Después vas a poder generar el código de 6 dígitos que el fabricante necesita para validar la entrega."
         confirmLabel="Confirmar entrega"
         cancelLabel="Cancelar"
         variant="warning"
         loading={submittingConfirm}
-        confirmDisabled={loadingCodigo || !codigo}
         onConfirm={handleConfirmDelivery}
         onCancel={() => setConfirmingItem(null)}
-      >
-        <div className="purchases-page__codigo-display">
-          <KeyRound size={16} strokeWidth={2} />
-          <span>{loadingCodigo ? "Cargando código..." : (codigo ?? "—")}</span>
-        </div>
-      </ConfirmDialog>
+      />
+
+      <CodigoEntregaDialog
+        paso={codigoEntrega.paso}
+        codigo={codigoEntrega.codigo}
+        loading={codigoEntrega.loading}
+        onGenerar={codigoEntrega.generar}
+        onCerrar={codigoEntrega.cerrar}
+      />
+
+      <MotivoDialog
+        open={disputa.abierto}
+        title="Abrir disputa"
+        message="Los fondos quedan congelados y un administrador revisará el caso. Contanos qué pasó: no se puede deshacer."
+        fieldLabel="Motivo de la disputa"
+        placeholder="Describí el problema con la pieza o la entrega"
+        value={disputa.motivo}
+        onChange={disputa.handleMotivoChange}
+        maxLength={MAX_MOTIVO_DISPUTA}
+        error={disputa.error}
+        confirmLabel="Abrir disputa"
+        cancelLabel="Volver"
+        variant="danger"
+        loading={disputa.loading}
+        confirmDisabled={disputa.invalido}
+        onConfirm={disputa.enviar}
+        onCancel={disputa.cerrar}
+      />
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </Layout>

@@ -16,6 +16,12 @@ export interface ToastItem {
   duration?: number;
 }
 
+export type AddToast = (
+  message: string,
+  type: ToastType,
+  duration?: number,
+) => void;
+
 // Button
 export type ButtonVariant =
   | "primary"
@@ -24,6 +30,15 @@ export type ButtonVariant =
   | "danger"
   | "outline";
 export type ButtonSize = "sm" | "md" | "lg";
+
+// Tag / badge
+export type TagVariant =
+  | "primary"
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info";
 
 // Card
 export type CardVariant =

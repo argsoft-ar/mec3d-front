@@ -1,5 +1,6 @@
 import { io, type Socket } from "socket.io-client";
 import { BASE_URL } from "./http.client";
+import { onSessionCleared } from "./session";
 
 // El socket de chat corre en el mismo host/puerto que la API pero sin el
 // prefijo /api/v1 (server.ts monta Socket.IO sobre el mismo http.Server).
@@ -21,3 +22,6 @@ export function disconnectSocket(): void {
   socket?.disconnect();
   socket = null;
 }
+
+// Logout, 401 y nuevo login: el socket autenticado con el token anterior no debe sobrevivir.
+onSessionCleared(disconnectSocket);

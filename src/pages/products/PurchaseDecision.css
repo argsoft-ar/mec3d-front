@@ -5,6 +5,20 @@
   margin-bottom: var(--space-8);
 }
 
+.purchase-decision__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.purchase-decision__tecnologia {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
 .purchase-decision__token {
   margin-bottom: var(--space-8);
 }

@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  ArchivoPreviewResponse,
   PaginatedResponse,
   Product,
   CreateProductPayload,
@@ -28,6 +29,10 @@ export const productService = {
   },
 
   getMine: () => request<Product[]>("/productos/mis-disenos"),
+
+  /** URL firmada (vida corta) para el visor 3D; requiere acceso al archivo. */
+  getArchivoPreview: (id: string) =>
+    request<ArchivoPreviewResponse>(`/productos/${id}/archivo-preview`),
 
   create: (payload: CreateProductPayload) =>
     request<ApiResponse<Product>>("/productos", {

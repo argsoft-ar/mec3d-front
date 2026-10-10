@@ -12,6 +12,12 @@ import { useGeoref } from "../../hooks/useGeoref";
 import { useUsernameAvailability } from "../../hooks/useUsernameAvailability";
 import { usuarioService } from "../../services/usuario.service";
 import { toZonaId } from "../../services/georef.service";
+import {
+  AVISO_COOLDOWN_CUENTA,
+  MAX_CUENTA_MERCADOPAGO,
+  validarCuentaMercadopago,
+} from "../../utils/cuenta.util";
+import { formatDateTime } from "../../utils/format.util";
 import type {
   ApiError,
   PerfilCompleto,
@@ -140,6 +146,10 @@ function Account() {
   }
 
   async function handleSaveProfile() {
+    if (cuentaError) {
+      addToast(cuentaError, "warning");
+      return;
+    }
     setSavingProfile(true);
     try {
       const payload: UpdateProfileDTO = {};
@@ -153,7 +163,10 @@ function Account() {
         "direccion",
       ];
       for (const field of textFields) {
-        const value = profileForm[field];
+        const value =
+          field === "cuentaMercadopago"
+            ? profileForm[field].trim()
+            : profileForm[field];
         const original = profile?.[field] ?? "";
         if (value === original) continue;
         // never resend an empty username, backend treats "" as an explicit taken-check
@@ -242,6 +255,20 @@ function Account() {
   const displayName = profile ? deriveDisplayName(profile.email) : "Usuario";
   const initials = profile ? deriveInitials(profile.email) : "U";
 
+  const cuentaError = validarCuentaMercadopago(profileForm.cuentaMercadopago);
+  const cuentaEnCooldown = profile?.cuentaMercadopagoEnCooldown === true;
+  const cuentaHint = (
+    <>
+      {cuentaEnCooldown && (
+        <span className="account__cooldown">
+          Tu cuenta fue actualizada; los cobros se habilitan el{" "}
+          {formatDateTime(profile?.cuentaMercadopagoHabilitadaDesde)}.{" "}
+        </span>
+      )}
+      {AVISO_COOLDOWN_CUENTA}
+    </>
+  );
+
   let usernameHint: string | undefined;
   if (usernameStatus === "checking")
     usernameHint = "Comprobando disponibilidad...";
@@ -306,6 +333,19 @@ function Account() {
                   disabled={savingProfile}
                 />
               ))}
+              <FormField
+                label="Cuenta de Mercado Pago"
+                name="cuentaMercadopago"
+                type="text"
+                value={profileForm.cuentaMercadopago}
+                onChange={handleProfileChange}
+                placeholder="CBU/CVU (22 dígitos), alias o email"
+                maxLength={MAX_CUENTA_MERCADOPAGO}
+                fullWidth
+                disabled={savingProfile}
+                error={cuentaError}
+                hint={cuentaHint}
+              />
               {zonaFields.map((f) => (
                 <FormField
                   key={f.name}
@@ -325,6 +365,7 @@ function Account() {
                 variant="primary"
                 type="button"
                 loading={savingProfile}
+                disabled={cuentaError !== undefined}
                 onClick={handleSaveProfile}
               />
             </div>

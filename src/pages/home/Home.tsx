@@ -184,6 +184,8 @@ function Home() {
                 rating={product.rating}
                 downloads={product.downloads}
                 price={product.price}
+                tecnologia={product.tecnologia}
+                materiales={product.materiales}
                 onClick={() => navigate(`/product/${product.id}`)}
               />
             ))}

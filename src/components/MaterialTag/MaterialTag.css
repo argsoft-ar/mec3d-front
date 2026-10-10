@@ -1,15 +1,41 @@
 .material-tag {
+  --tag-color: var(--color-primary);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid var(--tag-color);
+  background: color-mix(in srgb, var(--tag-color) 12%, transparent);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   white-space: nowrap;
+}
+
+.material-tag--neutral {
+  --tag-color: var(--color-text-muted);
+}
+
+.material-tag--success {
+  --tag-color: var(--color-success);
+}
+
+.material-tag--warning {
+  --tag-color: var(--color-warning);
+}
+
+.material-tag--danger {
+  --tag-color: var(--color-danger);
+}
+
+.material-tag--info {
+  --tag-color: var(--color-info);
+}
+
+.material-tag--sm {
+  padding: 2px var(--space-2);
+  font-size: var(--font-size-xs);
 }
 
 .material-tag__remove {

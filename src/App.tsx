@@ -7,9 +7,12 @@ import {
   ShoppingBag,
   MessageSquare,
   Hammer,
+  Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import Navbar from "./components/Navbar/Navbar";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import AdminRoute from "./auth/AdminRoute";
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import Home from "./pages/home/Home";
@@ -23,8 +26,12 @@ import PurchaseDecision from "./pages/products/PurchaseDecision";
 import FabricanteSelection from "./pages/fabricacion/FabricanteSelection";
 import MisSolicitudesFabricacion from "./pages/fabricacion/MisSolicitudesFabricacion";
 import PurchasesPage from "./pages/account/PurchasesPage";
+import PagoResultado from "./pages/pago/PagoResultado";
+import Billetera from "./pages/billetera/Billetera";
 import ChatPage from "./pages/chat/ChatPage";
 import Profile from "./pages/profile/Profile";
+import AdminPage from "./pages/admin/AdminPage";
+import { puedeVerAdmin } from "./utils/admin-access.util";
 import type { NavLink } from "./types";
 import type { RolUsuario } from "./interfaces";
 import "./index.css";
@@ -52,6 +59,11 @@ const BASE_NAV_LINKS: NavLink[] = [
     icon: <ShoppingBag size={18} strokeWidth={1.5} />,
   },
   {
+    label: "Billetera",
+    path: "/billetera",
+    icon: <Wallet size={18} strokeWidth={1.5} />,
+  },
+  {
     label: "Chat",
     path: "/chat",
     icon: <MessageSquare size={18} strokeWidth={1.5} />,
@@ -62,6 +74,12 @@ const FABRICANTE_NAV_LINK: NavLink = {
   label: "Mis Solicitudes",
   path: "/fabricacion/mis-solicitudes",
   icon: <Hammer size={18} strokeWidth={1.5} />,
+};
+
+const ADMIN_NAV_LINK: NavLink = {
+  label: "Admin",
+  path: "/admin",
+  icon: <ShieldCheck size={18} strokeWidth={1.5} />,
 };
 
 const AUTH_ROUTES = ["/login", "/register"];
@@ -81,10 +99,11 @@ function getCurrentUserRole(): RolUsuario | null {
 function AppShell() {
   const location = useLocation();
   const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
-  const navLinks =
-    getCurrentUserRole() === "fabricante"
-      ? [...BASE_NAV_LINKS, FABRICANTE_NAV_LINK]
-      : BASE_NAV_LINKS;
+  const navLinks = [
+    ...BASE_NAV_LINKS,
+    ...(getCurrentUserRole() === "fabricante" ? [FABRICANTE_NAV_LINK] : []),
+    ...(puedeVerAdmin() ? [ADMIN_NAV_LINK] : []),
+  ];
 
   return (
     <>
@@ -113,9 +132,25 @@ function AppShell() {
               element={<MisSolicitudesFabricacion />}
             />
             <Route path="/account/purchases" element={<PurchasesPage />} />
+            <Route
+              path="/pago/exito"
+              element={<PagoResultado variant="exito" />}
+            />
+            <Route
+              path="/pago/error"
+              element={<PagoResultado variant="error" />}
+            />
+            <Route
+              path="/pago/pendiente"
+              element={<PagoResultado variant="pendiente" />}
+            />
+            <Route path="/billetera" element={<Billetera />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/chat/:conversacionId" element={<ChatPage />} />
             <Route path="/profile/:designerName" element={<Profile />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
             <Route
               path="/dashboard/products/new"
               element={<ProductFormPage />}

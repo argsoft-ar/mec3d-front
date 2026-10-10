@@ -24,6 +24,9 @@ const MAX_MODEL_SIZE_BYTES = 30 * 1024 * 1024;
 const HEAVY_FILE_MESSAGE =
   "Este archivo es muy pesado para previsualizar en el navegador. Descargalo para verlo en tu software CAD.";
 
+const LOAD_FAILED_MESSAGE =
+  "No se pudo cargar la vista previa. Descargá el archivo para verlo en tu software CAD.";
+
 const UNSUPPORTED_FORMAT_MESSAGE =
   "Vista previa no disponible para este formato. Descargá el archivo para verlo en tu software CAD.";
 
@@ -31,56 +34,94 @@ function isSupportedFormat(format: string): format is SupportedFormat {
   return (SUPPORTED_FORMATS as readonly string[]).includes(format);
 }
 
-type SizeGuardStatus = "checking" | "safe" | "blocked";
+type ModelSourceStatus = "loading" | "ready" | "blocked" | "failed";
 
-// Issues a HEAD request to read Content-Length before any loader touches the
-// file. Pre-existing files uploaded before the 30MB cap existed can still be
-// huge, and a missing/unreadable header is treated as "blocked" rather than
-// "safe" — we'd rather show the download fallback than risk freezing the
-// main thread while parsing an unexpectedly large model.
-async function checkModelSize(url: string): Promise<SizeGuardStatus> {
-  // The Fetch spec forbids non-GET methods on blob: URLs, so HEAD always
-  // errors here; local files are already size-validated before the object
-  // URL is created, so we can safely skip the check.
-  if (url.startsWith("blob:")) return "safe";
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    const contentLength = response.headers.get("content-length");
-    if (!response.ok || contentLength === null) return "blocked";
-    const size = Number(contentLength);
-    return Number.isFinite(size) && size <= MAX_MODEL_SIZE_BYTES
-      ? "safe"
-      : "blocked";
-  } catch {
-    return "blocked";
-  }
+interface ModelSource {
+  status: ModelSourceStatus;
+  src: string | null;
 }
 
-function useModelSizeGuard(url: string, enabled: boolean): SizeGuardStatus {
+// Signed (SigV4) URLs sign the HTTP method, so the size cannot be probed with HEAD and
+// extra request headers are avoided. The file is downloaded once with a plain GET,
+// aborting as soon as it exceeds the cap (declared Content-Length or bytes actually read);
+// the loaders then parse the resulting blob URL without hitting the network again.
+// Resolves to null when the file is over the cap.
+async function fetchModelBlob(
+  url: string,
+  signal: AbortSignal,
+): Promise<Blob | null> {
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+  const declared = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_MODEL_SIZE_BYTES) {
+    await response.body?.cancel();
+    return null;
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const blob = await response.blob();
+    return blob.size <= MAX_MODEL_SIZE_BYTES ? blob : null;
+  }
+
+  const chunks: BlobPart[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > MAX_MODEL_SIZE_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new Blob(chunks);
+}
+
+function useModelSource(url: string, enabled: boolean): ModelSource {
+  // Local files are already size-validated before their object URL is created.
+  const isLocal = url.startsWith("blob:");
   const key = `${url}|${enabled}`;
   // Result is tagged with the inputs it was computed for, so a stale result
-  // from a previous url/enabled pair is treated as "checking" during render
+  // from a previous url/enabled pair is treated as "loading" during render
   // instead of resetting state imperatively from inside the effect.
-  const [result, setResult] = useState<{
-    key: string;
-    status: SizeGuardStatus;
-  }>({ key, status: "checking" });
-  const status = result.key === key ? result.status : "checking";
+  const [result, setResult] = useState<{ key: string } & ModelSource>({
+    key,
+    status: "loading",
+    src: null,
+  });
 
   useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
+    if (!enabled || isLocal) return;
+    const controller = new AbortController();
+    let objectUrl: string | null = null;
 
-    checkModelSize(url).then((resolvedStatus) => {
-      if (!cancelled) setResult({ key, status: resolvedStatus });
-    });
+    fetchModelBlob(url, controller.signal)
+      .then((blob) => {
+        if (blob === null) {
+          setResult({ key, status: "blocked", src: null });
+          return;
+        }
+        objectUrl = URL.createObjectURL(blob);
+        setResult({ key, status: "ready", src: objectUrl });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setResult({ key, status: "failed", src: null });
+        }
+      });
 
     return () => {
-      cancelled = true;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [url, enabled, key]);
+  }, [url, enabled, isLocal, key]);
 
-  return status;
+  if (enabled && isLocal) return { status: "ready", src: url };
+  if (result.key !== key) return { status: "loading", src: null };
+  return { status: result.status, src: result.src };
 }
 
 function disposeObject3D(object: THREE.Object3D): void {
@@ -172,7 +213,7 @@ function FallbackMessage({ text }: Readonly<{ text: string }>) {
 function SizeCheckingIndicator() {
   return (
     <div className="model-viewer-3d__fallback">
-      <div className="model-viewer-3d__loading">Comprobando el archivo…</div>
+      <div className="model-viewer-3d__loading">Descargando el modelo…</div>
     </div>
   );
 }
@@ -215,15 +256,20 @@ function ModelViewer3D({
 }: ModelViewer3DProps) {
   const normalizedFormat = useMemo(() => format.trim().toUpperCase(), [format]);
   const formatIsSupported = isSupportedFormat(normalizedFormat);
-  const sizeGuardStatus = useModelSizeGuard(url, formatIsSupported);
+  const { status: sourceStatus, src: modelSrc } = useModelSource(
+    url,
+    formatIsSupported,
+  );
 
   useEffect(() => {
     if (!formatIsSupported) onPreviewError?.();
   }, [formatIsSupported, onPreviewError]);
 
   useEffect(() => {
-    if (sizeGuardStatus === "blocked") onPreviewError?.();
-  }, [sizeGuardStatus, onPreviewError]);
+    if (sourceStatus === "blocked" || sourceStatus === "failed") {
+      onPreviewError?.();
+    }
+  }, [sourceStatus, onPreviewError]);
 
   if (!formatIsSupported) {
     return (
@@ -233,7 +279,7 @@ function ModelViewer3D({
     );
   }
 
-  if (sizeGuardStatus === "checking") {
+  if (sourceStatus === "loading") {
     return (
       <div className={`model-viewer-3d ${className}`.trim()}>
         <SizeCheckingIndicator />
@@ -241,10 +287,14 @@ function ModelViewer3D({
     );
   }
 
-  if (sizeGuardStatus === "blocked") {
+  if (sourceStatus === "blocked" || sourceStatus === "failed" || !modelSrc) {
     return (
       <div className={`model-viewer-3d ${className}`.trim()}>
-        <FallbackMessage text={HEAVY_FILE_MESSAGE} />
+        <FallbackMessage
+          text={
+            sourceStatus === "blocked" ? HEAVY_FILE_MESSAGE : LOAD_FAILED_MESSAGE
+          }
+        />
       </div>
     );
   }
@@ -267,7 +317,7 @@ function ModelViewer3D({
           <Suspense fallback={<CanvasLoader />}>
             <Bounds fit clip observe margin={1.2}>
               <Center>
-                <SceneModel url={url} format={normalizedFormat} />
+                <SceneModel url={modelSrc} format={normalizedFormat} />
               </Center>
             </Bounds>
           </Suspense>

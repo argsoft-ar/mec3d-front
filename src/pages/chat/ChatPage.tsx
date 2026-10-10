@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { Send } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
@@ -8,9 +9,23 @@ import FormField from "../../components/Form/FormField";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
+import MotivoDialog from "../../components/MotivoDialog/MotivoDialog";
+import CodigoEntregaDialog from "../../components/CodigoEntregaDialog/CodigoEntregaDialog";
+import MaterialTag from "../../components/MaterialTag/MaterialTag";
 import { useToast } from "../../hooks/useToast";
 import { useConversaciones } from "../../hooks/useConversaciones";
 import { useChatThread } from "../../hooks/useChatThread";
+import { useCheckout } from "../../hooks/useCheckout";
+import { useCodigoEntrega } from "../../hooks/useCodigoEntrega";
+import { useDisputa } from "../../hooks/useDisputa";
+import { useCompraDeOrden } from "../../hooks/useCompraDeOrden";
+import {
+  AVISO_EN_DISPUTA,
+  compraPagada,
+  estadoCompraVisual,
+  puedeDisputarOrden,
+} from "../../utils/estado.util";
+import { MAX_MOTIVO_DISPUTA } from "../../interfaces";
 import type { ConversacionResumen } from "../../interfaces";
 import "./ChatPage.css";
 
@@ -52,6 +67,23 @@ function ChatThread({
   onDealUpdate,
   addToast,
 }: Readonly<ChatThreadProps>) {
+  const tratoVigente =
+    conversacion?.estadoOrden === "trato_cerrado" ||
+    conversacion?.estadoOrden === "confirmada";
+  const compra = useCompraDeOrden(
+    ordenFabricacionId,
+    conversacion?.miRol,
+    tratoVigente || conversacion?.estadoOrden === "en_disputa",
+  );
+  const { paying, pagar } = useCheckout(addToast);
+  const codigoEntrega = useCodigoEntrega(addToast);
+  const { refresh: refreshCompra } = compra;
+  const handleDealUpdate = useCallback(() => {
+    onDealUpdate();
+    refreshCompra();
+  }, [onDealUpdate, refreshCompra]);
+  const disputa = useDisputa(addToast, handleDealUpdate);
+
   const {
     mensajes,
     loadingMensajes,
@@ -71,18 +103,22 @@ function ChatThread({
     handleAbrirProponerModal,
     handleCerrarProponerModal,
     handleProponerPrecio,
-    codigoEntrega,
-    loadingCodigo,
-    handleVerCodigoEntrega,
     dealClosed,
     precioAcordadoValue,
   } = useChatThread({
     conversacionId,
     ordenFabricacionId,
     conversacion,
-    onDealUpdate,
+    onDealUpdate: handleDealUpdate,
     addToast,
   });
+
+  const estadoPago = compra.estado ? estadoCompraVisual(compra.estado) : null;
+  const esComprador = conversacion?.miRol === "comprador";
+  const pagada = compraPagada(compra.estado);
+  const puedeDisputar =
+    esComprador && puedeDisputarOrden(conversacion?.estadoOrden, compra.estado);
+  const enDisputa = conversacion?.estadoOrden === "en_disputa";
 
   return (
     <>
@@ -106,24 +142,70 @@ function ChatThread({
         )}
       </div>
 
-      {conversacion?.miRol === "comprador" &&
-        (conversacion?.estadoOrden === "trato_cerrado" ||
-          conversacion?.estadoOrden === "confirmada") && (
-          <div className="chat-page__delivery-code">
-            {codigoEntrega ? (
-              <span className="chat-page__delivery-code-value">
-                Código de entrega: <strong>{codigoEntrega}</strong>
-              </span>
-            ) : (
-              <Button
-                title="Ver código de entrega"
-                variant="outline"
-                loading={loadingCodigo}
-                onClick={handleVerCodigoEntrega}
-              />
-            )}
-          </div>
-        )}
+      {estadoPago && tratoVigente && (
+        <div className="chat-page__delivery-code">
+          <MaterialTag
+            label={`Pago: ${estadoPago.label}`}
+            variant={estadoPago.variant}
+            size="sm"
+          />
+          {esComprador && compra.estado === "pendiente_pago" && compra.compraId && (
+            <Button
+              title="Pagar"
+              variant="primary"
+              loading={paying}
+              onClick={() => pagar(compra.compraId as string)}
+            />
+          )}
+          {esComprador && pagada && ordenFabricacionId && (
+            <Button
+              title="Código de entrega"
+              variant="outline"
+              onClick={() => codigoEntrega.abrir(ordenFabricacionId)}
+            />
+          )}
+          {puedeDisputar && ordenFabricacionId && (
+            <Button
+              title="Abrir disputa"
+              variant="danger"
+              onClick={() => disputa.abrir(ordenFabricacionId)}
+            />
+          )}
+        </div>
+      )}
+
+      {enDisputa && (
+        <p className="chat-page__dispute-notice" role="status">
+          <strong>Orden en disputa.</strong> {AVISO_EN_DISPUTA}
+        </p>
+      )}
+
+      <MotivoDialog
+        open={disputa.abierto}
+        title="Abrir disputa"
+        message="Los fondos quedan congelados y un administrador revisará el caso. Contanos qué pasó: no se puede deshacer."
+        fieldLabel="Motivo de la disputa"
+        placeholder="Describí el problema con la pieza o la entrega"
+        value={disputa.motivo}
+        onChange={disputa.handleMotivoChange}
+        maxLength={MAX_MOTIVO_DISPUTA}
+        error={disputa.error}
+        confirmLabel="Abrir disputa"
+        cancelLabel="Volver"
+        variant="danger"
+        loading={disputa.loading}
+        confirmDisabled={disputa.invalido}
+        onConfirm={disputa.enviar}
+        onCancel={disputa.cerrar}
+      />
+
+      <CodigoEntregaDialog
+        paso={codigoEntrega.paso}
+        codigo={codigoEntrega.codigo}
+        loading={codigoEntrega.loading}
+        onGenerar={codigoEntrega.generar}
+        onCerrar={codigoEntrega.cerrar}
+      />
 
       {loadingMensajes ? (
         <PageLoader />

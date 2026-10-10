@@ -17,18 +17,23 @@ export interface TokenPayload {
 export interface Material {
   id: number;
   material: string;
+  materialId: number;
+  tecnologia: string;
   disponible: boolean;
 }
 
 export interface Tecnologia {
   id: number;
   tecnologia: string;
+  tecnologiaId: number;
   disponible: boolean;
 }
 
 export interface CatalogoItem {
   id: number;
   nombre: string;
+  /** Solo presente en los materiales. */
+  tecnologiaId?: number;
 }
 
 export interface UpdateProfileDTO {
@@ -51,6 +56,9 @@ export interface PerfilCompleto {
   zonaId: number | null;
   puntuacion: number;
   cuentaMercadopago: string | null;
+  /** Tras cambiar la cuenta no se puede cobrar a ella hasta `cuentaMercadopagoHabilitadaDesde` (24 h). */
+  cuentaMercadopagoEnCooldown?: boolean;
+  cuentaMercadopagoHabilitadaDesde?: string | null;
   tagline: string | null;
   descripcion: string | null;
   experiencia: string | null;

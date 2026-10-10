@@ -5,10 +5,8 @@ import Form from "../Form/Form";
 import FormField from "../Form/FormField";
 import Button from "../Button/Button";
 import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
-import {
-  usuarioService,
-  catalogoService,
-} from "../../services/usuario.service";
+import { usuarioService } from "../../services/usuario.service";
+import { catalogoService } from "../../services/catalogo.service";
 import type {
   PerfilCompleto,
   RolUsuario,

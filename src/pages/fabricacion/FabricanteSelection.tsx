@@ -6,6 +6,7 @@ import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import Header from "../../components/Header/Header";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
+import MaterialTag from "../../components/MaterialTag/MaterialTag";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
@@ -17,6 +18,7 @@ import "./FabricanteSelection.css";
 
 interface LocationState {
   compraId?: string;
+  material?: string | null;
 }
 
 async function resolveZonaLabel(zonaId: number): Promise<string> {
@@ -51,6 +53,8 @@ function FabricanteSelection() {
   const location = useLocation();
   const { toasts, addToast, removeToast } = useToast();
   const compraId = (location.state as LocationState | null)?.compraId;
+  const material =
+    (location.state as LocationState | null)?.material ?? undefined;
 
   const [fabricantes, setFabricantes] = useState<FabricanteSugerido[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,13 +64,13 @@ function FabricanteSelection() {
   const resolvedZonasRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !compraId) return;
     ordenFabricacionService
-      .fabricantesSugeridos(id)
+      .fabricantesSugeridos({ disenoId: id, compraId, material })
       .then(setFabricantes)
       .catch(() => addToast("No se pudieron cargar los fabricantes", "error"))
       .finally(() => setLoading(false));
-  }, [id, addToast]);
+  }, [id, compraId, material, addToast]);
 
   useEffect(() => {
     const uniqueZonaIds = Array.from(
@@ -151,6 +155,13 @@ function FabricanteSelection() {
         accentText="fabricantes"
         subtitle="Seleccioná uno o más fabricantes para pedir presupuesto."
       />
+
+      {material && (
+        <div className="fabricante-selection__material">
+          <span>Material elegido:</span>
+          <MaterialTag label={material} />
+        </div>
+      )}
 
       {loading ? (
         <PageLoader />
