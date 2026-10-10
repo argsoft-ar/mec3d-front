@@ -1,12 +1,9 @@
 import type { FasePagoEstado } from "../hooks/usePagoEstado";
-import type {
-  EstadoPagoResponse,
-  RetornoPago,
-  VistaPago,
-} from "../interfaces";
+import type { EstadoPagoResponse, RetornoPago, VistaPago } from "../interfaces";
 import { compraPagada } from "./estado.util";
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Devuelve el id si es un UUID (evita armar rutas de API con valores arbitrarios de la URL). */
 export function parseCompraId(value: string | null): string | null {
@@ -36,7 +33,8 @@ export const TEXTO_VISTA_PAGO: Record<
 > = {
   verificando: {
     title: "Verificando tu pago",
-    message: "Estamos consultando el estado real del pago. No cierres esta página.",
+    message:
+      "Estamos consultando el estado real del pago. No cierres esta página.",
   },
   acreditado: {
     title: "Pago acreditado",
@@ -61,13 +59,16 @@ export const TEXTO_VISTA_PAGO: Record<
   },
   error: {
     title: "No pudimos verificar el pago",
-    message: "Hubo un problema al consultar el estado. Reintentá en unos instantes.",
+    message:
+      "Hubo un problema al consultar el estado. Reintentá en unos instantes.",
   },
 };
 
 /** Aclaración mientras se verifica; refleja lo que informó la URL, sin darlo por cierto. */
 export const HINT_RETORNO: Record<RetornoPago, string> = {
   exito: "Mercado Pago indicó que el pago se procesó; lo estamos confirmando.",
-  error: "Mercado Pago indicó un problema con el pago; confirmamos el estado real.",
-  pendiente: "Mercado Pago indicó que el pago está en proceso; lo seguimos verificando.",
+  error:
+    "Mercado Pago indicó un problema con el pago; confirmamos el estado real.",
+  pendiente:
+    "Mercado Pago indicó que el pago está en proceso; lo seguimos verificando.",
 };

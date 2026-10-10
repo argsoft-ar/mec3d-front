@@ -56,7 +56,9 @@ const COLUMNS: ColumnDef<MovimientoBilletera>[] = [
     width: 170,
     renderCell: (value) => {
       const visual = estadoMovimientoVisual(value as EstadoMovimiento);
-      return <MaterialTag label={visual.label} variant={visual.variant} size="sm" />;
+      return (
+        <MaterialTag label={visual.label} variant={visual.variant} size="sm" />
+      );
     },
   },
   {

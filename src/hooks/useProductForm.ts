@@ -101,7 +101,10 @@ export function useProductForm() {
 
   useEffect(() => {
     if (catalogoError) {
-      addToast("No se pudo cargar el catálogo de tecnologías y materiales", "error");
+      addToast(
+        "No se pudo cargar el catálogo de tecnologías y materiales",
+        "error",
+      );
     }
   }, [catalogoError, addToast]);
 

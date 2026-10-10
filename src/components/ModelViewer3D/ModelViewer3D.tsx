@@ -292,7 +292,9 @@ function ModelViewer3D({
       <div className={`model-viewer-3d ${className}`.trim()}>
         <FallbackMessage
           text={
-            sourceStatus === "blocked" ? HEAVY_FILE_MESSAGE : LOAD_FAILED_MESSAGE
+            sourceStatus === "blocked"
+              ? HEAVY_FILE_MESSAGE
+              : LOAD_FAILED_MESSAGE
           }
         />
       </div>

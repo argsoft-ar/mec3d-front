@@ -113,7 +113,8 @@ export function getErrorToast(
   fallback: string,
 ): { message: string; type: ToastType } {
   const esNegocio =
-    error instanceof HttpError && (error.status === 403 || error.status === 409);
+    error instanceof HttpError &&
+    (error.status === 403 || error.status === 409);
   return {
     message: getErrorMessage(error, fallback),
     type: esNegocio ? "warning" : "error",

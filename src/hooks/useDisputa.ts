@@ -62,10 +62,7 @@ export function useDisputa(
       onDisputada(ordenId);
       setOrdenId(null);
     } catch (e) {
-      const { message, type } = getErrorToast(
-        e,
-        "No se pudo abrir la disputa",
-      );
+      const { message, type } = getErrorToast(e, "No se pudo abrir la disputa");
       addToast(message, type);
     } finally {
       setLoading(false);

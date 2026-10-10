@@ -42,7 +42,7 @@ function resumenResolucion(res: ResolverDisputaResponse): {
   if (res.reembolso === "pendiente") {
     return {
       message:
-        "Disputa resuelta. El reembolso quedó pendiente: usá \"Reintentar reembolsos pendientes\".",
+        'Disputa resuelta. El reembolso quedó pendiente: usá "Reintentar reembolsos pendientes".',
       type: "warning",
     };
   }

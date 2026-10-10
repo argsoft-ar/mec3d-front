@@ -81,7 +81,11 @@ function renderEstadoCobro(row: PayoutPendiente): React.ReactNode {
         />
       )}
       {!row.usuario.cuentaMercadopago && (
-        <MaterialTag label="Sin cuenta configurada" variant="danger" size="sm" />
+        <MaterialTag
+          label="Sin cuenta configurada"
+          variant="danger"
+          size="sm"
+        />
       )}
     </div>
   );
@@ -136,7 +140,9 @@ const DISPUTA_COLUMNS: ColumnDef<DisputaFila>[] = [
     header: "Estado",
     renderCell: (value) => {
       const visual = estadoOrdenVisual(value as EstadoOrdenFabricacion);
-      return <MaterialTag label={visual.label} variant={visual.variant} size="sm" />;
+      return (
+        <MaterialTag label={visual.label} variant={visual.variant} size="sm" />
+      );
     },
   },
   {
@@ -156,7 +162,8 @@ const DISPUTA_COLUMNS: ColumnDef<DisputaFila>[] = [
     key: "abiertaEn",
     header: "Abierta",
     width: 150,
-    renderCell: (value) => formatDateTime(typeof value === "string" ? value : null),
+    renderCell: (value) =>
+      formatDateTime(typeof value === "string" ? value : null),
   },
   {
     key: "resolucion",
@@ -235,7 +242,9 @@ function AdminPage() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) {
-    setEstadoDisputa(esEstadoDisputa(e.target.value) ? e.target.value : "abiertas");
+    setEstadoDisputa(
+      esEstadoDisputa(e.target.value) ? e.target.value : "abiertas",
+    );
     disputas.resetPage();
   }
 

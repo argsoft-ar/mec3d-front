@@ -48,7 +48,10 @@ export function useCatalogoDiseno(tecnologia: string) {
       ? cargados.items
       : null;
 
-  const tecnologiaOptions = useMemo(() => toOptions(tecnologias), [tecnologias]);
+  const tecnologiaOptions = useMemo(
+    () => toOptions(tecnologias),
+    [tecnologias],
+  );
   const materialOptions = useMemo(
     () => toOptions(materialesActuales ?? []),
     [materialesActuales],
@@ -57,7 +60,8 @@ export function useCatalogoDiseno(tecnologia: string) {
   return {
     tecnologiaOptions,
     materialOptions,
-    loadingMateriales: tecnologiaId !== undefined && materialesActuales === null,
+    loadingMateriales:
+      tecnologiaId !== undefined && materialesActuales === null,
     error,
   };
 }

@@ -102,7 +102,9 @@ export function compraPagada(estado: EstadoCompra | null | undefined): boolean {
 }
 
 /** true si la fecha de liberación todavía no llegó (el payout sigue en retención). */
-export function enRetencionHasta(liberableDesde: string | null | undefined): boolean {
+export function enRetencionHasta(
+  liberableDesde: string | null | undefined,
+): boolean {
   if (!liberableDesde) return false;
   const time = new Date(liberableDesde).getTime();
   return !Number.isNaN(time) && time > Date.now();

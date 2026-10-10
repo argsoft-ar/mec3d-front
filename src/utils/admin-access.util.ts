@@ -18,7 +18,9 @@ function getStoredRole(): RolUsuario | null {
 
 /** El rol viaja en `auth_user.rolPrincipal`; un 403 del backend manda sobre ese dato local. */
 export function puedeVerAdmin(): boolean {
-  return getStoredRole() === "admin" && cacheGet<boolean>(ADMIN_DENIED_KEY) !== true;
+  return (
+    getStoredRole() === "admin" && cacheGet<boolean>(ADMIN_DENIED_KEY) !== true
+  );
 }
 
 /** Se invoca ante un 403 de /admin/*: oculta el link y bloquea la ruta hasta cerrar sesión. */

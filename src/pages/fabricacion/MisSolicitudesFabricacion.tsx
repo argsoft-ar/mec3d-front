@@ -13,7 +13,11 @@ import {
   ordenFabricacionService,
   descargarDisenoOrden,
 } from "../../services/orden-fabricacion.service";
-import { HttpError, getErrorMessage, getErrorToast } from "../../services/http.client";
+import {
+  HttpError,
+  getErrorMessage,
+  getErrorToast,
+} from "../../services/http.client";
 import { compraPagada, mensajeReembolso } from "../../utils/estado.util";
 import type { OrdenFabricacionListItem } from "../../interfaces";
 import "./MisSolicitudesFabricacion.css";
@@ -56,7 +60,10 @@ function MisSolicitudesFabricacion() {
     try {
       await descargarDisenoOrden(orden.id, orden.productoTitulo);
     } catch (error) {
-      addToast(getErrorMessage(error, "No se pudo descargar el archivo"), "error");
+      addToast(
+        getErrorMessage(error, "No se pudo descargar el archivo"),
+        "error",
+      );
     } finally {
       setDownloadingId(null);
     }

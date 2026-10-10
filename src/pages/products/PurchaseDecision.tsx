@@ -109,7 +109,10 @@ function PurchaseDecision() {
         },
       });
     } catch (error) {
-      addToast(getErrorMessage(error, "No se pudo procesar la compra"), "error");
+      addToast(
+        getErrorMessage(error, "No se pudo procesar la compra"),
+        "error",
+      );
       setProcessing(null);
     }
   }
@@ -194,7 +197,9 @@ function PurchaseDecision() {
       />
 
       <div className="purchase-decision__summary">
-        <span className="purchase-decision__tecnologia">{product.tecnologia}</span>
+        <span className="purchase-decision__tecnologia">
+          {product.tecnologia}
+        </span>
         <MaterialTagList items={product.materiales} />
       </div>
 

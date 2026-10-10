@@ -128,7 +128,11 @@ function DetailProduct() {
       : product.rating;
 
   const specItems: SpecItem[] = [
-    { Icon: Cpu, title: "Tecnología", value: <span>{product.tecnologia}</span> },
+    {
+      Icon: Cpu,
+      title: "Tecnología",
+      value: <span>{product.tecnologia}</span>,
+    },
     {
       Icon: Box,
       title: "Materiales",
@@ -136,8 +140,13 @@ function DetailProduct() {
     },
   ];
   if (product.specs) {
-    const { dimensiones, dificultad, tiempoImpresion, soportes, configuracion } =
-      product.specs;
+    const {
+      dimensiones,
+      dificultad,
+      tiempoImpresion,
+      soportes,
+      configuracion,
+    } = product.specs;
     specItems.push(
       { Icon: Ruler, title: "Dimensiones", value: <span>{dimensiones}</span> },
       { Icon: Gauge, title: "Dificultad", value: <span>{dificultad}</span> },

@@ -8,7 +8,9 @@ import type { AddToast } from "../types";
 const MAX_REFERENCIA = 255;
 
 /** Igual que el backend: referencia obligatoria de hasta 255 caracteres. */
-export function validarReferenciaPayout(referencia: string): string | undefined {
+export function validarReferenciaPayout(
+  referencia: string,
+): string | undefined {
   const limpia = referencia.trim();
   if (!limpia) return "La referencia de la transferencia es obligatoria";
   if (limpia.length > MAX_REFERENCIA) {

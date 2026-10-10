@@ -19,10 +19,7 @@ import PageLoader from "../../components/PageLoader/PageLoader";
 import { usePagoEstado } from "../../hooks/usePagoEstado";
 import { useCheckout } from "../../hooks/useCheckout";
 import { useToast } from "../../hooks/useToast";
-import {
-  estadoCompraVisual,
-  estadoPagoVisual,
-} from "../../utils/estado.util";
+import { estadoCompraVisual, estadoPagoVisual } from "../../utils/estado.util";
 import { formatCentavos } from "../../utils/format.util";
 import {
   HINT_RETORNO,
@@ -47,11 +44,26 @@ const VISTA_VISUAL: Record<
   VistaPago,
   { icon: React.ReactNode; variant: TagVariant }
 > = {
-  verificando: { icon: <Loader size={20} strokeWidth={1.5} />, variant: "info" },
-  acreditado: { icon: <CheckCircle size={20} strokeWidth={1.5} />, variant: "success" },
-  pendiente: { icon: <Clock size={20} strokeWidth={1.5} />, variant: "warning" },
-  rechazado: { icon: <XCircle size={20} strokeWidth={1.5} />, variant: "danger" },
-  reembolsado: { icon: <RotateCcw size={20} strokeWidth={1.5} />, variant: "info" },
+  verificando: {
+    icon: <Loader size={20} strokeWidth={1.5} />,
+    variant: "info",
+  },
+  acreditado: {
+    icon: <CheckCircle size={20} strokeWidth={1.5} />,
+    variant: "success",
+  },
+  pendiente: {
+    icon: <Clock size={20} strokeWidth={1.5} />,
+    variant: "warning",
+  },
+  rechazado: {
+    icon: <XCircle size={20} strokeWidth={1.5} />,
+    variant: "danger",
+  },
+  reembolsado: {
+    icon: <RotateCcw size={20} strokeWidth={1.5} />,
+    variant: "info",
+  },
   cancelado: { icon: <Ban size={20} strokeWidth={1.5} />, variant: "danger" },
   error: { icon: <XCircle size={20} strokeWidth={1.5} />, variant: "danger" },
 };
@@ -64,9 +76,7 @@ function PagoResultado({ variant }: Readonly<PagoResultadoProps>) {
   const { data, fase, errorMessage, reintentar } = usePagoEstado(compraId);
   const { paying, pagar } = useCheckout(addToast);
 
-  const vista: VistaPago = compraId
-    ? resolverVistaPago(data, fase)
-    : "error";
+  const vista: VistaPago = compraId ? resolverVistaPago(data, fase) : "error";
   const texto = TEXTO_VISTA_PAGO[vista];
   const visual = VISTA_VISUAL[vista];
 

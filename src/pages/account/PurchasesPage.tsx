@@ -74,7 +74,10 @@ function PurchasesPage() {
         item.diseno.formato?.split(",")[0]?.trim().toLowerCase() || "zip";
       await descargarCompra(item.id, `${item.diseno.titulo}.${ext}`);
     } catch (error) {
-      addToast(getErrorMessage(error, "Error al descargar el archivo"), "error");
+      addToast(
+        getErrorMessage(error, "Error al descargar el archivo"),
+        "error",
+      );
     } finally {
       setDownloadingId(null);
     }
@@ -92,7 +95,6 @@ function PurchasesPage() {
       state: { compraId: item.id, material: item.material },
     });
   }
-
 
   async function handleConfirmDelivery() {
     if (!confirmingItem?.ordenFabricacionId) return;
@@ -114,7 +116,10 @@ function PurchasesPage() {
       );
       setConfirmingItem(null);
     } catch (error) {
-      addToast(getErrorMessage(error, "No se pudo confirmar la entrega"), "error");
+      addToast(
+        getErrorMessage(error, "No se pudo confirmar la entrega"),
+        "error",
+      );
     } finally {
       setSubmittingConfirm(false);
     }

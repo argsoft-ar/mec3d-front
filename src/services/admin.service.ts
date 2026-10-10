@@ -44,10 +44,10 @@ export const adminService = {
     ),
 
   resolverDisputa: (ordenId: string, payload: ResolverDisputaPayload) =>
-    request<ResolverDisputaResponse>(
-      `/admin/disputas/${ordenId}/resolver`,
-      { method: "POST", body: JSON.stringify(payload) },
-    ),
+    request<ResolverDisputaResponse>(`/admin/disputas/${ordenId}/resolver`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   reintentarReembolsosPendientes: () =>
     request<ResumenReintentoReembolsos>(

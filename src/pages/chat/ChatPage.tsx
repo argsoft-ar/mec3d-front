@@ -149,14 +149,16 @@ function ChatThread({
             variant={estadoPago.variant}
             size="sm"
           />
-          {esComprador && compra.estado === "pendiente_pago" && compra.compraId && (
-            <Button
-              title="Pagar"
-              variant="primary"
-              loading={paying}
-              onClick={() => pagar(compra.compraId as string)}
-            />
-          )}
+          {esComprador &&
+            compra.estado === "pendiente_pago" &&
+            compra.compraId && (
+              <Button
+                title="Pagar"
+                variant="primary"
+                loading={paying}
+                onClick={() => pagar(compra.compraId as string)}
+              />
+            )}
           {esComprador && pagada && ordenFabricacionId && (
             <Button
               title="Código de entrega"

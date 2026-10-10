@@ -49,7 +49,10 @@ const SolicitudFabricacionCard = ({
       </header>
 
       {enDisputa && (
-        <p className="solicitud-card__note solicitud-card__note--danger" role="status">
+        <p
+          className="solicitud-card__note solicitud-card__note--danger"
+          role="status"
+        >
           El comprador abrió una disputa. {AVISO_EN_DISPUTA}
         </p>
       )}

@@ -83,15 +83,17 @@ const PurchaseCard = ({
               onClick={onDownload}
             />
           )}
-          {pendientePago && onPagar && (tipo === "descarga" || tratoCerrado) && (
-            <Button
-              title="Pagar"
-              variant={tipo === "descarga" ? "outline" : "primary"}
-              icon={<CreditCard size={16} strokeWidth={2} />}
-              loading={paying}
-              onClick={onPagar}
-            />
-          )}
+          {pendientePago &&
+            onPagar &&
+            (tipo === "descarga" || tratoCerrado) && (
+              <Button
+                title="Pagar"
+                variant={tipo === "descarga" ? "outline" : "primary"}
+                icon={<CreditCard size={16} strokeWidth={2} />}
+                loading={paying}
+                onClick={onPagar}
+              />
+            )}
           {tipo === "fabricacion" &&
             pendientePago &&
             deliveryStage === "none" &&
