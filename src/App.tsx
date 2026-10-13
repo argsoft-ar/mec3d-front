@@ -112,13 +112,13 @@ function AppShell() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/product/:id" element={<DetailProduct />} />
+          <Route path="/product/:id/preview" element={<ProductPreview3D />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<ProductsPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Account />} />
-            <Route path="/product/:id" element={<DetailProduct />} />
-            <Route path="/product/:id/preview" element={<ProductPreview3D />} />
             <Route
               path="/product/:id/purchase"
               element={<PurchaseDecision />}

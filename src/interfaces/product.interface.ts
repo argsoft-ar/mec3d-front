@@ -5,6 +5,15 @@ export interface ArchivoPreviewResponse {
   expiresIn: number | null;
 }
 
+export interface PreviewPublicoResponse {
+  /** URL firmada de vida corta al STL simplificado. */
+  url: string;
+  /** Segundos de vigencia. */
+  expiresIn: number;
+  /** Formato del archivo servido (el backend devuelve "stl"). */
+  format: string;
+}
+
 export type EstadoProducto = "disponible" | "vendido" | "pausado";
 
 export interface Categoria {

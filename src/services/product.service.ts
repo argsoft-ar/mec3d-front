@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   ArchivoPreviewResponse,
+  PreviewPublicoResponse,
   PaginatedResponse,
   Product,
   CreateProductPayload,
@@ -36,7 +37,13 @@ export const productService = {
 
   /** URL firmada (vida corta) para el visor 3D; requiere acceso al archivo. */
   getArchivoPreview: (id: string) =>
-    request<ArchivoPreviewResponse>(`/productos/${id}/archivo-preview`),
+    request<ArchivoPreviewResponse>(`/productos/${id}/archivo-preview`, {
+      keepSessionOnUnauthorized: true,
+    }),
+
+  /** URL firmada (300 s) del STL simplificado; pública, sin auth, con rate-limit. */
+  getPreviewPublico: (id: string) =>
+    request<PreviewPublicoResponse>(`/productos/${id}/preview-publico`),
 
   create: (payload: CreateProductPayload) =>
     request<ApiResponse<Product>>("/productos", {
