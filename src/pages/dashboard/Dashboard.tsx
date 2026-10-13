@@ -33,14 +33,21 @@ import "./Dashboard.css";
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
   { key: "title", header: "Título", sortable: true },
   { key: "format", header: "Formato", width: 90, align: "center" },
-  { key: "tecnologia", header: "Tecnología", width: 130 },
+  {
+    key: "tecnologia",
+    header: "Tecnología",
+    width: 130,
+    renderCell: (value) => (typeof value === "string" && value ? value : "—"),
+  },
   {
     key: "materiales",
     header: "Materiales",
     renderCell: (value) =>
-      Array.isArray(value) ? (
+      Array.isArray(value) && value.length > 0 ? (
         <MaterialTagList items={value as string[]} max={3} size="sm" />
-      ) : null,
+      ) : (
+        "—"
+      ),
   },
   {
     key: "price",
@@ -68,7 +75,11 @@ const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
 ];
 
 const PRODUCT_FILTERABLE_FIELDS: FilterableField<Product>[] = [
-  { key: "format", label: "Formato", options: ["STL", "OBJ", "STEP", "3MF"] },
+  {
+    key: "format",
+    label: "Formato",
+    options: ["STL", "OBJ", "STEP", "3MF", "PDF", "DWG", "DXF"],
+  },
   { key: "tecnologia", label: "Tecnología", options: ["Impresión 3D", "CNC"] },
 ];
 

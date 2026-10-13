@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Download, Hammer } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -13,9 +13,10 @@ import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
 import { productService } from "../../services/product.service";
-import { useCheckout } from "../../hooks/useCheckout";
+import { useCompraDescarga } from "../../hooks/useCompraDescarga";
 import { compraService } from "../../services/compra.service";
-import { getErrorMessage } from "../../services/http.client";
+import { getErrorMessage, isNotFoundError } from "../../services/http.client";
+import { esPlanoTecnico } from "../../utils/product.util";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
 import "./PurchaseDecision.css";
@@ -44,9 +45,8 @@ function PurchaseDecision() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<ChosenPath>(null);
-  // Compra de descarga creada cuyo checkout no pudo abrirse; se puede reintentar el pago.
-  const [pendingCompraId, setPendingCompraId] = useState<string | null>(null);
-  const { paying, redirigir, pagar } = useCheckout(addToast);
+  const descarga = useCompraDescarga(addToast);
+  const activePath: ChosenPath = descarga.processing ? "download" : processing;
   const [material, setMaterial] = useState("");
   const [materialError, setMaterialError] = useState<string | undefined>();
 
@@ -58,34 +58,21 @@ function PurchaseDecision() {
   useEffect(() => {
     if (!id) return;
     productService
-      .getAll()
-      .then((res) => setProduct(res.data.find((p) => p.id === id) ?? null))
+      .getById(id)
+      .then(setProduct)
+      .catch((error: unknown) => {
+        setProduct(null);
+        if (!isNotFoundError(error))
+          addToast(
+            getErrorMessage(error, "No se pudo cargar el producto"),
+            "error",
+          );
+      })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, addToast]);
 
-  async function handleDownloadNow() {
-    if (!id) return;
-    setProcessing("download");
-    try {
-      const { compra, initPoint } = await compraService.crear({
-        disenoId: id,
-        tipo: "descarga",
-      });
-      // Si se redirige, la página se descarga: el botón queda en carga hasta entonces.
-      if (!redirigir(initPoint)) {
-        setPendingCompraId(compra.id);
-        setProcessing(null);
-      }
-    } catch (error) {
-      addToast(
-        getErrorMessage(
-          error,
-          "No se pudo procesar la compra. Si ya se creó, pagala desde Mis compras.",
-        ),
-        "error",
-      );
-      setProcessing(null);
-    }
+  function handleDownloadNow() {
+    if (id) void descarga.comprar(id);
   }
 
   async function handleRequestFabricacion() {
@@ -177,8 +164,13 @@ function PurchaseDecision() {
     return (
       <Layout>
         <p style={{ padding: "2rem" }}>Producto no encontrado.</p>
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
       </Layout>
     );
+
+  // Los planos solo se compran como descarga desde el detalle.
+  if (esPlanoTecnico(product.categoria))
+    return <Navigate to={`/product/${id}`} replace />;
 
   const breadcrumbItems = [
     { label: "Inicio", path: "/" },
@@ -218,8 +210,8 @@ function PurchaseDecision() {
                 title={option.buttonTitle}
                 variant={option.buttonVariant}
                 fullWidth
-                loading={processing === option.processingKey}
-                disabled={processing !== null}
+                loading={activePath === option.processingKey}
+                disabled={activePath !== null}
                 onClick={option.onClick}
               />
             }
@@ -229,13 +221,13 @@ function PurchaseDecision() {
         ))}
       </div>
 
-      {pendingCompraId && (
+      {descarga.pendingCompraId && (
         <div className="purchase-decision__actions">
           <Button
             title="Reintentar pago"
             variant="primary"
-            loading={paying}
-            onClick={() => pagar(pendingCompraId)}
+            loading={descarga.paying}
+            onClick={descarga.reintentarPago}
           />
           <Button
             title="Ir a Mis Compras"

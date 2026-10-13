@@ -1,11 +1,15 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Button from "../../components/Button/Button";
 import PageLoader from "../../components/PageLoader/PageLoader";
+import ToastContainer from "../../components/Toast/ToastContainer";
 import { productService } from "../../services/product.service";
+import { getErrorMessage, isNotFoundError } from "../../services/http.client";
+import { useToast } from "../../hooks/useToast";
 import { useArchivoPreview } from "../../hooks/useArchivoPreview";
+import { esPlanoTecnico } from "../../utils/product.util";
 import type { ArchivoPreviewStatus } from "../../hooks/useArchivoPreview";
 import type { Product } from "../../interfaces/product.interface";
 import "./ProductPreview3D.css";
@@ -27,13 +31,23 @@ function ProductPreview3D() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const preview = useArchivoPreview(id);
+  const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
-    productService.getAll().then((res) => {
-      setProduct(res.data.find((p) => p.id === id) ?? null);
-      setLoading(false);
-    });
-  }, [id]);
+    if (!id) return;
+    productService
+      .getById(id)
+      .then(setProduct)
+      .catch((error: unknown) => {
+        setProduct(null);
+        if (!isNotFoundError(error))
+          addToast(
+            getErrorMessage(error, "No se pudo cargar el producto"),
+            "error",
+          );
+      })
+      .finally(() => setLoading(false));
+  }, [id, addToast]);
 
   if (loading)
     return (
@@ -46,8 +60,13 @@ function ProductPreview3D() {
     return (
       <Layout>
         <p style={{ padding: "2rem" }}>Producto no encontrado.</p>
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
       </Layout>
     );
+
+  // PDF/DWG/DXF no tienen vista previa 3D.
+  if (esPlanoTecnico(product.categoria))
+    return <Navigate to={`/product/${id}`} replace />;
 
   return (
     <Layout>

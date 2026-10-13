@@ -65,13 +65,18 @@ export interface Product {
   /** Solo viene en GET /productos/mis-disenos (diseñador dueño); nunca en lecturas públicas. */
   archivoUrl?: string;
   categoria?: string;
-  tecnologia: string;
+  /** null en planos técnicos. */
+  tecnologia: string | null;
+  /** Vacío en planos técnicos. */
   materiales: string[];
+  /** null en planos técnicos. */
   specs: ProductSpecificaciones | null;
   designer: ProductDesigner;
 }
 
-export interface CreateProductPayload {
+export type FormatoPlano = "PDF" | "DWG" | "DXF";
+
+interface ProductPayloadBase {
   disenadorId?: string;
   titulo: string;
   descripcion: string;
@@ -80,10 +85,24 @@ export interface CreateProductPayload {
   precioBase: number;
   formato: string;
   categoria?: string;
+}
+
+export interface ModeloProductPayload extends ProductPayloadBase {
   tecnologia: string;
   materiales: string[];
   especificaciones?: ProductSpecificaciones;
 }
+
+/** Planos técnicos: el backend rechaza tecnología/materiales/especificaciones. */
+export interface PlanoProductPayload extends ProductPayloadBase {
+  categoria: "Planos técnicos";
+  formato: FormatoPlano;
+  tecnologia?: never;
+  materiales?: never;
+  especificaciones?: never;
+}
+
+export type CreateProductPayload = ModeloProductPayload | PlanoProductPayload;
 
 export type UpdateProductPayload = CreateProductPayload;
 export type PartialUpdateProductPayload = Partial<CreateProductPayload>;

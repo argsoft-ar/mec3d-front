@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { MapPin, Star } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -11,8 +16,10 @@ import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
 import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
+import { productService } from "../../services/product.service";
 import { georefService } from "../../services/georef.service";
 import { getProvinciaPrefix, getPartidoPrefix } from "../../utils/zona.util";
+import { esPlanoTecnico } from "../../utils/product.util";
 import type { FabricanteSugerido } from "../../interfaces";
 import "./FabricanteSelection.css";
 
@@ -62,6 +69,16 @@ function FabricanteSelection() {
   const [submitting, setSubmitting] = useState(false);
   const [zonaLabels, setZonaLabels] = useState<Map<number, string>>(new Map());
   const resolvedZonasRef = useRef<Set<number>>(new Set());
+  const [esPlano, setEsPlano] = useState(false);
+
+  // Los planos no se fabrican: si el diseño lo es, se vuelve al detalle.
+  useEffect(() => {
+    if (!id) return;
+    productService
+      .getById(id)
+      .then((product) => setEsPlano(esPlanoTecnico(product.categoria)))
+      .catch(() => setEsPlano(false));
+  }, [id]);
 
   useEffect(() => {
     if (!id || !compraId) return;
@@ -129,6 +146,8 @@ function FabricanteSelection() {
     { label: "Explorar", path: "/explore" },
     { label: "Elegir fabricante" },
   ];
+
+  if (esPlano) return <Navigate to={`/product/${id}`} replace />;
 
   if (!compraId) {
     return (

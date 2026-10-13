@@ -7,11 +7,13 @@ export const BASE_URL =
 
 export class HttpError extends Error implements ApiError {
   readonly status: number;
+  readonly details: ApiErrorDetail[];
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, details: ApiErrorDetail[] = []) {
     super(message);
     this.name = "HttpError";
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -24,17 +26,23 @@ function isErrorDetail(value: unknown): value is ApiErrorDetail {
 }
 
 // El backend responde { error, details? }; se usa ese texto para que la UI lo muestre.
-async function readErrorMessage(response: Response): Promise<string> {
-  const fallback = `HTTP error ${response.status}`;
+async function readErrorBody(
+  response: Response,
+): Promise<{ message: string; details: ApiErrorDetail[] }> {
+  const fallback = { message: `HTTP error ${response.status}`, details: [] };
   try {
     const body: unknown = await response.json();
     if (typeof body !== "object" || body === null) return fallback;
     const { error, details } = body as { error?: unknown; details?: unknown };
     if (typeof error !== "string" || !error) return fallback;
-    const firstDetail = Array.isArray(details)
-      ? details.find(isErrorDetail)
-      : undefined;
-    return firstDetail ? `${error}: ${firstDetail.message}` : error;
+    const validDetails = Array.isArray(details)
+      ? details.filter(isErrorDetail)
+      : [];
+    const [firstDetail] = validDetails;
+    return {
+      message: firstDetail ? `${error}: ${firstDetail.message}` : error,
+      details: validDetails,
+    };
   } catch {
     return fallback;
   }
@@ -53,7 +61,8 @@ async function throwHttpError(
   endpoint: string,
 ): Promise<never> {
   if (response.status === 401 && !endpoint.startsWith("/auth/")) endSession();
-  throw new HttpError(response.status, await readErrorMessage(response));
+  const { message, details } = await readErrorBody(response);
+  throw new HttpError(response.status, message, details);
 }
 
 export async function request<T>(
@@ -105,6 +114,10 @@ export async function downloadFile(
 
 export function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof HttpError ? error.message : fallback;
+}
+
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof HttpError && error.status === 404;
 }
 
 /** 403/409 son reglas de negocio (p. ej. "no podés cancelar con el pago acreditado"): se avisan como warning. */

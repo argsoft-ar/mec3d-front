@@ -71,7 +71,8 @@ export type ProductCategory =
   | "Barcos"
   | "Casa"
   | "Maquinas"
-  | "Engranajes";
+  | "Engranajes"
+  | "Planos técnicos";
 export type SaleModality = "design" | "fabrication" | "direct_sale" | "plans";
 export type QualityTier = "low" | "medium" | "high";
 

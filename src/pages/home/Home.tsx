@@ -6,6 +6,7 @@ import {
   House,
   Settings2,
   Cog,
+  DraftingCompass,
   Search,
   Upload,
   Grid2X2,
@@ -71,12 +72,17 @@ const CATEGORIES: CategoryItem[] = [
     icon: <Cog {...ICON_PROPS} />,
     description: "Transmisiones, poleas y sistemas mecánicos",
   },
+  {
+    name: "Planos técnicos",
+    icon: <DraftingCompass {...ICON_PROPS} />,
+    description: "Planos en PDF, DWG y DXF para descargar",
+  },
 ];
 
 const SERVICES: ServiceItem[] = [
   {
     icon: <Grid2X2 size={32} strokeWidth={1.5} />,
-    title: "12 Categorías",
+    title: `${CATEGORIES.length} Categorías`,
     description:
       "Desde mecánica hasta tecnología, encuentra la pieza perfecta para tu proyecto",
   },
@@ -144,7 +150,9 @@ function Home() {
               title={cat.name}
               text={cat.description}
               variant={index < 2 ? "elevated" : "elevated"}
-              onClick={() => navigate(`/explore?category=${cat.name}`)}
+              onClick={() =>
+                navigate(`/explore?category=${encodeURIComponent(cat.name)}`)
+              }
             />
           ))}
         </div>

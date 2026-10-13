@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "./useToast";
 import { useCatalogoDiseno } from "./useCatalogoDiseno";
+import { getErrorMessage } from "../services/http.client";
 import {
   productService,
   uploadImage,
@@ -12,12 +13,12 @@ import {
   MAX_PRECIO_BASE,
   MAX_PRINT_HOURS,
   MIN_PRINT_HOURS,
+  buildProductPayload,
+  getFileExtension,
+  getProductFormRules,
+  isFormatoPlano,
 } from "../utils/product.util";
-import type {
-  UpdateProductPayload,
-  ProductForm,
-  ProductFormErrors,
-} from "../interfaces";
+import type { ProductForm, ProductFormErrors } from "../interfaces";
 
 const INITIAL_FORM: ProductForm = {
   titulo: "",
@@ -50,13 +51,9 @@ function isValidPrintHours(value: string): boolean {
   return hours >= MIN_PRINT_HOURS && hours <= MAX_PRINT_HOURS;
 }
 
-// Matches the backend's upload cap (see mec3d-back upload.service.ts).
-const MAX_ARCHIVO_SIZE_BYTES = 30 * 1024 * 1024;
-
 // Maps a filename/URL extension to the format expected by ModelViewer3D, independent of `form.formato`.
 function getModelFormatFromName(name: string): string {
-  const extension = name.slice(name.lastIndexOf(".")).toLowerCase();
-  switch (extension) {
+  switch (getFileExtension(name)) {
     case ".stl":
       return "STL";
     case ".3mf":
@@ -92,6 +89,7 @@ export function useProductForm() {
   const [notFound, setNotFound] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const archivoFileInputRef = useRef<HTMLInputElement>(null);
+  const rules = getProductFormRules(form.categoria);
   const {
     tecnologiaOptions,
     materialOptions,
@@ -160,12 +158,42 @@ export function useProductForm() {
       });
   }, [id, isEdit]);
 
+  // Al pasar de modelo 3D a plano (o viceversa) el archivo elegido deja de ser válido; el formato también si no corresponde.
+  const handleCategoriaChange = (categoria: string) => {
+    const next = getProductFormRules(categoria);
+    const cambiaFamilia = next.esPlano !== rules.esPlano;
+    const formatoValido = next.formatOptions.some(
+      (o) => o.value === form.formato,
+    );
+    setForm((prev) => ({
+      ...prev,
+      categoria,
+      formato: formatoValido ? prev.formato : "",
+      archivoUrl: cambiaFamilia ? "" : prev.archivoUrl,
+    }));
+    if (cambiaFamilia) {
+      setArchivoFile(null);
+      setArchivoPreviewUrl("");
+      if (archivoFileInputRef.current) archivoFileInputRef.current.value = "";
+    }
+    setErrors((prev) => ({
+      ...prev,
+      categoria: undefined,
+      formato: formatoValido ? prev.formato : undefined,
+      archivoUrl: cambiaFamilia ? undefined : prev.archivoUrl,
+    }));
+  };
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
     const { name, value } = e.target;
+    if (name === "categoria") {
+      handleCategoriaChange(value);
+      return;
+    }
     if (name === "tecnologia") {
       // Cada material pertenece a una única tecnología: al cambiarla ninguno de los elegidos sigue siendo válido.
       setForm((prev) => ({ ...prev, tecnologia: value, materiales: [] }));
@@ -204,18 +232,15 @@ export function useProductForm() {
     }
   };
 
-  const ARCHIVO_EXTENSIONS = new Set([".stl", ".3mf", ".obj", ".step", ".stp"]);
-
   const handleArchivoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-    if (!ARCHIVO_EXTENSIONS.has(extension)) {
-      addToast("Formato no permitido. Usá STL, 3MF, OBJ, STEP o STP", "error");
+    if (!rules.archivo.extensions.includes(getFileExtension(file.name))) {
+      addToast(rules.archivo.invalidFormatMessage, "error");
       return;
     }
-    if (file.size > MAX_ARCHIVO_SIZE_BYTES) {
-      addToast("El archivo debe ser menor a 30MB", "error");
+    if (file.size > rules.archivo.maxBytes) {
+      addToast(rules.archivo.tooLargeMessage, "error");
       return;
     }
     setArchivoFile(file);
@@ -226,9 +251,12 @@ export function useProductForm() {
     }
   };
 
-  const archivoPreviewFormat = archivoFile
-    ? getModelFormatFromName(archivoFile.name)
-    : getModelFormatFromName(form.archivoUrl);
+  // Los planos (PDF/DWG/DXF) no tienen vista previa 3D.
+  const archivoPreviewFormat = rules.esPlano
+    ? ""
+    : archivoFile
+      ? getModelFormatFromName(archivoFile.name)
+      : getModelFormatFromName(form.archivoUrl);
 
   const handleImagePreviewError = () => {
     addToast("No se pudo previsualizar la imagen", "error");
@@ -238,19 +266,8 @@ export function useProductForm() {
     addToast("No se pudo previsualizar el modelo 3D", "error");
   };
 
-  const validate = (): boolean => {
-    const newErrors: ProductFormErrors = {};
-    if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
-    if (!form.descripcion.trim())
-      newErrors.descripcion = "La descripción es obligatoria";
-    if (!form.categoria) newErrors.categoria = "Seleccioná una categoría";
-    if (!isValidPrecio(form.precioBase))
-      newErrors.precioBase = `Ingresá un precio mayor a 0 y hasta ${MAX_PRECIO_BASE.toLocaleString("es-AR")}, con máximo 2 decimales`;
-    if (!form.formato) newErrors.formato = "Seleccioná un formato";
-    if (!form.archivoUrl.trim() && !archivoFile)
-      newErrors.archivoUrl = "Subí el archivo de diseño 3D";
-    if (!form.imagenUrl && !imageFile)
-      newErrors.imagenUrl = "La imagen es obligatoria";
+  // Solo para categorías con tecnología, materiales y especificaciones de impresión.
+  const validateTechnicalFields = (newErrors: ProductFormErrors) => {
     if (!form.tecnologia) newErrors.tecnologia = "Seleccioná una tecnología";
     if (form.materiales.length === 0) {
       newErrors.materiales = "Seleccioná al menos un material";
@@ -273,6 +290,23 @@ export function useProductForm() {
       newErrors.specSoportes = "Seleccioná la opción de soportes";
     if (!form.specLayer) newErrors.specLayer = "Seleccioná la altura de capa";
     if (!form.specInfill) newErrors.specInfill = "Seleccioná el relleno";
+  };
+
+  const validate = (): boolean => {
+    const newErrors: ProductFormErrors = {};
+    if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
+    if (!form.descripcion.trim())
+      newErrors.descripcion = "La descripción es obligatoria";
+    if (!form.categoria) newErrors.categoria = "Seleccioná una categoría";
+    if (!isValidPrecio(form.precioBase))
+      newErrors.precioBase = `Ingresá un precio mayor a 0 y hasta ${MAX_PRECIO_BASE.toLocaleString("es-AR")}, con máximo 2 decimales`;
+    if (rules.esPlano ? !isFormatoPlano(form.formato) : !form.formato)
+      newErrors.formato = "Seleccioná un formato";
+    if (!form.archivoUrl.trim() && !archivoFile)
+      newErrors.archivoUrl = rules.archivo.missingMessage;
+    if (!form.imagenUrl && !imageFile)
+      newErrors.imagenUrl = "La imagen es obligatoria";
+    if (rules.showTechnicalFields) validateTechnicalFields(newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -304,61 +338,26 @@ export function useProductForm() {
         try {
           archivoUrl = await uploadModel(archivoFile);
         } catch {
-          addToast("Error al subir el archivo 3D", "error");
+          addToast(rules.archivo.uploadErrorMessage, "error");
           return;
         } finally {
           setUploadingArchivo(false);
         }
       }
-      const especificaciones = {
-        dimensiones: form.specDimensiones,
-        dificultad: form.specDificultad,
-        tiempoImpresion: Number(form.specTiempoImpresion),
-        soportes: form.specSoportes,
-        configuracion: {
-          layer: form.specLayer,
-          infill: form.specInfill,
-        },
-      };
+      const payload = buildProductPayload(form, imageUrl, archivoUrl);
       if (isEdit && id) {
-        const payload: UpdateProductPayload = {
-          titulo: form.titulo,
-          descripcion: form.descripcion,
-          imagenUrl: imageUrl,
-          archivoUrl,
-          precioBase: Number(form.precioBase),
-          formato: form.formato,
-          categoria: form.categoria,
-          tecnologia: form.tecnologia,
-          materiales: form.materiales,
-          especificaciones,
-        };
         await productService.update(id, payload);
         navigate("/dashboard", {
           state: { successToast: "Cambios guardados exitosamente" },
         });
       } else {
-        await productService.create({
-          titulo: form.titulo,
-          descripcion: form.descripcion,
-          imagenUrl: imageUrl,
-          archivoUrl,
-          precioBase: Number(form.precioBase),
-          formato: form.formato,
-          categoria: form.categoria,
-          tecnologia: form.tecnologia,
-          materiales: form.materiales,
-          especificaciones,
-        });
+        await productService.create(payload);
         navigate("/dashboard", {
           state: { successToast: "Diseño publicado exitosamente" },
         });
       }
     } catch (error) {
-      addToast(
-        error instanceof Error ? error.message : "Error al guardar el diseño",
-        "error",
-      );
+      addToast(getErrorMessage(error, "Error al guardar el diseño"), "error");
     } finally {
       setLoading(false);
       setConfirmOpen(false);
@@ -369,6 +368,7 @@ export function useProductForm() {
     id,
     isEdit,
     form,
+    rules,
     errors,
     handleChange,
     handleMaterialesChange,

@@ -20,6 +20,11 @@ export const authService = {
       body: JSON.stringify(data),
     }),
 
+  checkUsernameDisponible: (username: string) =>
+    request<{ disponible: boolean }>(
+      `/auth/username-disponible?username=${encodeURIComponent(username)}`,
+    ),
+
   logout: () => {
     clearSessionData();
     disconnectSocket();

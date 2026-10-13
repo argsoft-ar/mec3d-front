@@ -45,6 +45,28 @@ export interface FormFieldConfig {
   blockedKeys?: readonly string[];
 }
 
+export interface ArchivoRules {
+  label: string;
+  accept: string;
+  hint: string;
+  /** Extensiones permitidas, en minúsculas y con punto. */
+  extensions: readonly string[];
+  maxBytes: number;
+  missingMessage: string;
+  invalidFormatMessage: string;
+  tooLargeMessage: string;
+  uploadErrorMessage: string;
+}
+
+/** Qué campos, opciones y validaciones aplica el formulario de diseño según la categoría. */
+export interface ProductFormRules {
+  esPlano: boolean;
+  /** Tecnología, materiales y especificaciones de impresión. */
+  showTechnicalFields: boolean;
+  formatOptions: SelectOption[];
+  archivo: ArchivoRules;
+}
+
 export interface ButtonConfig {
   title: string;
   variant: "ghost" | "primary";

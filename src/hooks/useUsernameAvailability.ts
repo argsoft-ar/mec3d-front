@@ -6,7 +6,8 @@ export type UsernameAvailabilityStatus =
   | "invalid"
   | "checking"
   | "available"
-  | "taken";
+  | "taken"
+  | "error";
 
 interface UseUsernameAvailabilityReturn {
   status: UsernameAvailabilityStatus;
@@ -14,8 +15,12 @@ interface UseUsernameAvailabilityReturn {
 
 interface CheckResult {
   value: string;
-  result: "available" | "taken";
+  result: "available" | "taken" | "error";
 }
+
+export type UsernameChecker = (
+  username: string,
+) => Promise<{ disponible: boolean }>;
 
 const USERNAME_REGEX = /^\w{3,30}$/;
 const DEBOUNCE_MS = 400;
@@ -23,6 +28,7 @@ const DEBOUNCE_MS = 400;
 export function useUsernameAvailability(
   username: string,
   currentUsername: string,
+  checker: UsernameChecker = usuarioService.checkUsernameDisponible,
 ): UseUsernameAvailabilityReturn {
   const [check, setCheck] = useState<CheckResult | null>(null);
   const debounceRef = useRef<number | undefined>(undefined);
@@ -38,8 +44,7 @@ export function useUsernameAvailability(
 
     let cancelled = false;
     debounceRef.current = window.setTimeout(() => {
-      usuarioService
-        .checkUsernameDisponible(trimmed)
+      checker(trimmed)
         .then((res) => {
           if (cancelled) return;
           setCheck({
@@ -48,7 +53,8 @@ export function useUsernameAvailability(
           });
         })
         .catch(() => {
-          /* ignore, falls back to "checking" until user edits again */
+          if (cancelled) return;
+          setCheck({ value: trimmed, result: "error" });
         });
     }, DEBOUNCE_MS);
 
@@ -56,7 +62,7 @@ export function useUsernameAvailability(
       cancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [trimmed, shouldCheck]);
+  }, [trimmed, shouldCheck, checker]);
 
   let status: UsernameAvailabilityStatus;
   if (isUnchanged) status = "idle";
