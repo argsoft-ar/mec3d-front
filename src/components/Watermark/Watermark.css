@@ -1,0 +1,32 @@
+.watermark {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.watermark__grid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: space-around;
+  justify-content: space-around;
+  transform: translate(-50%, -50%) rotate(-30deg);
+}
+
+.watermark__tile {
+  padding: var(--space-4) var(--space-6);
+  color: var(--color-text-primary);
+  opacity: 0.14;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
