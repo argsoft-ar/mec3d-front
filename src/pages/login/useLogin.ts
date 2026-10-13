@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ChangeEvent, FormEvent } from "react";
 import { authService } from "../../services/api";
+import { clearSessionData } from "../../services/session";
 
 export type LoginForm = { email: string; password: string };
 
@@ -32,6 +33,7 @@ export function useLogin() {
         formData.email,
         formData.password,
       );
+      clearSessionData();
       localStorage.setItem("auth_token", token);
       localStorage.setItem("auth_user", JSON.stringify(user));
       navigate("/dashboard");

@@ -6,7 +6,6 @@ import type {
   Material,
   RolUsuario,
   Tecnologia,
-  CatalogoItem,
 } from "../interfaces";
 
 const PROFILE_KEY = "user:profile";
@@ -74,9 +73,4 @@ export const usuarioService = {
       method: "PUT",
       body: JSON.stringify({ tecnologias }),
     }),
-};
-
-export const catalogoService = {
-  getMateriales: () => request<CatalogoItem[]>("/catalogos/materiales"),
-  getTecnologias: () => request<CatalogoItem[]>("/catalogos/tecnologias"),
 };

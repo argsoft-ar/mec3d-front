@@ -9,34 +9,53 @@ import {
   Clock,
   Wrench,
   SlidersHorizontal,
+  Cpu,
+  type LucideIcon,
 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
 import DesignerHeroCard from "../../components/DesignerHeroCard/DesignerHeroCard";
+import MaterialTagList from "../../components/MaterialTag/MaterialTagList";
+import ToastContainer from "../../components/Toast/ToastContainer";
+import { useToast } from "../../hooks/useToast";
+import { useCompraDescarga } from "../../hooks/useCompraDescarga";
 import { productService } from "../../services/product.service";
+import { getErrorMessage, isNotFoundError } from "../../services/http.client";
+import { esPlanoTecnico, formatPrintHours } from "../../utils/product.util";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import "./DetailProduct.css";
 
+type ActionId = "buy" | "preview";
+
 interface ActionItem {
+  id: ActionId;
   title: string;
   icon: ReactNode;
   variant: ButtonVariant;
 }
 const ACTIONS: ActionItem[] = [
   {
+    id: "buy",
     title: "Comprar ahora",
     icon: <ShoppingCart size={18} strokeWidth={2} />,
     variant: "primary",
   },
   {
+    id: "preview",
     title: "Vista previa 3D",
     icon: <Eye size={18} strokeWidth={2} />,
     variant: "outline",
   },
 ];
+
+interface SpecItem {
+  Icon: LucideIcon;
+  title: string;
+  value: ReactNode;
+}
 
 interface StarProps {
   rating: number;
@@ -81,15 +100,34 @@ function DetailProduct() {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const { toasts, addToast, removeToast } = useToast();
+  const descarga = useCompraDescarga(addToast);
 
   useEffect(() => {
-    productService.getAll().then((res) => {
-      setAllProducts(res.data);
-      setProduct(res.data.find((p) => p.id === id) ?? null);
-      setLoading(false);
-    });
-  }, [id]);
+    if (!id) return;
+    productService
+      .getById(id)
+      .then((found) => {
+        setErrorMessage(null);
+        setProduct(found);
+      })
+      .catch((error: unknown) => {
+        setProduct(null);
+        setErrorMessage(
+          isNotFoundError(error)
+            ? "Producto no encontrado."
+            : getErrorMessage(error, "No se pudo cargar el producto"),
+        );
+      })
+      .finally(() => setLoading(false));
+    // Solo para las estadísticas del diseñador; si falla, se muestran con el producto actual.
+    productService
+      .getAll({ limit: 100 })
+      .then((res) => setAllProducts(res.data))
+      .catch(() => setAllProducts([]));
+  }, [id, addToast]);
 
   if (loading)
     return (
@@ -100,7 +138,10 @@ function DetailProduct() {
   if (!product)
     return (
       <Layout>
-        <p style={{ padding: "2rem" }}>Producto no encontrado.</p>
+        <p className="detail-product__message">
+          {errorMessage ?? "Producto no encontrado."}
+        </p>
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
       </Layout>
     );
 
@@ -116,6 +157,58 @@ function DetailProduct() {
       ? designerProducts.reduce((sum, p) => sum + p.rating, 0) /
         designerProducts.length
       : product.rating;
+
+  const esPlano = esPlanoTecnico(product.categoria);
+  const actions = esPlano ? ACTIONS.filter((a) => a.id === "buy") : ACTIONS;
+
+  const handleAction = (actionId: ActionId) => {
+    if (actionId === "preview") navigate(`/product/${id}/preview`);
+    // Los planos solo admiten descarga: se compra directo, sin pantalla de decisión.
+    else if (esPlano) void descarga.comprar(product.id);
+    else navigate(`/product/${id}/purchase`);
+  };
+
+  const specItems: SpecItem[] = [];
+  if (product.tecnologia) {
+    specItems.push({
+      Icon: Cpu,
+      title: "Tecnología",
+      value: <span>{product.tecnologia}</span>,
+    });
+  }
+  if (product.materiales?.length > 0) {
+    specItems.push({
+      Icon: Box,
+      title: "Materiales",
+      value: <MaterialTagList items={product.materiales} />,
+    });
+  }
+  if (product.specs) {
+    const {
+      dimensiones,
+      dificultad,
+      tiempoImpresion,
+      soportes,
+      configuracion,
+    } = product.specs;
+    specItems.push(
+      { Icon: Ruler, title: "Dimensiones", value: <span>{dimensiones}</span> },
+      { Icon: Gauge, title: "Dificultad", value: <span>{dificultad}</span> },
+      {
+        Icon: Clock,
+        title: "Tiempo de Impresión",
+        value: <span>{formatPrintHours(tiempoImpresion)}</span>,
+      },
+      { Icon: Wrench, title: "Soportes", value: <span>{soportes}</span> },
+      {
+        Icon: SlidersHorizontal,
+        title: "Configuración",
+        value: (
+          <span>{`Layer: ${configuracion.layer} · Infill: ${configuracion.infill}`}</span>
+        ),
+      },
+    );
+  }
 
   return (
     <Layout>
@@ -163,71 +256,63 @@ function DetailProduct() {
 
             {/* Actions */}
             <div className="detail-product__actions">
-              {ACTIONS.map((action) => (
+              {actions.map((action) => (
                 <Button
-                  key={action.title}
+                  key={action.id}
                   variant={action.variant}
                   size="lg"
                   title={action.title}
                   fullWidth={true}
                   icon={action.icon}
                   iconPosition="left"
-                  onClick={
-                    action.title === "Vista previa 3D"
-                      ? () => navigate(`/product/${id}/preview`)
-                      : () => navigate(`/product/${id}/purchase`)
-                  }
+                  loading={action.id === "buy" && descarga.processing}
+                  disabled={descarga.processing}
+                  onClick={() => handleAction(action.id)}
                 />
               ))}
             </div>
+            {descarga.pendingCompraId && (
+              <div className="detail-product__actions">
+                <Button
+                  title="Reintentar pago"
+                  variant="primary"
+                  size="lg"
+                  fullWidth={true}
+                  loading={descarga.paying}
+                  onClick={descarga.reintentarPago}
+                />
+                <Button
+                  title="Ir a Mis Compras"
+                  variant="ghost"
+                  size="lg"
+                  fullWidth={true}
+                  onClick={() => navigate("/account/purchases")}
+                />
+              </div>
+            )}
           </div>
         </section>
 
         {/* Especificaciones Técnicas */}
-        <section className="detail-product__section">
-          <h2 className="detail-product__section-title">
-            Especificaciones Técnicas
-          </h2>
-          <div className="detail-product__specs-grid">
-            {product.specs &&
-              (() => {
-                const {
-                  material,
-                  dimensiones,
-                  dificultad,
-                  tiempoImpresion,
-                  soportes,
-                  configuracion,
-                } = product.specs;
-                const items = [
-                  { Icon: Box, title: "Material", value: material },
-                  { Icon: Ruler, title: "Dimensiones", value: dimensiones },
-                  { Icon: Gauge, title: "Dificultad", value: dificultad },
-                  {
-                    Icon: Clock,
-                    title: "Tiempo de Impresión",
-                    value: tiempoImpresion,
-                  },
-                  { Icon: Wrench, title: "Soportes", value: soportes },
-                  {
-                    Icon: SlidersHorizontal,
-                    title: "Configuración",
-                    value: `Layer: ${configuracion.layer} · Infill: ${configuracion.infill}`,
-                  },
-                ];
-                return items.map(({ Icon, title, value }) => (
-                  <Card
-                    key={title}
-                    variant="spec"
-                    title={title}
-                    icon={<Icon size={16} strokeWidth={2} />}
-                  >
-                    <span>{value}</span>
-                  </Card>
-                ));
-              })()}
-          </div>
-        </section>
+        {specItems.length > 0 && (
+          <section className="detail-product__section">
+            <h2 className="detail-product__section-title">
+              Especificaciones Técnicas
+            </h2>
+            <div className="detail-product__specs-grid">
+              {specItems.map(({ Icon, title, value }) => (
+                <Card
+                  key={title}
+                  variant="spec"
+                  title={title}
+                  icon={<Icon size={16} strokeWidth={2} />}
+                >
+                  {value}
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Diseñador */}
         <section className="detail-product__section">
@@ -251,6 +336,7 @@ function DetailProduct() {
           </Card>
         </section>
       </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </Layout>
   );
 }

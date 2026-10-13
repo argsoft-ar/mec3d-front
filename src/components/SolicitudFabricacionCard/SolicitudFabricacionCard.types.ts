@@ -6,4 +6,6 @@ export interface SolicitudFabricacionCardProps {
   onDescargar: () => void;
   onConfirmarEntrega: () => void;
   onAbrirChat: () => void;
+  /** Solo se muestra mientras la orden admite cancelación (antes de declararse la entrega). */
+  onCancelar?: () => void;
 }

@@ -1,3 +1,10 @@
+export interface ArchivoPreviewResponse {
+  /** URL firmada de vida corta. */
+  url: string;
+  /** Segundos de vigencia; null si la URL no expira. */
+  expiresIn: number | null;
+}
+
 export type EstadoProducto = "disponible" | "vendido" | "pausado";
 
 export interface Categoria {
@@ -26,10 +33,10 @@ export interface ProductoFisico {
 }
 
 export interface ProductSpecificaciones {
-  material: string;
   dimensiones: string;
   dificultad: string;
-  tiempoImpresion: string;
+  /** Horas enteras (1-500). */
+  tiempoImpresion: number;
   soportes: string;
   configuracion: {
     layer: string;
@@ -55,13 +62,21 @@ export interface Product {
   downloads: number;
   price: number;
   format: string;
+  /** Solo viene en GET /productos/mis-disenos (diseñador dueño); nunca en lecturas públicas. */
   archivoUrl?: string;
   categoria?: string;
+  /** null en planos técnicos. */
+  tecnologia: string | null;
+  /** Vacío en planos técnicos. */
+  materiales: string[];
+  /** null en planos técnicos. */
   specs: ProductSpecificaciones | null;
   designer: ProductDesigner;
 }
 
-export interface CreateProductPayload {
+export type FormatoPlano = "PDF" | "DWG" | "DXF";
+
+interface ProductPayloadBase {
   disenadorId?: string;
   titulo: string;
   descripcion: string;
@@ -70,8 +85,24 @@ export interface CreateProductPayload {
   precioBase: number;
   formato: string;
   categoria?: string;
+}
+
+export interface ModeloProductPayload extends ProductPayloadBase {
+  tecnologia: string;
+  materiales: string[];
   especificaciones?: ProductSpecificaciones;
 }
+
+/** Planos técnicos: el backend rechaza tecnología/materiales/especificaciones. */
+export interface PlanoProductPayload extends ProductPayloadBase {
+  categoria: "Planos técnicos";
+  formato: FormatoPlano;
+  tecnologia?: never;
+  materiales?: never;
+  especificaciones?: never;
+}
+
+export type CreateProductPayload = ModeloProductPayload | PlanoProductPayload;
 
 export type UpdateProductPayload = CreateProductPayload;
 export type PartialUpdateProductPayload = Partial<CreateProductPayload>;

@@ -31,6 +31,11 @@
   flex-wrap: wrap;
 }
 
+.account__cooldown {
+  color: var(--color-warning);
+  font-weight: var(--font-weight-semibold);
+}
+
 @media (max-width: 640px) {
   .account__actions {
     flex-direction: column;

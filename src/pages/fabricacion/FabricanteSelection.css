@@ -4,6 +4,15 @@
   padding: var(--space-6) 0;
 }
 
+.fabricante-selection__material {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .fabricante-selection__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

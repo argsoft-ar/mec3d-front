@@ -1,3 +1,5 @@
+import type { EstadoOrdenFabricacion } from "./orden-fabricacion.interface";
+
 export type TipoMensaje = "texto" | "sistema" | "propuesta_precio";
 
 export interface Mensaje {
@@ -49,7 +51,7 @@ export interface ConversacionResumen {
   productoTitulo: string | null;
   miRol: "comprador" | "fabricante";
   contraparte: { id: string; username: string | null; tagline: string | null };
-  estadoOrden: string; // EstadoOrdenFabricacion values: solicitado | en_negociacion | trato_cerrado | rechazado | cancelado | completado
+  estadoOrden: EstadoOrdenFabricacion;
   precioAcordado: number | null;
   precioPropuestoComprador: number | null;
   precioPropuestoFabricante: number | null;

@@ -143,6 +143,11 @@
   opacity: 0.1;
 }
 
+/* Last card when the grid has an odd remainder: full row */
+.home-categories__grid .home-category-card:nth-child(7) {
+  grid-column: 1 / -1;
+}
+
 @media (min-width: 640px) {
   .home-categories__grid {
     grid-template-columns: repeat(3, 1fr);

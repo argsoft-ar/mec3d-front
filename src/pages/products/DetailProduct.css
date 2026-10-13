@@ -1,3 +1,8 @@
+.detail-product__message {
+  padding: var(--space-8);
+  color: var(--color-text-secondary);
+}
+
 /* ── Hero ───────────────────────────────────────────────────────────── */
 .detail-product__hero {
   display: grid;
