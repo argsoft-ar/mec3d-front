@@ -10,3 +10,4 @@ export * from "./compra.interface";
 export * from "./orden-fabricacion.interface";
 export * from "./chat.interface";
 export * from "./admin.interface";
+export * from "./watermark.interface";

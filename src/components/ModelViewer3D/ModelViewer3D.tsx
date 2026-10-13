@@ -253,6 +253,7 @@ function ModelViewer3D({
   format,
   className = "",
   onPreviewError,
+  errorMessage,
 }: ModelViewer3DProps) {
   const normalizedFormat = useMemo(() => format.trim().toUpperCase(), [format]);
   const formatIsSupported = isSupportedFormat(normalizedFormat);
@@ -274,7 +275,7 @@ function ModelViewer3D({
   if (!formatIsSupported) {
     return (
       <div className={`model-viewer-3d ${className}`.trim()}>
-        <FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />
+        <FallbackMessage text={errorMessage ?? UNSUPPORTED_FORMAT_MESSAGE} />
       </div>
     );
   }
@@ -292,9 +293,10 @@ function ModelViewer3D({
       <div className={`model-viewer-3d ${className}`.trim()}>
         <FallbackMessage
           text={
-            sourceStatus === "blocked"
+            errorMessage ??
+            (sourceStatus === "blocked"
               ? HEAVY_FILE_MESSAGE
-              : LOAD_FAILED_MESSAGE
+              : LOAD_FAILED_MESSAGE)
           }
         />
       </div>
@@ -304,7 +306,9 @@ function ModelViewer3D({
   return (
     <div className={`model-viewer-3d ${className}`.trim()}>
       <ModelErrorBoundary
-        fallback={<FallbackMessage text={UNSUPPORTED_FORMAT_MESSAGE} />}
+        fallback={
+          <FallbackMessage text={errorMessage ?? UNSUPPORTED_FORMAT_MESSAGE} />
+        }
         onError={onPreviewError}
       >
         <Canvas

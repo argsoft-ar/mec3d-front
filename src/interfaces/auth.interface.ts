@@ -5,6 +5,11 @@ export interface LoginRequest {
   password: string;
 }
 
+/** State de navegación hacia /login con la ruta interna a la que volver tras autenticarse. */
+export interface LoginLocationState {
+  from?: string;
+}
+
 export interface LoginResponse {
   message: string;
   token: string;

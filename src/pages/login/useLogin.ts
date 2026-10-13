@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import type { ChangeEvent, FormEvent } from "react";
 import { authService } from "../../services/api";
 import { clearSessionData } from "../../services/session";
+import { resolvePostLoginPath } from "../../utils/redirect.util";
 
 export type LoginForm = { email: string; password: string };
 
+const DEFAULT_DESTINATION = "/dashboard";
+
 export function useLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
     password: "",
@@ -36,7 +40,9 @@ export function useLogin() {
       clearSessionData();
       localStorage.setItem("auth_token", token);
       localStorage.setItem("auth_user", JSON.stringify(user));
-      navigate("/dashboard");
+      navigate(resolvePostLoginPath(location.state, DEFAULT_DESTINATION), {
+        replace: true,
+      });
     } catch {
       setError("Credenciales inválidas. Revisá tu email y contraseña.");
     } finally {

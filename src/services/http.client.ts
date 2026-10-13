@@ -59,30 +59,39 @@ function endSession(): void {
 async function throwHttpError(
   response: Response,
   endpoint: string,
+  keepSession = false,
 ): Promise<never> {
-  if (response.status === 401 && !endpoint.startsWith("/auth/")) endSession();
+  if (response.status === 401 && !keepSession && !endpoint.startsWith("/auth/"))
+    endSession();
   const { message, details } = await readErrorBody(response);
   throw new HttpError(response.status, message, details);
 }
 
+export interface RequestOptions extends RequestInit {
+  /** Un 401 se propaga como HttpError sin cerrar la sesión ni redirigir a /login. */
+  keepSessionOnUnauthorized?: boolean;
+}
+
 export async function request<T>(
   endpoint: string,
-  options: RequestInit = {},
+  options: RequestOptions = {},
 ): Promise<T> {
+  const { keepSessionOnUnauthorized, ...init } = options;
   const token = localStorage.getItem("auth_token");
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...init.headers,
   };
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
+    ...init,
     headers,
   });
 
-  if (!response.ok) return throwHttpError(response, endpoint);
+  if (!response.ok)
+    return throwHttpError(response, endpoint, keepSessionOnUnauthorized);
 
   return response.json() as Promise<T>;
 }
