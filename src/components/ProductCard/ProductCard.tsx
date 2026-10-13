@@ -1,5 +1,8 @@
 import type { ProductCardProps } from "./ProductCard.types";
+import MaterialTagList from "../MaterialTag/MaterialTagList";
 import "./ProductCard.css";
+
+const MAX_VISIBLE_MATERIALES = 3;
 
 function formatDownloads(n: number): string {
   if (n >= 1000) {
@@ -44,6 +47,8 @@ const ProductCard = ({
   downloads,
   price,
   badge,
+  tecnologia,
+  materiales = [],
   onClick,
   className = "",
 }: ProductCardProps) => (
@@ -69,6 +74,21 @@ const ProductCard = ({
     <div className="product-card__info">
       <h3 className="product-card__title">{title}</h3>
       <p className="product-card__description">{description}</p>
+
+      {(tecnologia || materiales.length > 0) && (
+        <div className="product-card__tags">
+          {tecnologia && (
+            <span className="product-card__tecnologia">{tecnologia}</span>
+          )}
+          {materiales.length > 0 && (
+            <MaterialTagList
+              items={materiales}
+              max={MAX_VISIBLE_MATERIALES}
+              size="sm"
+            />
+          )}
+        </div>
+      )}
 
       <div className="product-card__rating">
         <Stars rating={rating} />

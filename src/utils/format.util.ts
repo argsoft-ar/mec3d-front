@@ -17,3 +17,24 @@ export function parseFormatTags(format: string | null | undefined): string[] {
     .map((f) => f.trim().toUpperCase())
     .filter(Boolean);
 }
+
+/** Centavos enteros de ARS a "$ 1.234,56" sin pasar por flotantes. */
+export function formatCentavos(centavos: number): string {
+  if (!Number.isSafeInteger(centavos)) return "—";
+  const sign = centavos < 0 ? "-" : "";
+  const abs = Math.abs(centavos);
+  const rest = abs % 100;
+  const pesos = (abs - rest) / 100;
+  const decimals = String(rest).padStart(2, "0");
+  return `${sign}$ ${pesos.toLocaleString("es-AR")},${decimals}`;
+}
+
+export function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("es-AR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}

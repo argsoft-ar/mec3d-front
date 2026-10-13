@@ -23,6 +23,7 @@ import type { Product, PerfilCompleto, RolUsuario } from "../../interfaces";
 import { productService } from "../../services/product.service";
 import { usuarioService } from "../../services/usuario.service";
 import FabricanteSection from "../../components/FabricanteSection/FabricanteSection";
+import MaterialTagList from "../../components/MaterialTag/MaterialTagList";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
@@ -32,6 +33,22 @@ import "./Dashboard.css";
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
   { key: "title", header: "Título", sortable: true },
   { key: "format", header: "Formato", width: 90, align: "center" },
+  {
+    key: "tecnologia",
+    header: "Tecnología",
+    width: 130,
+    renderCell: (value) => (typeof value === "string" && value ? value : "—"),
+  },
+  {
+    key: "materiales",
+    header: "Materiales",
+    renderCell: (value) =>
+      Array.isArray(value) && value.length > 0 ? (
+        <MaterialTagList items={value as string[]} max={3} size="sm" />
+      ) : (
+        "—"
+      ),
+  },
   {
     key: "price",
     header: "Precio",
@@ -58,7 +75,12 @@ const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
 ];
 
 const PRODUCT_FILTERABLE_FIELDS: FilterableField<Product>[] = [
-  { key: "format", label: "Formato", options: ["STL", "OBJ", "STEP", "3MF"] },
+  {
+    key: "format",
+    label: "Formato",
+    options: ["STL", "OBJ", "STEP", "3MF", "PDF", "DWG", "DXF"],
+  },
+  { key: "tecnologia", label: "Tecnología", options: ["Impresión 3D", "CNC"] },
 ];
 
 function Dashboard() {

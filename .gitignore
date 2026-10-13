@@ -1,3 +1,28 @@
+# Dependencias
+node_modules
+.pnp
+.pnp.js
+.pnpm-store/
+
+# Lockfiles de otros gestores (este repo usa pnpm)
+package-lock.json
+yarn.lock
+
+# Build
+dist
+dist-ssr
+build
+*.local
+*.tsbuildinfo
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
 # Logs
 logs
 *.log
@@ -7,19 +32,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Tests y cobertura
+coverage
+.nyc_output
 
-# Editor directories and files
+# Despliegue
+.vercel
+
+# Editores y SO
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.env
+
+# Caches de herramientas
+.eslintcache
+.cache
+.vite

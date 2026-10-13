@@ -1,18 +1,32 @@
 import type {
   ApiResponse,
+  CancelarOrdenResponse,
+  CerrarTratoResponse,
+  CodigoEntregaResponse,
   FabricanteSugerido,
+  FabricantesSugeridosParams,
   OrdenFabricacion,
   OrdenFabricacionCreada,
   OrdenFabricacionListItem,
-  CodigoEntregaResponse,
 } from "../interfaces";
-import { BASE_URL, request } from "./http.client";
+import { downloadFile, request } from "./http.client";
 
 export const ordenFabricacionService = {
-  fabricantesSugeridos: (disenoId: string) =>
-    request<FabricanteSugerido[]>(
-      `/ordenes-fabricacion/fabricantes-sugeridos?disenoId=${encodeURIComponent(disenoId)}`,
-    ),
+  fabricantesSugeridos: ({
+    disenoId,
+    compraId,
+    material,
+    page,
+    limit,
+  }: FabricantesSugeridosParams) => {
+    const query = new URLSearchParams({ disenoId, compraId });
+    if (material) query.set("material", material);
+    if (page !== undefined) query.set("page", String(page));
+    if (limit !== undefined) query.set("limit", String(limit));
+    return request<FabricanteSugerido[]>(
+      `/ordenes-fabricacion/fabricantes-sugeridos?${query.toString()}`,
+    );
+  },
 
   crear: (compraId: string, fabricanteIds: string[]) =>
     request<ApiResponse<OrdenFabricacionCreada[]>>("/ordenes-fabricacion", {
@@ -27,19 +41,32 @@ export const ordenFabricacionService = {
     ),
 
   cerrarTrato: (ordenId: string, precio: number) =>
-    request<ApiResponse<OrdenFabricacion>>(
+    request<CerrarTratoResponse>(
       `/ordenes-fabricacion/${ordenId}/cerrar-trato`,
       { method: "POST", body: JSON.stringify({ precio }) },
     ),
+
+  cancelar: (ordenId: string) =>
+    request<CancelarOrdenResponse>(`/ordenes-fabricacion/${ordenId}/cancelar`, {
+      method: "POST",
+    }),
 
   misSolicitudes: () =>
     request<ApiResponse<OrdenFabricacionListItem[]>>(
       "/ordenes-fabricacion/mis-solicitudes",
     ),
 
+  // POST: cada llamada genera un código nuevo e invalida el anterior.
   codigoEntrega: (ordenId: string) =>
     request<ApiResponse<CodigoEntregaResponse>>(
       `/ordenes-fabricacion/${ordenId}/codigo-entrega`,
+      { method: "POST" },
+    ),
+
+  disputar: (ordenId: string, motivo: string) =>
+    request<ApiResponse<OrdenFabricacion>>(
+      `/ordenes-fabricacion/${ordenId}/disputar`,
+      { method: "POST", body: JSON.stringify({ motivo }) },
     ),
 
   declararEntrega: (ordenId: string) =>
@@ -55,31 +82,12 @@ export const ordenFabricacionService = {
     ),
 };
 
-// Igual que descargarCompra: el endpoint responde 302 y exige el JWT como header,
-// por lo que un <a href> plano no serviría; se hace fetch manual y se dispara la
-// descarga del blob resultante.
-export async function descargarDisenoOrden(
+export function descargarDisenoOrden(
   ordenId: string,
   fileName: string,
 ): Promise<void> {
-  const token = localStorage.getItem("auth_token");
-
-  const response = await fetch(
-    `${BASE_URL}/ordenes-fabricacion/${ordenId}/descargar-diseno`,
-    { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+  return downloadFile(
+    `/ordenes-fabricacion/${ordenId}/descargar-diseno`,
+    fileName,
   );
-
-  if (!response.ok) {
-    throw new Error("Error al descargar el archivo");
-  }
-
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  window.URL.revokeObjectURL(url);
 }

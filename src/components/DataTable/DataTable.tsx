@@ -56,6 +56,7 @@ function DataTable<T extends { id: string | number }>({
   pagination = false,
   rowsPerPageOptions = DEFAULT_ROWS_PER_PAGE_OPTIONS,
   filterableFields = EMPTY_FILTERABLE_FIELDS,
+  serverPagination,
 }: Readonly<DataTableProps<T>>) {
   const hasActions = actions.length > 0;
   const hasToolbar = searchable || filterableFields.length > 0;
@@ -156,12 +157,12 @@ function DataTable<T extends { id: string | number }>({
   ]);
 
   const paginatedRows = useMemo(() => {
-    if (!pagination) return processedRows;
+    if (!pagination || serverPagination) return processedRows;
     return processedRows.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage,
     );
-  }, [processedRows, pagination, page, rowsPerPage]);
+  }, [processedRows, pagination, serverPagination, page, rowsPerPage]);
 
   return (
     <Paper
@@ -358,12 +359,21 @@ function DataTable<T extends { id: string | number }>({
       {pagination && (
         <TablePagination
           component="div"
-          count={processedRows.length}
-          page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
+          count={serverPagination?.total ?? processedRows.length}
+          page={serverPagination?.page ?? page}
+          onPageChange={(_, newPage) =>
+            serverPagination
+              ? serverPagination.onPageChange(newPage)
+              : setPage(newPage)
+          }
+          rowsPerPage={serverPagination?.rowsPerPage ?? rowsPerPage}
           onRowsPerPageChange={(e) => {
-            setRowsPerPage(Number.parseInt(e.target.value, 10));
+            const value = Number.parseInt(e.target.value, 10);
+            if (serverPagination) {
+              serverPagination.onRowsPerPageChange(value);
+              return;
+            }
+            setRowsPerPage(value);
             setPage(0);
           }}
           rowsPerPageOptions={rowsPerPageOptions}

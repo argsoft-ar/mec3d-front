@@ -7,6 +7,7 @@ import FormField from "../../components/Form/FormField";
 import Button from "../../components/Button/Button";
 import BrandPanel from "../../components/BrandPanel/BrandPanel";
 import PasswordStrengthHint from "./PasswordStrengthHint";
+import UsernameStatus from "../../components/UsernameStatus/UsernameStatus";
 import type { FormFieldType, SelectOption } from "../../types";
 import "./Register.css";
 
@@ -24,6 +25,7 @@ interface FieldDefinition {
   disabled?: boolean;
   error?: string;
   hint?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
 const ROL_OPTIONS: SelectOption[] = [
@@ -33,8 +35,29 @@ const ROL_OPTIONS: SelectOption[] = [
 ];
 
 function Register() {
-  const { formData, loading, error, handleChange, handleSubmit, georef } =
-    useRegister();
+  const {
+    formData,
+    loading,
+    error,
+    usernameStatus,
+    usernameServerError,
+    handleChange,
+    handleSubmit,
+    georef,
+  } = useRegister();
+
+  let usernameHint: string | undefined;
+  if (usernameStatus === "checking")
+    usernameHint = "Comprobando disponibilidad...";
+  else if (usernameStatus === "available") usernameHint = "Disponible";
+  else if (usernameStatus === "error")
+    usernameHint = "No se pudo comprobar la disponibilidad";
+
+  let usernameError: string | undefined = usernameServerError || undefined;
+  if (usernameStatus === "taken")
+    usernameError = "Nombre de usuario no disponible";
+  else if (usernameStatus === "invalid")
+    usernameError = "3-30 caracteres: letras, números y guion bajo";
 
   const fields: FieldDefinition[] = [
     {
@@ -44,6 +67,17 @@ function Register() {
       placeholder: "tucorreo@ejemplo.com",
       value: formData.email,
       onChange: handleChange("email"),
+    },
+    {
+      name: "username",
+      label: "Nombre de usuario",
+      type: "text",
+      placeholder: "tu_usuario",
+      value: formData.username,
+      onChange: handleChange("username"),
+      rightElement: <UsernameStatus status={usernameStatus} />,
+      hint: usernameHint,
+      error: usernameError,
     },
     {
       name: "password",
@@ -155,6 +189,7 @@ function Register() {
                     error={field.error}
                     disabled={field.disabled}
                     hint={field.hint}
+                    rightElement={field.rightElement}
                     required
                   />
                 </div>

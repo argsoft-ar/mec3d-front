@@ -1,0 +1,83 @@
+.multi-select {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.multi-select__legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+}
+
+.multi-select__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.multi-select__option {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+/* Checkbox nativo oculto visualmente pero accesible por teclado y lectores de pantalla. */
+.multi-select__input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.multi-select__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.multi-select__option:hover .multi-select__chip {
+  border-color: var(--color-primary);
+}
+
+.multi-select__input:checked + .multi-select__chip {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-text-primary);
+}
+
+.multi-select__input:focus-visible + .multi-select__chip {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.multi-select__input:disabled,
+.multi-select__input:disabled + .multi-select__chip {
+  cursor: not-allowed;
+}
+
+.multi-select__input:disabled + .multi-select__chip {
+  opacity: 0.5;
+}
+
+.form-field--error .multi-select__chip {
+  border-color: var(--color-danger);
+}
+
+.multi-select__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

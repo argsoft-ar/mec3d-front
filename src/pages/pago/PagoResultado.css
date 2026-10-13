@@ -1,0 +1,56 @@
+.pago-resultado {
+  max-width: 640px;
+}
+
+.pago-resultado__card--success {
+  border-color: var(--color-success);
+}
+
+.pago-resultado__card--warning {
+  border-color: var(--color-warning);
+}
+
+.pago-resultado__card--danger {
+  border-color: var(--color-danger);
+}
+
+.pago-resultado__card--info {
+  border-color: var(--color-info);
+}
+
+.pago-resultado__message {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-3);
+}
+
+.pago-resultado__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-3);
+}
+
+.pago-resultado__details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  margin: var(--space-4) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.pago-resultado__details dt {
+  color: var(--color-text-secondary);
+}
+
+.pago-resultado__details dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.pago-resultado__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

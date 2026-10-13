@@ -1,5 +1,5 @@
 import type React from "react";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import Header from "../../components/Header/Header";
@@ -13,8 +13,20 @@ import type { SelectOption } from "../../types";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import PageLoader from "../../components/PageLoader/PageLoader";
+import MultiSelectField from "../../components/MultiSelectField/MultiSelectField";
 import { useProductForm } from "../../hooks/useProductForm";
-import type { FormFieldConfig, ButtonConfig } from "../../interfaces";
+import {
+  MAX_MATERIALES_POR_DISENO,
+  MAX_PRECIO_BASE,
+  MAX_PRINT_HOURS,
+  MIN_PRECIO_BASE,
+  MIN_PRINT_HOURS,
+} from "../../utils/product.util";
+import type {
+  FormFieldConfig,
+  ButtonConfig,
+  ProductFormTextKey,
+} from "../../interfaces";
 import "./ProductFormPage.css";
 
 const ModelViewer3D = lazy(
@@ -28,24 +40,9 @@ const CATEGORY_OPTIONS: SelectOption[] = [
   { value: "Casa", label: "Casa" },
   { value: "Maquinas", label: "Máquinas" },
   { value: "Engranajes", label: "Engranajes" },
+  { value: "Planos técnicos", label: "Planos técnicos" },
 ];
 
-const FORMAT_OPTIONS: SelectOption[] = [
-  { value: "STL", label: "STL" },
-  { value: "3MF", label: "3MF" },
-  { value: "CNC", label: "CNC" },
-  { value: "PLANO", label: "Plano técnico" },
-];
-
-const MATERIAL_OPTIONS: SelectOption[] = [
-  { value: "PLA", label: "PLA" },
-  { value: "PLA+", label: "PLA+" },
-  { value: "PETG", label: "PETG" },
-  { value: "ABS", label: "ABS" },
-  { value: "TPU", label: "TPU" },
-  { value: "Nylon", label: "Nylon" },
-  { value: "Resina", label: "Resina" },
-];
 const DIFICULTAD_OPTIONS: SelectOption[] = [
   { value: "Básico", label: "Básico" },
   { value: "Intermedio", label: "Intermedio" },
@@ -71,6 +68,10 @@ const INFILL_OPTIONS: SelectOption[] = [
   { value: "60%", label: "60%" },
 ];
 
+// Evita notación exponencial y signos en inputs numéricos.
+const NON_NUMERIC_KEYS = ["e", "E", "+", "-"] as const;
+const INTEGER_ONLY_KEYS = [...NON_NUMERIC_KEYS, ".", ","] as const;
+
 const FORM_FIELDS: FormFieldConfig[] = [
   {
     label: "Imagen de portada",
@@ -82,13 +83,12 @@ const FORM_FIELDS: FormFieldConfig[] = [
     hint: "El archivo debe ser menor a 5MB",
   },
   {
-    label: "Archivo de diseño 3D",
+    // Label, accept y hint dependen de la categoría (ver getProductFormRules).
+    label: "Archivo de diseño",
     name: "archivoUrl",
     type: "file",
-    accept: ".stl,.3mf,.obj,.step,.stp",
     required: true,
     fullWidth: true,
-    hint: "Formatos permitidos: STL, 3MF, OBJ, STEP (máx. 30MB)",
   },
   {
     label: "Título del diseño",
@@ -102,6 +102,12 @@ const FORM_FIELDS: FormFieldConfig[] = [
     type: "number",
     placeholder: "Ej: 2500",
     required: true,
+    min: MIN_PRECIO_BASE,
+    max: MAX_PRECIO_BASE,
+    step: 0.01,
+    inputMode: "decimal",
+    blockedKeys: NON_NUMERIC_KEYS,
+    hint: "Máximo 2 decimales.",
   },
   {
     label: "Categoría",
@@ -114,7 +120,6 @@ const FORM_FIELDS: FormFieldConfig[] = [
     label: "Formato de archivo",
     name: "formato",
     type: "select",
-    options: FORMAT_OPTIONS,
     required: true,
   },
   {
@@ -126,11 +131,12 @@ const FORM_FIELDS: FormFieldConfig[] = [
     fullWidth: true,
   },
   {
-    label: "Material",
-    name: "specMaterial",
+    label: "Tecnología",
+    name: "tecnologia",
     type: "select",
-    options: MATERIAL_OPTIONS,
+    placeholder: "Seleccioná una tecnología",
     required: true,
+    fullWidth: true,
   },
   {
     label: "Dimensiones",
@@ -146,10 +152,16 @@ const FORM_FIELDS: FormFieldConfig[] = [
     required: true,
   },
   {
-    label: "Tiempo de Impresión",
+    label: "Tiempo de impresión (horas)",
     name: "specTiempoImpresion",
-    placeholder: "Ej: 4h",
+    type: "number",
+    placeholder: "Ej: 4",
     required: true,
+    min: MIN_PRINT_HOURS,
+    max: MAX_PRINT_HOURS,
+    step: 1,
+    inputMode: "numeric",
+    blockedKeys: INTEGER_ONLY_KEYS,
   },
   {
     label: "Soportes",
@@ -178,8 +190,13 @@ function ProductFormPage() {
   const {
     isEdit,
     form,
+    rules,
     errors,
     handleChange,
+    handleMaterialesChange,
+    tecnologiaOptions,
+    materialOptions,
+    loadingMateriales,
     imageFile,
     imagePreview,
     uploadingImage,
@@ -204,6 +221,34 @@ function ProductFormPage() {
     removeToast,
   } = useProductForm();
   const navigate = useNavigate();
+
+  const DYNAMIC_OPTIONS: Partial<Record<ProductFormTextKey, SelectOption[]>> = {
+    tecnologia: tecnologiaOptions,
+    formato: rules.formatOptions,
+  };
+
+  const renderField = (field: FormFieldConfig) => (
+    <FormField
+      key={field.name}
+      label={field.label}
+      name={field.name}
+      type={field.type}
+      value={form[field.name]}
+      onChange={handleChange}
+      placeholder={field.placeholder}
+      required={field.required}
+      fullWidth={field.fullWidth}
+      options={DYNAMIC_OPTIONS[field.name] ?? field.options}
+      error={errors[field.name]}
+      hint={field.hint}
+      accept={field.accept}
+      min={field.min}
+      max={field.max}
+      step={field.step}
+      inputMode={field.inputMode}
+      blockedKeys={field.blockedKeys}
+    />
+  );
 
   const FILE_FIELD_PROPS: Record<
     string,
@@ -309,7 +354,7 @@ function ProductFormPage() {
                 <div className="add-product__upload-col">
                   <FormField
                     key={FORM_FIELDS[1].name}
-                    label={FORM_FIELDS[1].label}
+                    label={rules.archivo.label}
                     name={FORM_FIELDS[1].name}
                     type={FORM_FIELDS[1].type}
                     value={form[FORM_FIELDS[1].name]}
@@ -317,8 +362,8 @@ function ProductFormPage() {
                     required={FORM_FIELDS[1].required}
                     fullWidth={FORM_FIELDS[1].fullWidth}
                     error={errors[FORM_FIELDS[1].name]}
-                    hint={FORM_FIELDS[1].hint}
-                    accept={FORM_FIELDS[1].accept}
+                    hint={rules.archivo.hint}
+                    accept={rules.archivo.accept}
                     {...FILE_FIELD_PROPS[FORM_FIELDS[1].name]}
                   />
                   {(archivoPreviewUrl || form.archivoUrl) &&
@@ -337,43 +382,38 @@ function ProductFormPage() {
                 </div>
               </div>
 
-              {FORM_FIELDS.slice(2, 7).map((field) => (
-                <FormField
-                  key={field.name}
-                  label={field.label}
-                  name={field.name}
-                  type={field.type}
-                  value={form[field.name]}
-                  onChange={handleChange}
-                  placeholder={field.placeholder}
-                  required={field.required}
-                  fullWidth={field.fullWidth}
-                  options={field.options}
-                  error={errors[field.name]}
-                  hint={field.hint}
-                  accept={field.accept}
-                />
-              ))}
+              {FORM_FIELDS.slice(2, 7).map(renderField)}
 
-              <h3 className="add-product__specs-title">
-                Especificaciones Técnicas
-              </h3>
+              {rules.showTechnicalFields && (
+                <>
+                  <h3 className="add-product__specs-title">
+                    Especificaciones Técnicas
+                  </h3>
 
-              {FORM_FIELDS.slice(7).map((field) => (
-                <FormField
-                  key={field.name}
-                  label={field.label}
-                  name={field.name}
-                  type={field.type}
-                  value={form[field.name]}
-                  onChange={handleChange}
-                  placeholder={field.placeholder}
-                  required={field.required}
-                  fullWidth={field.fullWidth}
-                  options={field.options}
-                  error={errors[field.name]}
-                />
-              ))}
+                  {FORM_FIELDS.slice(7).map((field) => (
+                    <Fragment key={field.name}>
+                      {renderField(field)}
+                      {field.name === "tecnologia" && (
+                        <MultiSelectField
+                          label="Materiales compatibles"
+                          name="materiales"
+                          options={materialOptions}
+                          value={form.materiales}
+                          onChange={handleMaterialesChange}
+                          required
+                          fullWidth
+                          maxSelected={MAX_MATERIALES_POR_DISENO}
+                          loading={loadingMateriales}
+                          disabled={!form.tecnologia}
+                          error={errors.materiales}
+                          emptyMessage="Elegí primero una tecnología para ver sus materiales."
+                          hint="Podés elegir más de un material."
+                        />
+                      )}
+                    </Fragment>
+                  ))}
+                </>
+              )}
 
               <div className="add-product__actions">
                 {FORM_ACTIONS.map((btn) => (

@@ -96,6 +96,8 @@ function Profile() {
                 rating={p.rating}
                 downloads={p.downloads}
                 price={p.price}
+                tecnologia={p.tecnologia}
+                materiales={p.materiales}
                 onClick={() => navigate(`/product/${p.id}`)}
               />
             ))}

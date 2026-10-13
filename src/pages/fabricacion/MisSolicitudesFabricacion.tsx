@@ -13,6 +13,12 @@ import {
   ordenFabricacionService,
   descargarDisenoOrden,
 } from "../../services/orden-fabricacion.service";
+import {
+  HttpError,
+  getErrorMessage,
+  getErrorToast,
+} from "../../services/http.client";
+import { compraPagada, mensajeReembolso } from "../../utils/estado.util";
 import type { OrdenFabricacionListItem } from "../../interfaces";
 import "./MisSolicitudesFabricacion.css";
 
@@ -31,24 +37,60 @@ function MisSolicitudesFabricacion() {
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
   const [codigoInput, setCodigoInput] = useState("");
   const [confirmandoEntrega, setConfirmandoEntrega] = useState(false);
+  const [cancelando, setCancelando] = useState<OrdenFabricacionListItem | null>(
+    null,
+  );
+  const [procesandoCancelacion, setProcesandoCancelacion] = useState(false);
 
   useEffect(() => {
+    cargar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function cargar() {
     ordenFabricacionService
       .misSolicitudes()
       .then((res) => setOrdenes(res.data ?? []))
       .catch(() => addToast("No se pudieron cargar las solicitudes", "error"))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
 
   async function handleDescargar(orden: OrdenFabricacionListItem) {
     setDownloadingId(orden.id);
     try {
       await descargarDisenoOrden(orden.id, orden.productoTitulo);
-    } catch {
-      addToast("No se pudo descargar el archivo", "error");
+    } catch (error) {
+      addToast(
+        getErrorMessage(error, "No se pudo descargar el archivo"),
+        "error",
+      );
     } finally {
       setDownloadingId(null);
+    }
+  }
+
+  async function handleCancelar() {
+    if (!cancelando) return;
+    setProcesandoCancelacion(true);
+    try {
+      const res = await ordenFabricacionService.cancelar(cancelando.id);
+      const { message, type } = mensajeReembolso(res.reembolso);
+      setOrdenes((prev) => prev.filter((o) => o.id !== cancelando.id));
+      addToast(message, type);
+      setCancelando(null);
+    } catch (error) {
+      const { message, type } = getErrorToast(
+        error,
+        "No se pudo cancelar la orden",
+      );
+      addToast(message, type);
+      // 409: el estado de la orden cambió (p. ej. disputa abierta); se recarga la lista.
+      if (error instanceof HttpError && error.status === 409) {
+        setCancelando(null);
+        cargar();
+      }
+    } finally {
+      setProcesandoCancelacion(false);
     }
   }
 
@@ -72,8 +114,17 @@ function MisSolicitudesFabricacion() {
       setOrdenes((prev) => prev.filter((o) => o.id !== confirmandoId));
       addToast("Entrega confirmada", "success");
       setConfirmandoId(null);
-    } catch {
-      addToast("Código de entrega inválido", "error");
+    } catch (error) {
+      // 400: código inválido con intentos restantes; 429: orden bloqueada por exceso de intentos.
+      if (error instanceof HttpError && error.status === 429) {
+        addToast(error.message, "error");
+        setConfirmandoId(null);
+      } else {
+        addToast(
+          getErrorMessage(error, "No se pudo confirmar la entrega"),
+          "error",
+        );
+      }
     } finally {
       setConfirmandoEntrega(false);
     }
@@ -103,6 +154,7 @@ function MisSolicitudesFabricacion() {
               downloading={downloadingId === orden.id}
               onDescargar={() => handleDescargar(orden)}
               onConfirmarEntrega={() => openConfirmarEntrega(orden.id)}
+              onCancelar={() => setCancelando(orden)}
               onAbrirChat={() =>
                 navigate(`/chat/${orden.conversacionId}`, {
                   state: { ordenFabricacionId: orden.id },
@@ -135,11 +187,30 @@ function MisSolicitudesFabricacion() {
             inputMode="numeric"
             maxLength={6}
             value={codigoInput}
-            onChange={(e) => setCodigoInput(e.target.value)}
+            onChange={(e) =>
+              setCodigoInput(e.target.value.replaceAll(/\D/g, "").slice(0, 6))
+            }
             placeholder="000000"
+            autoComplete="one-time-code"
           />
         </label>
       </ConfirmDialog>
+
+      <ConfirmDialog
+        open={cancelando !== null}
+        title="Cancelar orden"
+        message={
+          cancelando && compraPagada(cancelando.compraEstado)
+            ? "El comprador ya pagó: al cancelar se le reembolsa el pago. Esta acción no se puede deshacer."
+            : "Esta acción no se puede deshacer."
+        }
+        confirmLabel="Cancelar orden"
+        cancelLabel="Volver"
+        variant="danger"
+        loading={procesandoCancelacion}
+        onConfirm={handleCancelar}
+        onCancel={() => setCancelando(null)}
+      />
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </Layout>

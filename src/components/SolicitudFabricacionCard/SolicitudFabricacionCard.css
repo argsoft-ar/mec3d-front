@@ -55,8 +55,15 @@
 }
 
 .solicitud-card__badge--cancelado,
+.solicitud-card__badge--en_disputa,
 .solicitud-card__badge--rechazado {
   background-color: var(--color-danger);
+}
+
+.solicitud-card__material {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .solicitud-card__price {
@@ -94,4 +101,14 @@
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+.solicitud-card__note {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+}
+
+.solicitud-card__note--danger {
+  color: var(--color-danger);
 }

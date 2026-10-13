@@ -1,4 +1,6 @@
 import { request } from "./http.client";
+import { clearSessionData } from "./session";
+import { disconnectSocket } from "./socket.client";
 import type {
   LoginResponse,
   RegisterResponse,
@@ -18,8 +20,13 @@ export const authService = {
       body: JSON.stringify(data),
     }),
 
+  checkUsernameDisponible: (username: string) =>
+    request<{ disponible: boolean }>(
+      `/auth/username-disponible?username=${encodeURIComponent(username)}`,
+    ),
+
   logout: () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
+    clearSessionData();
+    disconnectSocket();
   },
 };

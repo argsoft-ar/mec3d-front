@@ -30,6 +30,15 @@ export interface FilterableField<T> {
   options: string[];
 }
 
+/** Paginación controlada por el servidor: `page` es 0-based y `total` el conteo global. */
+export interface ServerPagination {
+  page: number;
+  rowsPerPage: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onRowsPerPageChange: (rowsPerPage: number) => void;
+}
+
 export interface DataTableProps<T extends { id: string | number }> {
   columns: ColumnDef<T>[];
   rows: T[];
@@ -41,4 +50,6 @@ export interface DataTableProps<T extends { id: string | number }> {
   pagination?: boolean;
   rowsPerPageOptions?: number[];
   filterableFields?: FilterableField<T>[];
+  /** Si se define, las filas ya vienen paginadas y la tabla no las vuelve a recortar. */
+  serverPagination?: ServerPagination;
 }

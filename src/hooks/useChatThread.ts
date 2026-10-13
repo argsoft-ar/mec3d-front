@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, type RefObject } from "react";
 import { chatService } from "../services/chat.service";
 import { chatSocketService } from "../services/chat-socket.service";
 import { ordenFabricacionService } from "../services/orden-fabricacion.service";
+import { getErrorMessage } from "../services/http.client";
+import { useCheckout } from "./useCheckout";
 import type {
   Mensaje,
   DealClosedPayload,
@@ -41,10 +43,6 @@ interface UseChatThreadReturn {
   handleCerrarProponerModal: () => void;
   handleProponerPrecio: () => Promise<void>;
 
-  codigoEntrega: string | null;
-  loadingCodigo: boolean;
-  handleVerCodigoEntrega: () => Promise<void>;
-
   dealClosed: boolean;
   precioAcordadoValue: number | null;
 }
@@ -68,9 +66,8 @@ export function useChatThread({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [proponerOpen, setProponerOpen] = useState(false);
   const [proponiendoPrecio, setProponiendoPrecio] = useState(false);
-  const [codigoEntrega, setCodigoEntrega] = useState<string | null>(null);
-  const [loadingCodigo, setLoadingCodigo] = useState(false);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
+  const { redirigir } = useCheckout(addToast);
 
   useEffect(() => {
     chatService
@@ -122,7 +119,6 @@ export function useChatThread({
     const offOrdenCompletada = chatSocketService.onOrdenCompletada(
       (payload) => {
         if (payload.ordenFabricacionId !== ordenFabricacionId) return;
-        setCodigoEntrega(null);
         setMensajes((prev) =>
           prev.some((m) => m.id === payload.mensaje.id)
             ? prev
@@ -200,9 +196,14 @@ export function useChatThread({
       } else {
         addToast("Precio confirmado, esperando a la otra parte", "info");
       }
+      if (res.pagoRequerido) {
+        // Sin initPoint (cerró el fabricante) el comprador paga desde Mis compras.
+        if (res.initPoint) redirigir(res.initPoint);
+        else addToast("El comprador debe pagar para continuar", "info");
+      }
       onDealUpdate();
-    } catch {
-      addToast("No se pudo cerrar el trato", "error");
+    } catch (error) {
+      addToast(getErrorMessage(error, "No se pudo cerrar el trato"), "error");
     } finally {
       setCerrandoTrato(false);
     }
@@ -256,26 +257,14 @@ export function useChatThread({
     }
   }
 
-  async function handleVerCodigoEntrega() {
-    if (!ordenFabricacionId) return;
-    setLoadingCodigo(true);
-    try {
-      const res =
-        await ordenFabricacionService.codigoEntrega(ordenFabricacionId);
-      setCodigoEntrega(res.data?.codigoEntrega ?? null);
-    } catch {
-      addToast("No se pudo obtener el código de entrega", "error");
-    } finally {
-      setLoadingCodigo(false);
-    }
-  }
-
   // El estado local solo se actualiza vía eventos de socket dentro de esta sesión;
   // se combina con la conversación (ya persistida) para que, al reabrir un chat
   // cuyo trato ya estaba cerrado, el botón de cerrar trato no vuelva a aparecer.
   const dealClosed =
     precioAcordado !== null ||
     conversacion?.estadoOrden === "trato_cerrado" ||
+    conversacion?.estadoOrden === "confirmada" ||
+    conversacion?.estadoOrden === "en_disputa" ||
     conversacion?.estadoOrden === "completado";
   const precioAcordadoValue =
     precioAcordado ?? conversacion?.precioAcordado ?? null;
@@ -303,10 +292,6 @@ export function useChatThread({
     handleAbrirProponerModal,
     handleCerrarProponerModal,
     handleProponerPrecio,
-
-    codigoEntrega,
-    loadingCodigo,
-    handleVerCodigoEntrega,
 
     dealClosed,
     precioAcordadoValue,

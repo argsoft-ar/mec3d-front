@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  ArchivoPreviewResponse,
   PaginatedResponse,
   Product,
   CreateProductPayload,
@@ -27,7 +28,15 @@ export const productService = {
     return request<PaginatedResponse<Product>>(`/productos${query}`);
   },
 
+  /** Lanza HttpError 404 si no existe o fue eliminado, y 400 si el id no es UUID. */
+  getById: (id: string) =>
+    request<Product>(`/productos/${encodeURIComponent(id)}`),
+
   getMine: () => request<Product[]>("/productos/mis-disenos"),
+
+  /** URL firmada (vida corta) para el visor 3D; requiere acceso al archivo. */
+  getArchivoPreview: (id: string) =>
+    request<ArchivoPreviewResponse>(`/productos/${id}/archivo-preview`),
 
   create: (payload: CreateProductPayload) =>
     request<ApiResponse<Product>>("/productos", {

@@ -29,6 +29,16 @@ interface FormFieldProps {
   onFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   fileName?: string;
   fileSelected?: boolean;
+  min?: number;
+  max?: number;
+  step?: number | "any";
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  maxLength?: number;
+  /** Expresión regular (sin delimitadores) que valida el valor del input. */
+  pattern?: string;
+  autoComplete?: string;
+  /** Teclas (KeyboardEvent.key) que el input descarta al escribirse. */
+  blockedKeys?: readonly string[];
 }
 
 function FormField({
@@ -51,6 +61,14 @@ function FormField({
   onFileChange,
   fileName,
   fileSelected = false,
+  min,
+  max,
+  step,
+  inputMode,
+  maxLength,
+  pattern,
+  autoComplete,
+  blockedKeys,
 }: Readonly<FormFieldProps>) {
   const fieldId = `field-${name}`;
   const errorId = `${fieldId}-error`;
@@ -61,6 +79,10 @@ function FormField({
       return visible ? "text" : "password";
     }
     return type;
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (blockedKeys?.includes(e.key)) e.preventDefault();
   }
 
   function renderField() {
@@ -110,6 +132,7 @@ function FormField({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
+          maxLength={maxLength}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
           rows={4}
@@ -147,9 +170,17 @@ function FormField({
           className={`form-field__input${toggleable || rightElement ? " form-field__input--has-right" : ""}`}
           value={value}
           onChange={onChange}
+          onKeyDown={blockedKeys ? handleKeyDown : undefined}
           placeholder={placeholder}
           required={required}
           disabled={disabled}
+          min={min}
+          max={max}
+          step={step}
+          inputMode={inputMode}
+          maxLength={maxLength}
+          pattern={pattern}
+          autoComplete={autoComplete}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
         />
