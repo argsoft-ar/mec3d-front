@@ -46,7 +46,6 @@ const ProductCard = ({
   rating,
   downloads,
   price,
-  badge,
   tecnologia,
   materiales = [],
   onClick,
@@ -68,7 +67,6 @@ const ProductCard = ({
     <div className="product-card__image-wrapper">
       <img className="product-card__image" src={imageUrl} alt={title} />
       <div className="product-card__image-overlay" aria-hidden="true" />
-      {badge && <span className="product-card__badge">{badge}</span>}
     </div>
 
     <div className="product-card__info">

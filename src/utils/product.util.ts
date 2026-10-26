@@ -23,7 +23,7 @@ export const FORMATOS_PLANO: readonly FormatoPlano[] = ["PDF", "DWG", "DXF"];
 const PLANO_EXTENSIONS = [".pdf", ".dwg", ".dxf"] as const;
 const MODELO_EXTENSIONS = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
 const MAX_PLANO_SIZE_BYTES = 5 * 1024 * 1024;
-const MAX_MODELO_SIZE_BYTES = 30 * 1024 * 1024;
+const MAX_MODELO_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function esPlanoTecnico(categoria: string | null | undefined): boolean {
   return (
@@ -62,12 +62,12 @@ const MODELO_FORM_RULES: ProductFormRules = {
   archivo: {
     label: "Archivo de diseño 3D",
     accept: MODELO_EXTENSIONS.join(","),
-    hint: "Formatos permitidos: STL, 3MF, OBJ, STEP (máx. 30MB)",
+    hint: "Formatos permitidos: STL, 3MF, OBJ, STEP (máx. 10MB)",
     extensions: MODELO_EXTENSIONS,
     maxBytes: MAX_MODELO_SIZE_BYTES,
     missingMessage: "Subí el archivo de diseño 3D",
     invalidFormatMessage: "Formato no permitido. Usá STL, 3MF, OBJ, STEP o STP",
-    tooLargeMessage: "El archivo debe ser menor a 30MB",
+    tooLargeMessage: "El archivo debe ser menor a 10MB",
     uploadErrorMessage: "Error al subir el archivo 3D",
   },
 };
