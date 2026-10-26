@@ -14,7 +14,6 @@ export const productService = {
   getAll: (params?: {
     page?: number;
     limit?: number;
-    zonaId?: number;
     categoria?: string;
   }) => {
     const query = params

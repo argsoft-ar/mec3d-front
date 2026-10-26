@@ -11,8 +11,6 @@ export interface ProductCardProps {
   downloads: number;
   /** Price in currency units; 0 means free ("Gratis") */
   price: number;
-  /** Optional badge text shown over the image (e.g. "En tu zona") */
-  badge?: string;
   /** Manufacturing technology name (e.g. "Impresión 3D"); absent for technical plans */
   tecnologia?: string | null;
   /** Compatible material names, shown as tags */
