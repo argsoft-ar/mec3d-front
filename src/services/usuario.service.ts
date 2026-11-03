@@ -1,5 +1,6 @@
 import { request } from "./http.client";
 import { cacheGet, cacheSet, cacheDel } from "./cache";
+import { notifySessionChanged } from "./session";
 import type {
   PerfilCompleto,
   UpdateProfileDTO,
@@ -57,6 +58,7 @@ export const usuarioService = {
         JSON.stringify({ ...user, rolPrincipal: rol }),
       );
     }
+    notifySessionChanged();
     return data;
   },
 

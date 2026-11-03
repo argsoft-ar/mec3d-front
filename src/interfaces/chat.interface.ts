@@ -56,5 +56,39 @@ export interface ConversacionResumen {
   precioPropuestoComprador: number | null;
   precioPropuestoFabricante: number | null;
   ultimoMensaje: { contenido: string; creadoEn: string } | null;
+  noLeidos: number;
   creadoEn: string;
+}
+
+/** Evento `notificacion-mensaje` emitido a la sala `user:<id>`. */
+export interface NotificacionMensajePayload {
+  conversacionId: string;
+  mensajeId: string;
+  remitenteUsername: string | null;
+  /** Texto plano, hasta 100 caracteres. */
+  preview: string;
+  tipo: TipoMensaje;
+  creadoEn: string;
+}
+
+/** Evento `nueva-solicitud-fabricacion` emitido al fabricante. */
+export interface NuevaSolicitudFabricacionPayload {
+  ordenId: string;
+  conversacionId: string;
+  disenoId: string;
+  disenoTitulo: string;
+  compradorUsername: string | null;
+}
+
+export type MarcarLeidoAck =
+  | { ok: true; conversacionId: string; noLeidos: 0 }
+  | { ok: false; error: string };
+
+export interface NoLeidosTotal {
+  total: number;
+}
+
+export interface ConversacionLeida {
+  conversacionId: string;
+  noLeidos: 0;
 }

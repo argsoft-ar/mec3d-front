@@ -19,6 +19,7 @@ import {
   getErrorToast,
 } from "../../services/http.client";
 import { compraPagada, mensajeReembolso } from "../../utils/estado.util";
+import { rutaDisenoOrden } from "../../utils/redirect.util";
 import type { OrdenFabricacionListItem } from "../../interfaces";
 import "./MisSolicitudesFabricacion.css";
 
@@ -136,7 +137,7 @@ function MisSolicitudesFabricacion() {
       <Header
         title="Mis solicitudes de"
         accentText="fabricación"
-        subtitle="Abrí el chat para negociar el precio y, una vez cerrado el trato, descargá el diseño y confirmá la entrega."
+        subtitle="Revisá el diseño, enviá tu presupuesto desde el chat y, cuando el comprador lo acepte y pague, descargá el archivo y confirmá la entrega."
       />
 
       {loading ? (
@@ -158,6 +159,11 @@ function MisSolicitudesFabricacion() {
               onAbrirChat={() =>
                 navigate(`/chat/${orden.conversacionId}`, {
                   state: { ordenFabricacionId: orden.id },
+                })
+              }
+              onVerDiseno={() =>
+                navigate(rutaDisenoOrden(orden.id), {
+                  state: { conversacionId: orden.conversacionId },
                 })
               }
             />

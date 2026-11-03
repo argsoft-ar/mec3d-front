@@ -27,7 +27,11 @@ import MaterialTagList from "../../components/MaterialTag/MaterialTagList";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
+import { useSession } from "../../hooks/useSession";
+import { useSolicitudesCerradas } from "../../hooks/useSolicitudesCerradas";
 import PageLoader from "../../components/PageLoader/PageLoader";
+import SolicitudCerradaItem from "../../components/SolicitudCerradaItem/SolicitudCerradaItem";
+import { estadoOrdenVisual } from "../../utils/estado.util";
 import "./Dashboard.css";
 
 const PRODUCT_COLUMNS: ColumnDef<Product>[] = [
@@ -109,6 +113,12 @@ function Dashboard() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { rol: sessionRol } = useSession();
+  const esFabricante = (profile?.rolPrincipal ?? sessionRol) === "fabricante";
+  const solicitudesCerradas = useSolicitudesCerradas({
+    enabled: esFabricante,
+    limit: 5,
+  });
 
   useEffect(() => {
     usuarioService
@@ -184,7 +194,7 @@ function Dashboard() {
             </p>
           </div>
           <div className="dashboard__header-actions">
-            {profile?.rolPrincipal === "fabricante" && (
+            {esFabricante && (
               <Button
                 title="Mis solicitudes de fabricación"
                 variant="outline"
@@ -214,15 +224,6 @@ function Dashboard() {
             <p className="dashboard__stat-label">diseños publicados</p>
           </Card>
           <Card
-            key="pedidos"
-            icon={<Package size={20} strokeWidth={1.5} />}
-            title="Mis Pedidos"
-            variant="default"
-          >
-            <div className="dashboard__stat-value">3</div>
-            <p className="dashboard__stat-label">pedidos activos</p>
-          </Card>
-          <Card
             key="reputation"
             icon={<Star size={20} strokeWidth={1.5} />}
             title="Mi Reputación"
@@ -233,6 +234,85 @@ function Dashboard() {
               sobre 5.0 ({totalReviews} reseñas)
             </p>
           </Card>
+          {esFabricante && (
+            <Card
+              key="solicitudes-cerradas"
+              className="dashboard__stat-card--wide"
+              icon={<Hammer size={20} strokeWidth={1.5} />}
+              title="Solicitudes cerradas"
+              variant="default"
+              disableHover
+              footer={
+                <Button
+                  title="Ver todas"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/fabricacion/mis-solicitudes")}
+                />
+              }
+            >
+              {solicitudesCerradas.loading ? (
+                <PageLoader label="Cargando solicitudes..." />
+              ) : solicitudesCerradas.error ? (
+                <div className="dashboard__solicitudes-error" role="alert">
+                  <p>{solicitudesCerradas.error}</p>
+                  <Button
+                    title="Reintentar"
+                    variant="outline"
+                    size="sm"
+                    onClick={solicitudesCerradas.refresh}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="dashboard__stat-value">
+                    {solicitudesCerradas.total}
+                  </div>
+                  <p className="dashboard__stat-label">
+                    solicitudes de fabricación cerradas
+                  </p>
+                  {solicitudesCerradas.items.length === 0 ? (
+                    <p className="dashboard__solicitudes-empty">
+                      Todavía no tenés solicitudes cerradas
+                    </p>
+                  ) : (
+                    <ul className="dashboard__solicitudes-list">
+                      {solicitudesCerradas.items.map((s) => {
+                        const estado = estadoOrdenVisual(s.estado);
+                        const { conversacionId } = s;
+                        return (
+                          <li key={s.id}>
+                            <SolicitudCerradaItem
+                              titulo={s.disenoTitulo}
+                              imagenUrl={s.disenoImagenUrl}
+                              compradorUsername={s.compradorUsername}
+                              estadoLabel={estado.label}
+                              estadoVariant={estado.variant}
+                              precio={s.precioAcordado}
+                              fecha={s.fechaCierre ?? s.actualizadoEn}
+                              onVerChat={
+                                conversacionId
+                                  ? () =>
+                                      navigate(
+                                        `/chat/${encodeURIComponent(conversacionId)}`,
+                                      )
+                                  : undefined
+                              }
+                              onVerDiseno={() =>
+                                navigate(
+                                  `/fabricacion/ordenes/${encodeURIComponent(s.id)}/diseno`,
+                                )
+                              }
+                            />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </>
+              )}
+            </Card>
+          )}
         </div>
 
         <section className="dashboard__designs">

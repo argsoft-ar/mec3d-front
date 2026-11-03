@@ -6,6 +6,7 @@ import {
   CreditCard,
   KeyRound,
   ShieldAlert,
+  XCircle,
 } from "lucide-react";
 import Button from "../Button/Button";
 import MaterialTag from "../MaterialTag/MaterialTag";
@@ -29,9 +30,12 @@ const PurchaseCard = ({
   deliveryStage,
   downloading = false,
   paying = false,
+  cancelando = false,
   onDownload,
   onPagar,
   onSolicitarFabricacion,
+  onFabricar,
+  onCancelar,
   onConfirmarEntrega,
   onGenerarCodigo,
   onAbrirDisputa,
@@ -43,6 +47,11 @@ const PurchaseCard = ({
   const tratoCerrado = deliveryStage === "trato_cerrado";
   const puedeEntregar =
     pagada && (tratoCerrado || deliveryStage === "confirmada");
+  const puedeCancelar =
+    pendientePago &&
+    deliveryStage !== "confirmada" &&
+    deliveryStage !== "completado" &&
+    deliveryStage !== "en_disputa";
 
   return (
     <article className={`purchase-card ${className}`.trim()}>
@@ -83,6 +92,14 @@ const PurchaseCard = ({
               onClick={onDownload}
             />
           )}
+          {tipo === "descarga" && pagada && onFabricar && (
+            <Button
+              title="Fabricar"
+              variant="outline"
+              icon={<Hammer size={16} strokeWidth={2} />}
+              onClick={onFabricar}
+            />
+          )}
           {pendientePago &&
             onPagar &&
             (tipo === "descarga" || tratoCerrado) && (
@@ -105,6 +122,16 @@ const PurchaseCard = ({
                 onClick={onSolicitarFabricacion}
               />
             )}
+          {puedeCancelar && onCancelar && (
+            <Button
+              title="Cancelar compra"
+              variant="danger"
+              icon={<XCircle size={16} strokeWidth={2} />}
+              loading={cancelando}
+              disabled={paying}
+              onClick={onCancelar}
+            />
+          )}
           {deliveryStage === "completado" && (
             <span className="purchase-card__delivery-status purchase-card__delivery-status--confirmed">
               <ShieldCheck size={14} strokeWidth={2} /> Entrega confirmada

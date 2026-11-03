@@ -1,6 +1,8 @@
 import type {
   ApiResponse,
+  ConversacionLeida,
   ConversacionResumen,
+  NoLeidosTotal,
   PaginatedResponse,
   Mensaje,
 } from "../interfaces";
@@ -14,4 +16,13 @@ export const chatService = {
 
   misConversaciones: () =>
     request<ApiResponse<ConversacionResumen[]>>("/conversaciones/mias"),
+
+  getNoLeidos: () =>
+    request<ApiResponse<NoLeidosTotal>>("/conversaciones/no-leidos"),
+
+  marcarLeida: (conversacionId: string) =>
+    request<ApiResponse<ConversacionLeida>>(
+      `/conversaciones/${encodeURIComponent(conversacionId)}/leer`,
+      { method: "POST" },
+    ),
 };

@@ -144,7 +144,7 @@
 }
 
 /* Last card when the grid has an odd remainder: full row */
-.home-categories__grid .home-category-card:nth-child(7) {
+.home-categories__grid .home-category-card:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
 
@@ -152,6 +152,10 @@
   .home-categories__grid {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-5);
+  }
+
+  .home-categories__grid .home-category-card:last-child:nth-child(odd) {
+    grid-column: auto;
   }
 }
 
@@ -264,5 +268,10 @@
   .home-categories__grid .home-category-card:nth-child(5),
   .home-categories__grid .home-category-card:nth-child(6) {
     grid-column: span 1;
+  }
+
+  /* 2 destacadas + 7 restantes en 4 columnas: la última completa la fila */
+  .home-categories__grid .home-category-card:last-child:nth-child(odd) {
+    grid-column: span 2;
   }
 }

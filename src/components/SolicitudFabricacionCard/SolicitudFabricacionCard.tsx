@@ -1,4 +1,10 @@
-import { Download, PackageCheck, MessageSquare, Ban } from "lucide-react";
+import {
+  Download,
+  PackageCheck,
+  MessageSquare,
+  Ban,
+  FileSearch,
+} from "lucide-react";
 import Button from "../Button/Button";
 import MaterialTag from "../MaterialTag/MaterialTag";
 import { formatPrice } from "../../utils/format.util";
@@ -17,9 +23,10 @@ const SolicitudFabricacionCard = ({
   onDescargar,
   onConfirmarEntrega,
   onAbrirChat,
+  onVerDiseno,
   onCancelar,
 }: SolicitudFabricacionCardProps) => {
-  // La negociación (proponer precio / cerrar trato) vive en el chat; acá solo
+  // La negociación (proponer precio / aceptar presupuesto) vive en el chat; acá solo
   // se habilitan las acciones de entrega una vez que ya hay un precio acordado.
   const hasPrecioAcordado = orden.precioAcordado !== null;
   // El fabricante recién puede cargar el código una vez que el comprador declaró
@@ -117,6 +124,14 @@ const SolicitudFabricacionCard = ({
               />
             )}
           </>
+        )}
+        {onVerDiseno && (
+          <Button
+            title="Ver diseño"
+            variant="outline"
+            icon={<FileSearch size={16} strokeWidth={2} />}
+            onClick={onVerDiseno}
+          />
         )}
         <Button
           title="Abrir chat"

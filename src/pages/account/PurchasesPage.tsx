@@ -13,6 +13,7 @@ import { useToast } from "../../hooks/useToast";
 import { useCheckout } from "../../hooks/useCheckout";
 import { useCodigoEntrega } from "../../hooks/useCodigoEntrega";
 import { useDisputa } from "../../hooks/useDisputa";
+import { useCancelarCompra } from "../../hooks/useCancelarCompra";
 import { compraService, descargarCompra } from "../../services/compra.service";
 import { getErrorMessage } from "../../services/http.client";
 import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
@@ -59,13 +60,22 @@ function PurchasesPage() {
   }, []);
   const disputa = useDisputa(addToast, marcarEnDisputa);
 
+  const cargarCompras = useCallback(
+    () =>
+      compraService
+        .misCompras()
+        .then(setPurchases)
+        .catch(() => addToast("No se pudieron cargar tus compras", "error")),
+    [addToast],
+  );
+  const quitarCompra = useCallback((compraId: string) => {
+    setPurchases((prev) => prev.filter((p) => p.id !== compraId));
+  }, []);
+  const cancelacion = useCancelarCompra(addToast, quitarCompra, cargarCompras);
+
   useEffect(() => {
-    compraService
-      .misCompras()
-      .then(setPurchases)
-      .catch(() => addToast("No se pudieron cargar tus compras", "error"))
-      .finally(() => setLoading(false));
-  }, [addToast]);
+    cargarCompras().finally(() => setLoading(false));
+  }, [cargarCompras]);
 
   async function handleDownload(item: MisComprasItem) {
     setDownloadingId(item.id);
@@ -94,6 +104,10 @@ function PurchasesPage() {
     navigate(`/product/${item.idModelo}/fabricantes`, {
       state: { compraId: item.id, material: item.material },
     });
+  }
+
+  function handleFabricar(item: MisComprasItem) {
+    navigate(`/product/${item.idModelo}/purchase`);
   }
 
   async function handleConfirmDelivery() {
@@ -153,9 +167,12 @@ function PurchasesPage() {
               deliveryStage={deliveryStageFor(item)}
               downloading={downloadingId === item.id}
               paying={payingId === item.id}
+              cancelando={cancelacion.cancelandoId === item.id}
               onDownload={() => handleDownload(item)}
               onPagar={() => handlePagar(item)}
               onSolicitarFabricacion={() => handleSolicitarFabricacion(item)}
+              onFabricar={() => handleFabricar(item)}
+              onCancelar={() => cancelacion.abrir(item)}
               onConfirmarEntrega={() => setConfirmingItem(item)}
               onGenerarCodigo={
                 item.ordenFabricacionId
@@ -182,6 +199,22 @@ function PurchasesPage() {
         loading={submittingConfirm}
         onConfirm={handleConfirmDelivery}
         onCancel={() => setConfirmingItem(null)}
+      />
+
+      <ConfirmDialog
+        open={cancelacion.abierto}
+        title="Cancelar compra"
+        message={
+          cancelacion.tipo === "fabricacion"
+            ? "¿Querés cancelar esta compra? Se cancelarán también las solicitudes enviadas a los fabricantes."
+            : "¿Querés cancelar esta compra? Vas a poder volver a comprar el diseño cuando quieras."
+        }
+        confirmLabel="Cancelar compra"
+        cancelLabel="Volver"
+        variant="danger"
+        loading={cancelacion.cancelandoId !== null}
+        onConfirm={cancelacion.confirmar}
+        onCancel={cancelacion.cerrar}
       />
 
       <CodigoEntregaDialog

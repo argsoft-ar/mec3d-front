@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogIn, LogOut, Menu, UserPlus, X } from "lucide-react";
 import type { NavLink } from "../../types";
+import type { LoginLocationState } from "../../interfaces";
 import { authService } from "../../services/auth.service";
+import Badge from "../Badge/Badge";
+import Button from "../Button/Button";
 import "./Navbar.css";
 
 interface NavbarProps {
   links: NavLink[];
+  isAuthenticated: boolean;
 }
 
-function Navbar({ links }: NavbarProps) {
+function Navbar({ links, isAuthenticated }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -18,6 +22,19 @@ function Navbar({ links }: NavbarProps) {
     authService.logout();
     setIsOpen(false);
     navigate("/login");
+  };
+
+  const handleLogin = () => {
+    const state: LoginLocationState = {
+      from: `${location.pathname}${location.search}${location.hash}`,
+    };
+    setIsOpen(false);
+    navigate("/login", { state });
+  };
+
+  const handleRegister = () => {
+    setIsOpen(false);
+    navigate("/register");
   };
 
   const closeDrawer = () => setIsOpen(false);
@@ -71,6 +88,13 @@ function Navbar({ links }: NavbarProps) {
                       <span className="sidebar__link-icon">{link.icon}</span>
                     )}
                     <span className="sidebar__link-label">{link.label}</span>
+                    {link.badgeCount !== undefined && (
+                      <Badge
+                        count={link.badgeCount}
+                        className="sidebar__link-badge"
+                        ariaLabel={`${link.badgeCount} sin leer`}
+                      />
+                    )}
                   </Link>
                 </li>
               );
@@ -79,10 +103,29 @@ function Navbar({ links }: NavbarProps) {
         </nav>
 
         <div className="sidebar__bottom">
-          <button className="sidebar__logout" onClick={handleLogout}>
-            <LogOut size={18} className="sidebar__logout-icon" />
-            <span>Cerrar sesión</span>
-          </button>
+          {isAuthenticated ? (
+            <button className="sidebar__logout" onClick={handleLogout}>
+              <LogOut size={18} className="sidebar__logout-icon" />
+              <span>Cerrar sesión</span>
+            </button>
+          ) : (
+            <div className="sidebar__auth-actions">
+              <Button
+                title="Ingresar"
+                icon={<LogIn size={18} />}
+                variant="primary"
+                fullWidth
+                onClick={handleLogin}
+              />
+              <Button
+                title="Registrarse"
+                icon={<UserPlus size={18} />}
+                variant="outline"
+                fullWidth
+                onClick={handleRegister}
+              />
+            </div>
+          )}
         </div>
       </aside>
     </>

@@ -71,6 +71,8 @@ export interface Product {
   downloads: number;
   price: number;
   format: string;
+  /** Gramos; null en diseños cargados antes de que el campo fuera obligatorio. */
+  pesoGramos: number | null;
   /** Solo viene en GET /productos/mis-disenos (diseñador dueño); nunca en lecturas públicas. */
   archivoUrl?: string;
   categoria?: string;
@@ -92,6 +94,8 @@ interface ProductPayloadBase {
   imagenUrl: string;
   archivoUrl: string;
   precioBase: number;
+  /** Entero entre 1 y 1.000.000. */
+  pesoGramos: number;
   formato: string;
   categoria?: string;
 }

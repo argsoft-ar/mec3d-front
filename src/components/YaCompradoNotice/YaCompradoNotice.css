@@ -1,0 +1,89 @@
+.ya-comprado-notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+}
+
+.ya-comprado-notice--small {
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.ya-comprado-notice--large {
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.ya-comprado-notice--success {
+  background-color: var(--color-success-light);
+  border: 1px solid var(--color-success);
+}
+
+.ya-comprado-notice--outlined {
+  background-color: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.ya-comprado-notice__message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+}
+
+.ya-comprado-notice--small .ya-comprado-notice__message {
+  font-size: var(--font-size-sm);
+}
+
+.ya-comprado-notice--large .ya-comprado-notice__message {
+  font-size: var(--font-size-lg);
+}
+
+.ya-comprado-notice__icon {
+  flex-shrink: 0;
+  color: var(--color-success);
+}
+
+.ya-comprado-notice__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ya-comprado-notice__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.ya-comprado-notice__link--small {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-xs);
+}
+
+.ya-comprado-notice__link--large {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-base);
+}
+
+.ya-comprado-notice__link:hover {
+  background-color: var(--color-surface-container);
+}
+
+.ya-comprado-notice__link:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}

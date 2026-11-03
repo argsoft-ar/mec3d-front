@@ -25,24 +25,32 @@ import ProductsPage from "./pages/products/ProductsPage";
 import PurchaseDecision from "./pages/products/PurchaseDecision";
 import FabricanteSelection from "./pages/fabricacion/FabricanteSelection";
 import MisSolicitudesFabricacion from "./pages/fabricacion/MisSolicitudesFabricacion";
+import DisenoEspecificaciones from "./pages/fabricacion/DisenoEspecificaciones";
 import PurchasesPage from "./pages/account/PurchasesPage";
 import PagoResultado from "./pages/pago/PagoResultado";
 import Billetera from "./pages/billetera/Billetera";
 import ChatPage from "./pages/chat/ChatPage";
 import Profile from "./pages/profile/Profile";
 import AdminPage from "./pages/admin/AdminPage";
+import NotificacionesProvider from "./context/NotificacionesProvider";
+import { useSession } from "./hooks/useSession";
+import { useNotificaciones } from "./hooks/useNotificaciones";
 import { puedeVerAdmin } from "./utils/admin-access.util";
 import type { NavLink } from "./types";
-import type { RolUsuario } from "./interfaces";
 import "./index.css";
 
-const BASE_NAV_LINKS: NavLink[] = [
+const PUBLIC_NAV_LINKS: NavLink[] = [
   { label: "Home", path: "/", icon: <HomeIcon size={18} strokeWidth={1.5} /> },
   {
     label: "Explorar",
     path: "/explore",
     icon: <Compass size={18} strokeWidth={1.5} />,
   },
+];
+
+const CHAT_PATH = "/chat";
+
+const PRIVATE_NAV_LINKS: NavLink[] = [
   {
     label: "Dashboard",
     path: "/dashboard",
@@ -65,7 +73,7 @@ const BASE_NAV_LINKS: NavLink[] = [
   },
   {
     label: "Chat",
-    path: "/chat",
+    path: CHAT_PATH,
     icon: <MessageSquare size={18} strokeWidth={1.5} />,
   },
 ];
@@ -84,39 +92,38 @@ const ADMIN_NAV_LINK: NavLink = {
 
 const AUTH_ROUTES = ["/login", "/register"];
 
-function getCurrentUserRole(): RolUsuario | null {
-  const raw = localStorage.getItem("auth_user");
-  if (!raw) return null;
-  try {
-    return (
-      (JSON.parse(raw) as { rolPrincipal?: RolUsuario }).rolPrincipal ?? null
-    );
-  } catch {
-    return null;
-  }
-}
-
-function AppShell() {
+function ShellContent() {
   const location = useLocation();
+  const { isAuthenticated, rol } = useSession();
+  const { totalNoLeidos } = useNotificaciones();
   const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
-  const navLinks = [
-    ...BASE_NAV_LINKS,
-    ...(getCurrentUserRole() === "fabricante" ? [FABRICANTE_NAV_LINK] : []),
-    ...(puedeVerAdmin() ? [ADMIN_NAV_LINK] : []),
-  ];
+  const navLinks = isAuthenticated
+    ? [
+        ...PUBLIC_NAV_LINKS,
+        ...PRIVATE_NAV_LINKS.map((link) =>
+          link.path === CHAT_PATH
+            ? { ...link, badgeCount: totalNoLeidos }
+            : link,
+        ),
+        ...(rol === "fabricante" ? [FABRICANTE_NAV_LINK] : []),
+        ...(puedeVerAdmin() ? [ADMIN_NAV_LINK] : []),
+      ]
+    : PUBLIC_NAV_LINKS;
 
   return (
     <>
-      {isAuthRoute ? null : <Navbar links={navLinks} />}
+      {isAuthRoute ? null : (
+        <Navbar links={navLinks} isAuthenticated={isAuthenticated} />
+      )}
       <main className={isAuthRoute ? undefined : "main--with-sidebar"}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/explore" element={<ProductsPage />} />
           <Route path="/product/:id" element={<DetailProduct />} />
           <Route path="/product/:id/preview" element={<ProductPreview3D />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/explore" element={<ProductsPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<Account />} />
             <Route
@@ -130,6 +137,10 @@ function AppShell() {
             <Route
               path="/fabricacion/mis-solicitudes"
               element={<MisSolicitudesFabricacion />}
+            />
+            <Route
+              path="/fabricacion/ordenes/:ordenId/diseno"
+              element={<DisenoEspecificaciones />}
             />
             <Route path="/account/purchases" element={<PurchasesPage />} />
             <Route
@@ -163,6 +174,19 @@ function AppShell() {
         </Routes>
       </main>
     </>
+  );
+}
+
+function AppShell() {
+  const { isAuthenticated, user } = useSession();
+
+  if (!isAuthenticated) return <ShellContent />;
+
+  // `key` por usuario: un cambio de cuenta remonta el provider y resetea suscripciones y contadores.
+  return (
+    <NotificacionesProvider key={user?.id ?? "session"}>
+      <ShellContent />
+    </NotificacionesProvider>
   );
 }
 

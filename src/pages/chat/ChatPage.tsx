@@ -1,10 +1,12 @@
-import { useCallback } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
-import { Send } from "lucide-react";
+import { useCallback, useEffect } from "react";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import { FileSearch, Send } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import Header from "../../components/Header/Header";
 import Button from "../../components/Button/Button";
+import Badge from "../../components/Badge/Badge";
+import ChatMessage from "../../components/ChatMessage/ChatMessage";
 import FormField from "../../components/Form/FormField";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
@@ -19,17 +21,33 @@ import { useCheckout } from "../../hooks/useCheckout";
 import { useCodigoEntrega } from "../../hooks/useCodigoEntrega";
 import { useDisputa } from "../../hooks/useDisputa";
 import { useCompraDeOrden } from "../../hooks/useCompraDeOrden";
+import { useNotificaciones } from "../../hooks/useNotificaciones";
 import {
   AVISO_EN_DISPUTA,
   compraPagada,
   estadoCompraVisual,
   puedeDisputarOrden,
 } from "../../utils/estado.util";
+import { formatPrice } from "../../utils/format.util";
+import { rutaDisenoOrden } from "../../utils/redirect.util";
 import { MAX_MOTIVO_DISPUTA } from "../../interfaces";
-import type { ConversacionResumen } from "../../interfaces";
+import type { ConversacionResumen, Mensaje } from "../../interfaces";
+import type { ChatMessageProps } from "../../components/ChatMessage/ChatMessage.types";
 import "./ChatPage.css";
 
 const BREADCRUMB_ITEMS = [{ label: "Inicio", path: "/" }, { label: "Chat" }];
+
+const PREFIJO_NUEVA_SOLICITUD = "Nueva solicitud de fabricación";
+const VER_DISENO_LABEL = "VER DISEÑO";
+
+function varianteMensaje(
+  m: Mensaje,
+  currentUserId: string | null,
+): NonNullable<ChatMessageProps["variant"]> {
+  if (m.tipo === "propuesta_precio") return "proposal";
+  if (m.tipo === "sistema") return "system";
+  return m.remitenteId === currentUserId ? "own" : "other";
+}
 
 interface LocationState {
   ordenFabricacionId?: string;
@@ -67,6 +85,7 @@ function ChatThread({
   onDealUpdate,
   addToast,
 }: Readonly<ChatThreadProps>) {
+  const navigate = useNavigate();
   const tratoVigente =
     conversacion?.estadoOrden === "trato_cerrado" ||
     conversacion?.estadoOrden === "confirmada";
@@ -96,8 +115,8 @@ function ChatThread({
     setPrecioInput,
     confirmOpen,
     setConfirmOpen,
-    cerrandoTrato,
-    handleConfirmarCierre,
+    aceptandoPresupuesto,
+    handleAceptarPresupuesto,
     proponerOpen,
     proponiendoPrecio,
     handleAbrirProponerModal,
@@ -119,25 +138,57 @@ function ChatThread({
   const puedeDisputar =
     esComprador && puedeDisputarOrden(conversacion?.estadoOrden, compra.estado);
   const enDisputa = conversacion?.estadoOrden === "en_disputa";
+  const esFabricante = conversacion?.miRol === "fabricante";
+  const presupuesto = conversacion?.precioPropuestoFabricante ?? null;
+
+  const verDiseno = ordenFabricacionId
+    ? () =>
+        navigate(rutaDisenoOrden(ordenFabricacionId), {
+          state: { conversacionId },
+        })
+    : undefined;
+
+  const accionMensaje = (m: Mensaje): ChatMessageProps["action"] =>
+    verDiseno &&
+    m.tipo === "sistema" &&
+    m.contenido.startsWith(PREFIJO_NUEVA_SOLICITUD)
+      ? {
+          label: VER_DISENO_LABEL,
+          icon: <FileSearch size={14} strokeWidth={2} />,
+          onClick: verDiseno,
+        }
+      : undefined;
 
   return (
     <>
-      {conversacion?.productoTitulo && (
-        <h3 className="chat-page__product-title">
-          {conversacion.productoTitulo}
-        </h3>
-      )}
+      <div className="chat-page__thread-header">
+        {conversacion?.productoTitulo && (
+          <h3 className="chat-page__product-title">
+            {conversacion.productoTitulo}
+          </h3>
+        )}
+        {verDiseno && (
+          <Button
+            title={VER_DISENO_LABEL}
+            variant={esFabricante ? "primary" : "outline"}
+            icon={<FileSearch size={16} strokeWidth={2} />}
+            onClick={verDiseno}
+          />
+        )}
+      </div>
 
       <div className="chat-page__deal-bar">
         <span>
           {dealClosed
-            ? `Trato cerrado en $${precioAcordadoValue}`
+            ? precioAcordadoValue != null
+              ? `Trato cerrado en ${formatPrice(precioAcordadoValue)}`
+              : "Trato cerrado"
             : "Negociación en curso"}
         </span>
         {!ordenFabricacionId && (
           <span className="chat-page__deal-bar-note">
-            Sin orden de fabricación asociada: no se puede cerrar el trato desde
-            este chat.
+            Sin orden de fabricación asociada: no se puede aceptar un
+            presupuesto desde este chat.
           </span>
         )}
       </div>
@@ -214,20 +265,12 @@ function ChatThread({
       ) : (
         <div className="chat-page__messages">
           {mensajes.map((m) => (
-            <div
+            <ChatMessage
               key={m.id}
-              className={`chat-page__message${
-                m.tipo === "propuesta_precio"
-                  ? " chat-page__message--proposal"
-                  : m.tipo === "sistema"
-                    ? " chat-page__message--system"
-                    : m.remitenteId === currentUserId
-                      ? " chat-page__message--own"
-                      : ""
-              }`}
-            >
-              <p>{m.contenido}</p>
-            </div>
+              content={m.contenido}
+              variant={varianteMensaje(m, currentUserId)}
+              action={accionMensaje(m)}
+            />
           ))}
           <div ref={threadEndRef} />
         </div>
@@ -255,61 +298,60 @@ function ChatThread({
       </div>
 
       {!dealClosed &&
-        (conversacion?.miRol === "comprador" ? (
+        conversacion &&
+        (esComprador ? (
           <div className="chat-page__negotiation">
             <p className="chat-page__negotiation-status">
-              {conversacion?.precioPropuestoFabricante != null
-                ? `El fabricante propuso $${conversacion.precioPropuestoFabricante}`
-                : "El fabricante todavía no propuso un precio."}
+              {presupuesto != null
+                ? `El fabricante te envió un presupuesto de ${formatPrice(presupuesto)}`
+                : "El fabricante todavía no envió un presupuesto."}
             </p>
             <Button
-              title="Cerrar trato"
+              title={
+                presupuesto != null
+                  ? `Aceptar presupuesto ${formatPrice(presupuesto)}`
+                  : "Aceptar presupuesto"
+              }
               variant="primary"
-              disabled={conversacion?.precioPropuestoFabricante == null}
+              disabled={presupuesto == null || !ordenFabricacionId}
+              loading={aceptandoPresupuesto}
               onClick={() => setConfirmOpen(true)}
             />
           </div>
         ) : (
           <div className="chat-page__negotiation">
             <p className="chat-page__negotiation-status">
-              {conversacion?.precioPropuestoFabricante != null
-                ? `Propusiste $${conversacion.precioPropuestoFabricante}`
+              {presupuesto != null
+                ? `Propusiste ${formatPrice(presupuesto)}. Esperando que el comprador acepte el presupuesto.`
                 : "Todavía no propusiste un precio."}
             </p>
             <div className="chat-page__negotiation-actions">
               <Button
-                title="Proponer precio"
-                variant="outline"
-                onClick={handleAbrirProponerModal}
-              />
-              <Button
-                title="Cerrar trato"
+                title={
+                  presupuesto != null ? "Cambiar precio" : "Proponer precio"
+                }
                 variant="primary"
-                disabled={conversacion?.precioPropuestoFabricante == null}
-                onClick={() => setConfirmOpen(true)}
+                disabled={!ordenFabricacionId}
+                onClick={handleAbrirProponerModal}
               />
             </div>
           </div>
         ))}
 
       <ConfirmDialog
-        open={confirmOpen}
-        title="Cerrar trato"
-        message={
-          conversacion?.miRol === "comprador"
-            ? "¿Confirmás cerrar el trato con el fabricante al precio declarado?"
-            : "¿Confirmás cerrar el trato al precio que propusiste?"
-        }
+        open={confirmOpen && esComprador}
+        title="Aceptar presupuesto"
+        message="Al aceptar se cierra el trato con el fabricante a este precio y te llevamos al pago."
         details={[
           {
             label: "Precio",
-            value: `$${conversacion?.precioPropuestoFabricante}`,
+            value: presupuesto != null ? formatPrice(presupuesto) : "—",
           },
         ]}
-        confirmLabel="Confirmar y aceptar"
+        confirmLabel="Aceptar y pagar"
         variant="info"
-        loading={cerrandoTrato}
-        onConfirm={handleConfirmarCierre}
+        loading={aceptandoPresupuesto}
+        onConfirm={handleAceptarPresupuesto}
         onCancel={() => setConfirmOpen(false)}
       />
 
@@ -349,11 +391,20 @@ function ChatPage() {
     conversaciones,
     loading: loadingConversaciones,
     refresh: refreshConversaciones,
+    noLeidosDe,
   } = useConversaciones(addToast);
+  const { setConversacionActiva } = useNotificaciones();
+
+  useEffect(() => {
+    setConversacionActiva(conversacionId ?? null);
+    return () => setConversacionActiva(null);
+  }, [conversacionId, setConversacionActiva]);
 
   const activeConversacion = conversaciones.find(
     (c) => c.id === conversacionId,
   );
+  const ordenFabricacionId =
+    stateOrdenId ?? activeConversacion?.ordenFabricacionId;
 
   return (
     <Layout>
@@ -361,7 +412,7 @@ function ChatPage() {
       <Header
         title="Chat"
         accentText="de fabricación"
-        subtitle="Conversá con el comprador o fabricante y cerrá el trato."
+        subtitle="Conversá con el comprador o fabricante: el fabricante envía el presupuesto y el comprador lo acepta."
       />
 
       <div className="chat-page">
@@ -374,31 +425,38 @@ function ChatPage() {
                   : "Sin conversaciones recientes."}
               </li>
             )}
-            {conversaciones.map((c) => (
-              <li key={c.id}>
-                <Link
-                  className={`chat-page__recent-link${c.id === conversacionId ? " chat-page__recent-link--active" : ""}`}
-                  to={`/chat/${c.id}`}
-                  state={{ ordenFabricacionId: c.ordenFabricacionId }}
-                >
-                  <span className="chat-page__recent-name">
-                    {c.contraparte.username ||
-                      c.contraparte.tagline ||
-                      "Usuario"}
-                  </span>
-                  {c.productoTitulo && (
-                    <span className="chat-page__recent-product">
-                      {c.productoTitulo}
+            {conversaciones.map((c) => {
+              const noLeidos = noLeidosDe(c.id);
+              const nombre =
+                c.contraparte.username || c.contraparte.tagline || "Usuario";
+              return (
+                <li key={c.id}>
+                  <Link
+                    className={`chat-page__recent-link${c.id === conversacionId ? " chat-page__recent-link--active" : ""}${noLeidos > 0 ? " chat-page__recent-link--unread" : ""}`}
+                    to={`/chat/${c.id}`}
+                    state={{ ordenFabricacionId: c.ordenFabricacionId }}
+                  >
+                    <span className="chat-page__recent-header">
+                      <span className="chat-page__recent-name">{nombre}</span>
+                      <Badge
+                        count={noLeidos}
+                        ariaLabel={`${noLeidos} mensajes sin leer`}
+                      />
                     </span>
-                  )}
-                  {c.ultimoMensaje && (
-                    <span className="chat-page__recent-preview">
-                      {c.ultimoMensaje.contenido}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
+                    {c.productoTitulo && (
+                      <span className="chat-page__recent-product">
+                        {c.productoTitulo}
+                      </span>
+                    )}
+                    {c.ultimoMensaje && (
+                      <span className="chat-page__recent-preview">
+                        {c.ultimoMensaje.contenido}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </aside>
 
@@ -407,7 +465,7 @@ function ChatPage() {
             <ChatThread
               key={conversacionId}
               conversacionId={conversacionId}
-              ordenFabricacionId={stateOrdenId}
+              ordenFabricacionId={ordenFabricacionId}
               currentUserId={currentUserId}
               conversacion={activeConversacion}
               onDealUpdate={refreshConversaciones}

@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Car,
-  Bike,
-  Sailboat,
-  House,
-  Settings2,
-  Cog,
-  DraftingCompass,
   Search,
   Upload,
   Grid2X2,
@@ -23,14 +16,9 @@ import Card from "../../components/Card/Card";
 import Button from "../../components/Button/Button";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import PageLoader from "../../components/PageLoader/PageLoader";
-import type { ProductCategory } from "../../types";
+import { useRequireAuth } from "../../hooks/useRequireAuth";
+import { CATEGORIAS } from "../../utils/categoria.util";
 import "./Home.css";
-
-interface CategoryItem {
-  name: ProductCategory;
-  icon: React.ReactNode;
-  description: string;
-}
 
 const ICON_SIZE = 64;
 const ICON_PROPS = { size: ICON_SIZE, strokeWidth: 1.5 };
@@ -41,48 +29,10 @@ interface ServiceItem {
   description: string;
 }
 
-const CATEGORIES: CategoryItem[] = [
-  {
-    name: "Autos",
-    icon: <Car {...ICON_PROPS} />,
-    description: "Piezas y repuestos para automóviles",
-  },
-  {
-    name: "Motos",
-    icon: <Bike {...ICON_PROPS} />,
-    description: "Componentes y accesorios para motos",
-  },
-  {
-    name: "Barcos",
-    icon: <Sailboat {...ICON_PROPS} />,
-    description: "Partes náuticas y marinas",
-  },
-  {
-    name: "Casa",
-    icon: <House {...ICON_PROPS} />,
-    description: "Herrajes, cerraduras y más",
-  },
-  {
-    name: "Maquinas",
-    icon: <Settings2 {...ICON_PROPS} />,
-    description: "Piezas industriales y de producción",
-  },
-  {
-    name: "Engranajes",
-    icon: <Cog {...ICON_PROPS} />,
-    description: "Transmisiones, poleas y sistemas mecánicos",
-  },
-  {
-    name: "Planos técnicos",
-    icon: <DraftingCompass {...ICON_PROPS} />,
-    description: "Planos en PDF, DWG y DXF para descargar",
-  },
-];
-
 const SERVICES: ServiceItem[] = [
   {
     icon: <Grid2X2 size={32} strokeWidth={1.5} />,
-    title: `${CATEGORIES.length} Categorías`,
+    title: `${CATEGORIAS.length} Categorías`,
     description:
       "Desde mecánica hasta tecnología, encuentra la pieza perfecta para tu proyecto",
   },
@@ -102,6 +52,7 @@ const SERVICES: ServiceItem[] = [
 
 function Home() {
   const navigate = useNavigate();
+  const { requireAuth } = useRequireAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -116,9 +67,9 @@ function Home() {
   return (
     <Layout>
       <Header
-        title="MEC3D, lo que necesitas"
+        title="MEC3D, todos los repuestos mecánicos o derivados que necesitas "
         accentText="en un solo lugar"
-        subtitle="El marketplace líder de piezas mecánicas en 3D. Comprá, diseñá y fabricá con los mejores proveedores."
+        subtitle="Encuentra el repuesto de tu maquina o el accesorio de tu moto o auto o lo que creas que ya no existe, descargala y fabricala a la vuelta de tu casa"
         actions={
           <>
             <Button
@@ -133,7 +84,9 @@ function Home() {
               icon={<Upload size={18} strokeWidth={2} />}
               variant="outline"
               size="lg"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => {
+                if (requireAuth("/dashboard")) navigate("/dashboard");
+              }}
             />
           </>
         }
@@ -142,19 +95,25 @@ function Home() {
       <section className="home-categories">
         <h2 className="home-section-title">Categorías</h2>
         <div className="home-categories__grid">
-          {CATEGORIES.map((cat, index) => (
-            <Card
-              key={cat.name}
-              className="home-category-card"
-              icon={<span className="home-category-icon">{cat.icon}</span>}
-              title={cat.name}
-              text={cat.description}
-              variant={index < 2 ? "elevated" : "elevated"}
-              onClick={() =>
-                navigate(`/explore?category=${encodeURIComponent(cat.name)}`)
-              }
-            />
-          ))}
+          {CATEGORIAS.map(
+            ({ nombre, etiqueta, descripcion, icon: Icon }, index) => (
+              <Card
+                key={nombre}
+                className="home-category-card"
+                icon={
+                  <span className="home-category-icon">
+                    <Icon {...ICON_PROPS} />
+                  </span>
+                }
+                title={etiqueta}
+                text={descripcion}
+                variant={index < 2 ? "elevated" : "elevated"}
+                onClick={() =>
+                  navigate(`/explore?category=${encodeURIComponent(nombre)}`)
+                }
+              />
+            ),
+          )}
         </div>
       </section>
 

@@ -93,13 +93,16 @@ async function resolverPreview(
 
 /**
  * Original si hay sesión y acceso; si no, preview público degradado (`degradado: true`).
- * Sin sesión no se pide el original.
+ * Sin sesión no se pide el original. Con `soloPublico` se pide únicamente el preview público.
  */
-export function usePreview3D(productId: string | undefined) {
+export function usePreview3D(
+  productId: string | undefined,
+  { soloPublico = false }: { soloPublico?: boolean } = {},
+) {
   const [state, setState] = useState<Preview3DState>(LOADING);
   const [intento, setIntento] = useState<Intento>({
     ciclo: 0,
-    soloPublico: false,
+    soloPublico,
   });
 
   useEffect(() => {
