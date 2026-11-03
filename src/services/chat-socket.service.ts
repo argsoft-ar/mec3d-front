@@ -7,6 +7,9 @@ import type {
   EntregaDeclaradaPayload,
   JoinConversacionAck,
   EnviarMensajeAck,
+  MarcarLeidoAck,
+  NotificacionMensajePayload,
+  NuevaSolicitudFabricacionPayload,
 } from "../interfaces";
 
 // Nota de contrato: el socket del backend espera "join-conversacion" con el
@@ -69,5 +72,30 @@ export const chatSocketService = {
     const socket = getSocket();
     socket.on("entrega-declarada", cb);
     return () => socket.off("entrega-declarada", cb);
+  },
+
+  marcarLeido: (conversacionId: string): Promise<MarcarLeidoAck> =>
+    new Promise((resolve) => {
+      getSocket().emit(
+        "marcar-leido",
+        { conversacionId },
+        (res: MarcarLeidoAck) => resolve(res),
+      );
+    }),
+
+  onNotificacionMensaje: (
+    cb: (payload: NotificacionMensajePayload) => void,
+  ): (() => void) => {
+    const socket = getSocket();
+    socket.on("notificacion-mensaje", cb);
+    return () => socket.off("notificacion-mensaje", cb);
+  },
+
+  onNuevaSolicitudFabricacion: (
+    cb: (payload: NuevaSolicitudFabricacionPayload) => void,
+  ): (() => void) => {
+    const socket = getSocket();
+    socket.on("nueva-solicitud-fabricacion", cb);
+    return () => socket.off("nueva-solicitud-fabricacion", cb);
   },
 };

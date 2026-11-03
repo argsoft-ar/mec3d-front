@@ -14,6 +14,8 @@ import Button from "../../components/Button/Button";
 import MaterialTag from "../../components/MaterialTag/MaterialTag";
 import ToastContainer from "../../components/Toast/ToastContainer";
 import PageLoader from "../../components/PageLoader/PageLoader";
+import ZonaFilter from "../../components/ZonaFilter/ZonaFilter";
+import type { ZonaFilterValue } from "../../components/ZonaFilter/ZonaFilter.types";
 import { useToast } from "../../hooks/useToast";
 import { ordenFabricacionService } from "../../services/orden-fabricacion.service";
 import { productService } from "../../services/product.service";
@@ -26,6 +28,21 @@ import "./FabricanteSelection.css";
 interface LocationState {
   compraId?: string;
   material?: string | null;
+}
+
+const EMPTY_ZONA_FILTER: ZonaFilterValue = {
+  provincias: [],
+  departamentos: [],
+  localidades: [],
+};
+const ZONA_FILTER_DEBOUNCE_MS = 300;
+
+function hasZonaFilter(filter: ZonaFilterValue): boolean {
+  return (
+    filter.provincias.length > 0 ||
+    filter.departamentos.length > 0 ||
+    filter.localidades.length > 0
+  );
 }
 
 async function resolveZonaLabel(zonaId: number): Promise<string> {
@@ -70,6 +87,10 @@ function FabricanteSelection() {
   const [zonaLabels, setZonaLabels] = useState<Map<number, string>>(new Map());
   const resolvedZonasRef = useRef<Set<number>>(new Set());
   const [esPlano, setEsPlano] = useState(false);
+  const [zonaFilter, setZonaFilter] =
+    useState<ZonaFilterValue>(EMPTY_ZONA_FILTER);
+  const [appliedZonaFilter, setAppliedZonaFilter] =
+    useState<ZonaFilterValue>(EMPTY_ZONA_FILTER);
 
   // Los planos no se fabrican: si el diseño lo es, se vuelve al detalle.
   useEffect(() => {
@@ -81,13 +102,35 @@ function FabricanteSelection() {
   }, [id]);
 
   useEffect(() => {
+    if (zonaFilter === appliedZonaFilter) return;
+    const timeout = setTimeout(() => {
+      setLoading(true);
+      setAppliedZonaFilter(zonaFilter);
+    }, ZONA_FILTER_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [zonaFilter, appliedZonaFilter]);
+
+  useEffect(() => {
     if (!id || !compraId) return;
+    // Abortar descarta respuestas de filtros ya reemplazados.
+    const controller = new AbortController();
     ordenFabricacionService
-      .fabricantesSugeridos({ disenoId: id, compraId, material })
-      .then(setFabricantes)
-      .catch(() => addToast("No se pudieron cargar los fabricantes", "error"))
-      .finally(() => setLoading(false));
-  }, [id, compraId, material, addToast]);
+      .fabricantesSugeridos(
+        { disenoId: id, compraId, material, ...appliedZonaFilter },
+        controller.signal,
+      )
+      .then((data) => {
+        if (!controller.signal.aborted) setFabricantes(data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          addToast("No se pudieron cargar los fabricantes", "error");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [id, compraId, material, appliedZonaFilter, addToast]);
 
   useEffect(() => {
     const uniqueZonaIds = Array.from(
@@ -147,6 +190,12 @@ function FabricanteSelection() {
     { label: "Elegir fabricante" },
   ];
 
+  // Las selecciones se conservan aunque el filtro de zona las oculte.
+  const visibleIds = new Set(fabricantes.map((f) => f.id));
+  const selectedOutOfList = loading
+    ? 0
+    : Array.from(selected).filter((s) => !visibleIds.has(s)).length;
+
   if (esPlano) return <Navigate to={`/product/${id}`} replace />;
 
   if (!compraId) {
@@ -182,11 +231,30 @@ function FabricanteSelection() {
         </div>
       )}
 
+      <ZonaFilter
+        value={zonaFilter}
+        onChange={setZonaFilter}
+        disabled={submitting}
+        className="fabricante-selection__zona-filter"
+      />
+
+      {selected.size > 0 && (
+        <p className="fabricante-selection__counter" aria-live="polite">
+          {selected.size === 1
+            ? "1 fabricante seleccionado"
+            : `${selected.size} fabricantes seleccionados`}
+          {selectedOutOfList > 0 &&
+            ` (${selectedOutOfList} fuera de los filtros actuales)`}
+        </p>
+      )}
+
       {loading ? (
         <PageLoader />
       ) : fabricantes.length === 0 ? (
         <p className="fabricante-selection__empty">
-          No encontramos fabricantes disponibles para este diseño.
+          {hasZonaFilter(appliedZonaFilter)
+            ? "Ningún fabricante coincide con las zonas elegidas. Probá ampliar o limpiar los filtros."
+            : "No encontramos fabricantes disponibles para este diseño."}
         </p>
       ) : (
         <div className="fabricante-selection__grid">

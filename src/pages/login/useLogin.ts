@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { ChangeEvent, FormEvent } from "react";
 import { authService } from "../../services/api";
-import { clearSessionData } from "../../services/session";
-import { resolvePostLoginPath } from "../../utils/redirect.util";
+import { clearSessionData, saveSession } from "../../services/session";
+import {
+  resolvePostLoginPath,
+  resolveRedirectParam,
+} from "../../utils/redirect.util";
 
 export type LoginForm = { email: string; password: string };
 
@@ -38,9 +41,13 @@ export function useLogin() {
         formData.password,
       );
       clearSessionData();
-      localStorage.setItem("auth_token", token);
-      localStorage.setItem("auth_user", JSON.stringify(user));
-      navigate(resolvePostLoginPath(location.state, DEFAULT_DESTINATION), {
+      saveSession(token, user);
+      // `state.from` (navegación interna) tiene prioridad sobre `?redirect=` (cierre por 401).
+      const fallback = resolveRedirectParam(
+        location.search,
+        DEFAULT_DESTINATION,
+      );
+      navigate(resolvePostLoginPath(location.state, fallback), {
         replace: true,
       });
     } catch {

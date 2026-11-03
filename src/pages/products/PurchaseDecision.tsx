@@ -14,9 +14,13 @@ import PageLoader from "../../components/PageLoader/PageLoader";
 import { useToast } from "../../hooks/useToast";
 import { productService } from "../../services/product.service";
 import { useCompraDescarga } from "../../hooks/useCompraDescarga";
+import { useEstadoCompraDiseno } from "../../hooks/useEstadoCompraDiseno";
 import { compraService } from "../../services/compra.service";
 import { getErrorMessage, isNotFoundError } from "../../services/http.client";
-import { esPlanoTecnico } from "../../utils/product.util";
+import {
+  buildDescargaFileName,
+  esPlanoTecnico,
+} from "../../utils/product.util";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
 import "./PurchaseDecision.css";
@@ -45,8 +49,13 @@ function PurchaseDecision() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<ChosenPath>(null);
-  const descarga = useCompraDescarga(addToast);
-  const activePath: ChosenPath = descarga.processing ? "download" : processing;
+  const estadoCompra = useEstadoCompraDiseno(product?.id, {
+    ownerId: product?.designerId,
+    addToast,
+  });
+  const descarga = useCompraDescarga(addToast, estadoCompra.refresh);
+  const activePath: ChosenPath =
+    descarga.processing || estadoCompra.descargando ? "download" : processing;
   const [material, setMaterial] = useState("");
   const [materialError, setMaterialError] = useState<string | undefined>();
 
@@ -72,7 +81,15 @@ function PurchaseDecision() {
   }, [id, addToast]);
 
   function handleDownloadNow() {
-    if (id) void descarga.comprar(id);
+    if (!id) return;
+    if (estadoCompra.comprado && estadoCompra.compraId && product) {
+      void estadoCompra.descargar(
+        estadoCompra.compraId,
+        buildDescargaFileName(product.title, product.format),
+      );
+      return;
+    }
+    void descarga.comprar(id);
   }
 
   async function handleRequestFabricacion() {
@@ -105,20 +122,33 @@ function PurchaseDecision() {
   }
 
   const purchaseOptions: PurchaseOption[] = [
-    {
-      icon: <Download size={32} strokeWidth={1.5} />,
-      title: "Descargar ahora",
-      text: "Comprá el diseño digital y descargalo en tu dispositivo apenas se acredite el pago.",
-      steps: [
-        "Pagás con Mercado Pago",
-        "Se acredita el pago",
-        "Descargás el archivo desde Mis compras",
-      ],
-      buttonTitle: "Descargar ahora",
-      buttonVariant: "primary",
-      processingKey: "download",
-      onClick: handleDownloadNow,
-    },
+    estadoCompra.comprado
+      ? {
+          icon: <Download size={32} strokeWidth={1.5} />,
+          title: "Ya compraste este diseño",
+          text: "Descargalo cuando quieras desde acá o desde Mis compras, sin volver a pagar.",
+          steps: [],
+          buttonTitle: "Descargar",
+          buttonVariant: "primary",
+          processingKey: "download",
+          onClick: handleDownloadNow,
+        }
+      : {
+          icon: <Download size={32} strokeWidth={1.5} />,
+          title: "Descargar ahora",
+          text: "Comprá el diseño digital y descargalo en tu dispositivo apenas se acredite el pago.",
+          steps: [
+            "Pagás con Mercado Pago",
+            "Se acredita el pago",
+            "Descargás el archivo desde Mis compras",
+          ],
+          buttonTitle: estadoCompra.pendientePago
+            ? "Completar pago"
+            : "Descargar ahora",
+          buttonVariant: "primary",
+          processingKey: "download",
+          onClick: handleDownloadNow,
+        },
     {
       icon: <Hammer size={32} strokeWidth={1.5} />,
       title: "Solicitar fabricación",

@@ -5,22 +5,31 @@ export interface NavLink {
   label: string;
   path: string;
   icon?: React.ReactNode;
+  badgeCount?: number;
 }
 
 // Toast
 export type ToastType = "success" | "error" | "warning" | "info";
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
 export interface ToastItem {
   id: string;
   message: string;
   type: ToastType;
   duration?: number;
+  action?: ToastAction;
 }
 
 export type AddToast = (
   message: string,
   type: ToastType,
   duration?: number,
+  action?: ToastAction,
 ) => void;
+
+export type ToastPosition = "top" | "bottom";
 
 // Button
 export type ButtonVariant =
@@ -65,14 +74,7 @@ export type FormFieldType =
   | "file";
 
 // MEC3D Domain types
-export type ProductCategory =
-  | "Autos"
-  | "Motos"
-  | "Barcos"
-  | "Casa"
-  | "Maquinas"
-  | "Engranajes"
-  | "Planos técnicos";
+export type { ProductCategory } from "../utils/categoria.util";
 export type SaleModality = "design" | "fabrication" | "direct_sale" | "plans";
 export type QualityTier = "low" | "medium" | "high";
 

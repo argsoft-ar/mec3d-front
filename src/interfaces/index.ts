@@ -9,5 +9,6 @@ export * from "./pago.interface";
 export * from "./compra.interface";
 export * from "./orden-fabricacion.interface";
 export * from "./chat.interface";
+export * from "./notificacion.interface";
 export * from "./admin.interface";
 export * from "./watermark.interface";

@@ -28,12 +28,18 @@ export interface PurchaseCardProps {
   downloading?: boolean;
   /** Muestra el botón de pago en curso mientras se abre el checkout */
   paying?: boolean;
+  /** Muestra el botón de cancelar en curso */
+  cancelando?: boolean;
   /** Solo se usa con tipo === "descarga" y la compra pagada */
   onDownload?: () => void;
   /** Solo se usa con la compra pendiente de pago */
   onPagar?: () => void;
   /** Solo se usa con tipo === "fabricacion" y deliveryStage === "none" */
   onSolicitarFabricacion?: () => void;
+  /** Solo se usa con tipo === "descarga" y la compra pagada: inicia el flujo de fabricación del diseño */
+  onFabricar?: () => void;
+  /** Solo se usa con la compra pendiente de pago y sin entrega/disputa en curso */
+  onCancelar?: () => void;
   /** Solo se usa cuando deliveryStage === "trato_cerrado" y la compra está pagada */
   onConfirmarEntrega?: () => void;
   /** Solo se usa cuando deliveryStage === "trato_cerrado" o "confirmada" y la compra está pagada */

@@ -13,6 +13,17 @@
   color: var(--color-text-muted);
 }
 
+.fabricante-selection__zona-filter {
+  margin-bottom: var(--space-4);
+}
+
+.fabricante-selection__counter {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
 .fabricante-selection__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type RefObject } from "react";
 import { chatService } from "../services/chat.service";
 import { chatSocketService } from "../services/chat-socket.service";
 import { ordenFabricacionService } from "../services/orden-fabricacion.service";
-import { getErrorMessage } from "../services/http.client";
+import { getErrorToast, hasErrorCode } from "../services/http.client";
 import { useCheckout } from "./useCheckout";
 import type {
   Mensaje,
@@ -34,8 +34,8 @@ interface UseChatThreadReturn {
 
   confirmOpen: boolean;
   setConfirmOpen: (open: boolean) => void;
-  cerrandoTrato: boolean;
-  handleConfirmarCierre: () => void;
+  aceptandoPresupuesto: boolean;
+  handleAceptarPresupuesto: () => void;
 
   proponerOpen: boolean;
   proponiendoPrecio: boolean;
@@ -62,12 +62,19 @@ export function useChatThread({
   const [sending, setSending] = useState(false);
   const [precioAcordado, setPrecioAcordado] = useState<number | null>(null);
   const [precioInput, setPrecioInput] = useState("");
-  const [cerrandoTrato, setCerrandoTrato] = useState(false);
+  const [aceptandoPresupuesto, setAceptandoPresupuesto] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [proponerOpen, setProponerOpen] = useState(false);
   const [proponiendoPrecio, setProponiendoPrecio] = useState(false);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
-  const { redirigir } = useCheckout(addToast);
+  const { redirigir, pagar } = useCheckout(addToast);
+  // Al llegar por la notificación (sin state) el id de la orden se conoce recién con la lista cargada.
+  const ordenIdRef = useRef(ordenFabricacionId);
+  const esFabricanteRef = useRef(conversacion?.miRol === "fabricante");
+  useEffect(() => {
+    ordenIdRef.current = ordenFabricacionId;
+    esFabricanteRef.current = conversacion?.miRol === "fabricante";
+  }, [ordenFabricacionId, conversacion?.miRol]);
 
   useEffect(() => {
     chatService
@@ -89,14 +96,19 @@ export function useChatThread({
 
     const offDealClosed = chatSocketService.onDealClosed(
       (payload: DealClosedPayload) => {
-        if (payload.ordenFabricacionId !== ordenFabricacionId) return;
+        if (payload.ordenFabricacionId !== ordenIdRef.current) return;
         setPrecioAcordado(payload.precioAcordado);
         setMensajes((prev) =>
           prev.some((m) => m.id === payload.mensaje.id)
             ? prev
             : [...prev, payload.mensaje],
         );
-        addToast("¡Trato cerrado!", "success");
+        addToast(
+          esFabricanteRef.current
+            ? "El comprador aceptó tu presupuesto"
+            : "¡Trato cerrado!",
+          "success",
+        );
         onDealUpdate();
       },
     );
@@ -106,7 +118,7 @@ export function useChatThread({
     // embebe la propuesta como un mensaje visible en el hilo (no solo un estado aparte).
     const offPrecioPropuesto = chatSocketService.onPrecioPropuesto(
       (payload) => {
-        if (payload.ordenFabricacionId !== ordenFabricacionId) return;
+        if (payload.ordenFabricacionId !== ordenIdRef.current) return;
         setMensajes((prev) =>
           prev.some((m) => m.id === payload.mensaje.id)
             ? prev
@@ -118,7 +130,7 @@ export function useChatThread({
 
     const offOrdenCompletada = chatSocketService.onOrdenCompletada(
       (payload) => {
-        if (payload.ordenFabricacionId !== ordenFabricacionId) return;
+        if (payload.ordenFabricacionId !== ordenIdRef.current) return;
         setMensajes((prev) =>
           prev.some((m) => m.id === payload.mensaje.id)
             ? prev
@@ -131,7 +143,7 @@ export function useChatThread({
 
     const offEntregaDeclarada = chatSocketService.onEntregaDeclarada(
       (payload) => {
-        if (payload.ordenFabricacionId !== ordenFabricacionId) return;
+        if (payload.ordenFabricacionId !== ordenIdRef.current) return;
         setMensajes((prev) =>
           prev.some((m) => m.id === payload.mensaje.id)
             ? prev
@@ -173,7 +185,8 @@ export function useChatThread({
     }
   }
 
-  async function handleCerrarTrato(precio: number) {
+  // Solo el comprador cierra el trato, aceptando el presupuesto vigente del fabricante.
+  async function handleAceptar(precio: number) {
     if (!ordenFabricacionId) {
       addToast(
         "No hay una orden de fabricación asociada a este chat",
@@ -181,41 +194,47 @@ export function useChatThread({
       );
       return;
     }
-    setCerrandoTrato(true);
+    setAceptandoPresupuesto(true);
     try {
       const res = await ordenFabricacionService.cerrarTrato(
         ordenFabricacionId,
         precio,
       );
-      if (
-        res.data?.estado === "trato_cerrado" &&
-        res.data.precioAcordado !== null
-      ) {
+      if (res.data?.precioAcordado != null)
         setPrecioAcordado(res.data.precioAcordado);
-        addToast("¡Trato cerrado!", "success");
-      } else {
-        addToast("Precio confirmado, esperando a la otra parte", "info");
-      }
-      if (res.pagoRequerido) {
-        // Sin initPoint (cerró el fabricante) el comprador paga desde Mis compras.
-        if (res.initPoint) redirigir(res.initPoint);
-        else addToast("El comprador debe pagar para continuar", "info");
-      }
+      addToast("¡Presupuesto aceptado! Te llevamos al pago.", "success");
       onDealUpdate();
+      setConfirmOpen(false);
+      if (res.initPoint) redirigir(res.initPoint);
+      else if (res.data?.compraId) await pagar(res.data.compraId);
     } catch (error) {
-      addToast(getErrorMessage(error, "No se pudo cerrar el trato"), "error");
+      if (hasErrorCode(error, "PRESUPUESTO_DESACTUALIZADO")) {
+        addToast("El presupuesto cambió, revisalo antes de aceptar", "warning");
+        setConfirmOpen(false);
+        onDealUpdate();
+      } else if (hasErrorCode(error, "SIN_PRESUPUESTO")) {
+        addToast("El fabricante todavía no envió un presupuesto", "warning");
+        setConfirmOpen(false);
+        onDealUpdate();
+      } else {
+        const { message, type } = getErrorToast(
+          error,
+          "No se pudo aceptar el presupuesto",
+        );
+        addToast(message, type);
+      }
     } finally {
-      setCerrandoTrato(false);
+      setAceptandoPresupuesto(false);
     }
   }
 
-  function handleConfirmarCierre() {
+  function handleAceptarPresupuesto() {
     const precio = conversacion?.precioPropuestoFabricante;
     if (precio == null || Number.isNaN(precio) || precio <= 0) {
-      addToast("Precio inválido", "warning");
+      addToast("El fabricante todavía no envió un presupuesto", "warning");
       return;
     }
-    handleCerrarTrato(precio).then(() => setConfirmOpen(false));
+    void handleAceptar(precio);
   }
 
   function handleAbrirProponerModal() {
@@ -250,8 +269,12 @@ export function useChatThread({
       addToast("Precio propuesto", "success");
       setProponerOpen(false);
       onDealUpdate();
-    } catch {
-      addToast("No se pudo proponer el precio", "error");
+    } catch (error) {
+      const { message, type } = getErrorToast(
+        error,
+        "No se pudo proponer el precio",
+      );
+      addToast(message, type);
     } finally {
       setProponiendoPrecio(false);
     }
@@ -259,7 +282,7 @@ export function useChatThread({
 
   // El estado local solo se actualiza vía eventos de socket dentro de esta sesión;
   // se combina con la conversación (ya persistida) para que, al reabrir un chat
-  // cuyo trato ya estaba cerrado, el botón de cerrar trato no vuelva a aparecer.
+  // cuyo trato ya estaba cerrado, el botón de aceptar presupuesto no vuelva a aparecer.
   const dealClosed =
     precioAcordado !== null ||
     conversacion?.estadoOrden === "trato_cerrado" ||
@@ -284,8 +307,8 @@ export function useChatThread({
 
     confirmOpen,
     setConfirmOpen,
-    cerrandoTrato,
-    handleConfirmarCierre,
+    aceptandoPresupuesto,
+    handleAceptarPresupuesto,
 
     proponerOpen,
     proponiendoPrecio,

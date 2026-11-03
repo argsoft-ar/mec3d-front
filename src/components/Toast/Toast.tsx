@@ -26,6 +26,18 @@ function Toast({ toast, onRemove }: ToastProps) {
         {ICONS[toast.type]}
       </span>
       <p className="toast__message">{toast.message}</p>
+      {toast.action && (
+        <button
+          type="button"
+          className="toast__action"
+          onClick={() => {
+            toast.action?.onClick();
+            onRemove(toast.id);
+          }}
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         className="toast__close"
         onClick={() => onRemove(toast.id)}

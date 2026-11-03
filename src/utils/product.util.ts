@@ -4,7 +4,7 @@ import type {
   ProductForm,
   ProductFormRules,
 } from "../interfaces";
-import type { SelectOption } from "../types";
+import type { ProductCategory, SelectOption } from "../types";
 
 // Límites espejo de mec3d-back/src/schemas/diseno.schema.ts.
 export const MIN_PRINT_HOURS = 1;
@@ -12,13 +12,41 @@ export const MAX_PRINT_HOURS = 500;
 export const MIN_PRECIO_BASE = 0.01;
 export const MAX_PRECIO_BASE = 10_000_000;
 export const MAX_MATERIALES_POR_DISENO = 20;
+export const MIN_PESO_GRAMOS = 1;
+export const MAX_PESO_GRAMOS = 1_000_000;
 
 export function formatPrintHours(hours: number): string {
   return `${hours} h`;
 }
 
+export function formatPesoGramos(gramos: number): string {
+  return `${gramos.toLocaleString("es-AR")} g`;
+}
+
+/** Nombre del archivo descargado: título + primera extensión del formato ("zip" si no hay). */
+export function buildDescargaFileName(
+  titulo: string,
+  formato: string | null | undefined,
+): string {
+  const ext = formato?.split(",")[0]?.trim().toLowerCase() || "zip";
+  return `${titulo}.${ext}`;
+}
+
+/** Mensaje de error del peso o null si es válido (entero entre los límites del backend). */
+export function validatePesoGramos(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return "El peso es obligatorio";
+  if (!/^\d+$/.test(trimmed))
+    return "El peso debe ser un número entero de gramos";
+  const gramos = Number(trimmed);
+  if (gramos < MIN_PESO_GRAMOS || gramos > MAX_PESO_GRAMOS)
+    return `Ingresá un peso entre ${MIN_PESO_GRAMOS} y ${MAX_PESO_GRAMOS.toLocaleString("es-AR")} gramos`;
+  return null;
+}
+
 // Espejo de mec3d-back/src/utils/plano.util.ts y upload.middleware.ts.
-export const CATEGORIA_PLANOS_TECNICOS = "Planos técnicos" as const;
+export const CATEGORIA_PLANOS_TECNICOS =
+  "Planos técnicos" as const satisfies ProductCategory;
 export const FORMATOS_PLANO: readonly FormatoPlano[] = ["PDF", "DWG", "DXF"];
 const PLANO_EXTENSIONS = [".pdf", ".dwg", ".dxf"] as const;
 const MODELO_EXTENSIONS = [".stl", ".3mf", ".obj", ".step", ".stp"] as const;
@@ -104,6 +132,7 @@ export function buildProductPayload(
     imagenUrl,
     archivoUrl,
     precioBase: Number(form.precioBase),
+    pesoGramos: Number(form.pesoGramos.trim()),
   };
 
   if (esPlanoTecnico(form.categoria)) {

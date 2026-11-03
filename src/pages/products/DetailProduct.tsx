@@ -10,6 +10,7 @@ import {
   Wrench,
   SlidersHorizontal,
   Cpu,
+  Weight,
   type LucideIcon,
 } from "lucide-react";
 import Layout from "../../components/Layout/Layout";
@@ -18,11 +19,21 @@ import Button from "../../components/Button/Button";
 import DesignerHeroCard from "../../components/DesignerHeroCard/DesignerHeroCard";
 import MaterialTagList from "../../components/MaterialTag/MaterialTagList";
 import ToastContainer from "../../components/Toast/ToastContainer";
+import YaCompradoNotice from "../../components/YaCompradoNotice/YaCompradoNotice";
+import SpecGrid from "../../components/SpecGrid/SpecGrid";
+import type { SpecGridItem } from "../../components/SpecGrid/SpecGrid.types";
 import { useToast } from "../../hooks/useToast";
 import { useCompraDescarga } from "../../hooks/useCompraDescarga";
+import { useEstadoCompraDiseno } from "../../hooks/useEstadoCompraDiseno";
+import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { productService } from "../../services/product.service";
 import { getErrorMessage, isNotFoundError } from "../../services/http.client";
-import { esPlanoTecnico, formatPrintHours } from "../../utils/product.util";
+import {
+  buildDescargaFileName,
+  esPlanoTecnico,
+  formatPesoGramos,
+  formatPrintHours,
+} from "../../utils/product.util";
 import type { Product } from "../../interfaces/product.interface";
 import type { ButtonVariant } from "../../types";
 import PageLoader from "../../components/PageLoader/PageLoader";
@@ -56,6 +67,12 @@ interface SpecItem {
   title: string;
   value: ReactNode;
 }
+
+const toSpecGridItem = ({ Icon, title, value }: SpecItem): SpecGridItem => ({
+  label: title,
+  value,
+  icon: <Icon size={16} strokeWidth={2} />,
+});
 
 interface StarProps {
   rating: number;
@@ -103,7 +120,12 @@ function DetailProduct() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const { toasts, addToast, removeToast } = useToast();
-  const descarga = useCompraDescarga(addToast);
+  const estadoCompra = useEstadoCompraDiseno(product?.id, {
+    ownerId: product?.designerId,
+    addToast,
+  });
+  const descarga = useCompraDescarga(addToast, estadoCompra.refresh);
+  const { requireAuth } = useRequireAuth();
 
   useEffect(() => {
     if (!id) return;
@@ -159,13 +181,28 @@ function DetailProduct() {
       : product.rating;
 
   const esPlano = esPlanoTecnico(product.categoria);
-  const actions = esPlano ? ACTIONS.filter((a) => a.id === "buy") : ACTIONS;
+  const actions = ACTIONS.filter((a) =>
+    a.id === "buy" ? !estadoCompra.comprado : !esPlano,
+  ).map((a) =>
+    a.id === "buy" && estadoCompra.pendientePago
+      ? { ...a, title: "Completar pago" }
+      : a,
+  );
 
   const handleAction = (actionId: ActionId) => {
     if (actionId === "preview") navigate(`/product/${id}/preview`);
-    // Los planos solo admiten descarga: se compra directo, sin pantalla de decisión.
-    else if (esPlano) void descarga.comprar(product.id);
+    else if (!requireAuth()) return;
+    // Los planos solo admiten descarga y una descarga pendiente se paga con la misma compra.
+    else if (esPlano || estadoCompra.pendientePago)
+      void descarga.comprar(product.id);
     else navigate(`/product/${id}/purchase`);
+  };
+
+  const handleDescargar = (compraId: string) => {
+    void estadoCompra.descargar(
+      compraId,
+      buildDescargaFileName(product.title, product.format),
+    );
   };
 
   const specItems: SpecItem[] = [];
@@ -208,6 +245,13 @@ function DetailProduct() {
         ),
       },
     );
+  }
+  if (product.pesoGramos != null) {
+    specItems.push({
+      Icon: Weight,
+      title: "Peso",
+      value: <span>{formatPesoGramos(product.pesoGramos)}</span>,
+    });
   }
 
   return (
@@ -255,6 +299,14 @@ function DetailProduct() {
             </div>
 
             {/* Actions */}
+            {estadoCompra.comprado && estadoCompra.compraId && (
+              <YaCompradoNotice
+                compraId={estadoCompra.compraId}
+                onDescargar={handleDescargar}
+                descargando={estadoCompra.descargando}
+                size="large"
+              />
+            )}
             <div className="detail-product__actions">
               {actions.map((action) => (
                 <Button
@@ -299,18 +351,7 @@ function DetailProduct() {
             <h2 className="detail-product__section-title">
               Especificaciones Técnicas
             </h2>
-            <div className="detail-product__specs-grid">
-              {specItems.map(({ Icon, title, value }) => (
-                <Card
-                  key={title}
-                  variant="spec"
-                  title={title}
-                  icon={<Icon size={16} strokeWidth={2} />}
-                >
-                  {value}
-                </Card>
-              ))}
-            </div>
+            <SpecGrid items={specItems.map(toSpecGridItem)} />
           </section>
         )}
 
