@@ -15,9 +15,8 @@ export const chatService = {
       page: String(page),
       limit: String(limit),
     });
-    return request<PaginatedResponse<Mensaje>>(
-      `${apiPath`/conversaciones/${conversacionId}/mensajes`}?${query.toString()}`,
-    );
+    const path = apiPath`/conversaciones/${conversacionId}/mensajes`;
+    return request<PaginatedResponse<Mensaje>>(`${path}?${query.toString()}`);
   },
 
   misConversaciones: () =>

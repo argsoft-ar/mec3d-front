@@ -115,8 +115,9 @@ export const ordenFabricacionService = {
     if (page !== undefined) query.set("page", String(page));
     if (limit !== undefined) query.set("limit", String(limit));
     const qs = query.toString();
+    const suffix = qs ? "?" + qs : "";
     return request<PaginatedResponse<SolicitudCerrada> & { message: string }>(
-      `/ordenes-fabricacion/fabricante/cerradas${qs ? `?${qs}` : ""}`,
+      `/ordenes-fabricacion/fabricante/cerradas${suffix}`,
       { signal },
     );
   },

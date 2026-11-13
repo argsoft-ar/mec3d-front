@@ -2,6 +2,7 @@ import type { ApiError, ApiErrorDetail } from "../interfaces";
 import type { ToastType } from "../types";
 import { clearSessionData, isAuthenticated } from "./session";
 import { buildLoginUrl, hasControlOrWhitespace } from "../utils/redirect.util";
+import { trimTrailingSlashes } from "../utils/string.util";
 
 // Same-origin por defecto ("/api/v1"): en dev lo atiende el proxy de Vite y en prod el
 // rewrite de Vercel, así la cookie de sesión es first-party.
@@ -9,7 +10,7 @@ export const BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 // Origen y prefijo de la API resueltos una sola vez (admite VITE_API_URL relativa, p. ej. "/api/v1").
 const API_BASE = new URL(BASE_URL, globalThis.location?.origin);
-const API_BASE_PATH = API_BASE.pathname.replace(/\/+$/, "");
+const API_BASE_PATH = trimTrailingSlashes(API_BASE.pathname);
 
 /** Segmento que (decodificado) es "." / ".." o esconde un separador: lo usaria un path traversal. */
 function isUnsafeSegment(segment: string): boolean {

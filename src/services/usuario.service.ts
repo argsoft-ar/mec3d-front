@@ -1,6 +1,7 @@
 import { request } from "./http.client";
 import { cacheGet, cacheSet, cacheDel } from "./cache";
 import { updateCurrentUser } from "./session";
+import { sanitizePerfilCompleto } from "../utils/cache-sanitize.util";
 import type {
   PerfilCompleto,
   UpdateProfileDTO,
@@ -12,12 +13,31 @@ import type {
 const PROFILE_KEY = "user:profile";
 const PROFILE_TTL = 2 * 60 * 1000;
 
+/** Lee el perfil cacheado; si fue manipulado (forma inválida) se descarta. */
+function readCachedProfile(): PerfilCompleto | null {
+  const cached = cacheGet<unknown>(PROFILE_KEY);
+  if (cached === null) return null;
+  const clean = sanitizePerfilCompleto(cached);
+  if (clean === null) cacheDel(PROFILE_KEY);
+  return clean;
+}
+
+/** Cachea solo una copia reconstruida con los campos conocidos; si la forma no es válida, no cachea. */
+function cacheProfile(perfil: unknown): void {
+  const clean = sanitizePerfilCompleto(perfil);
+  if (clean === null) {
+    cacheDel(PROFILE_KEY);
+    return;
+  }
+  cacheSet(PROFILE_KEY, clean, PROFILE_TTL);
+}
+
 export const usuarioService = {
   getMyProfile: async () => {
-    const cached = cacheGet<PerfilCompleto>(PROFILE_KEY);
+    const cached = readCachedProfile();
     if (cached) return cached;
     const data = await request<PerfilCompleto>("/usuarios/perfil");
-    cacheSet(PROFILE_KEY, data, PROFILE_TTL);
+    cacheProfile(data);
     return data;
   },
 
@@ -26,7 +46,7 @@ export const usuarioService = {
       method: "PUT",
       body: JSON.stringify(data),
     });
-    cacheSet(PROFILE_KEY, result, PROFILE_TTL);
+    cacheProfile(result);
     return result;
   },
 

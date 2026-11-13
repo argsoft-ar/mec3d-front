@@ -1,6 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 import { BASE_URL, request } from "./http.client";
 import { onSessionCleared } from "./session";
+import { trimTrailingSlashes } from "../utils/string.util";
 
 const DEV_SOCKET_URL = "http://localhost:3000";
 
@@ -12,7 +13,7 @@ const DEV_SOCKET_URL = "http://localhost:3000";
  */
 function resolveSocketUrl(): string {
   const explicit = import.meta.env.VITE_SOCKET_URL;
-  if (explicit) return explicit.replace(/\/+$/, "");
+  if (explicit) return trimTrailingSlashes(explicit);
   if (/^https?:\/\//i.test(BASE_URL))
     return BASE_URL.replace(/\/api\/v1\/?$/, "");
   return import.meta.env.DEV ? DEV_SOCKET_URL : globalThis.location.origin;
