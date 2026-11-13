@@ -7,7 +7,7 @@ interface LayoutProps {
   fullWidth?: boolean;
 }
 
-function Layout({ children, className = "", fullWidth = false }: LayoutProps) {
+function Layout({ children, className = "", fullWidth = false }: Readonly<LayoutProps>) {
   return (
     <div className={`layout-wrapper ${className}`.trim()}>
       <main className={`layout-inner${fullWidth ? " layout-inner--full" : ""}`}>

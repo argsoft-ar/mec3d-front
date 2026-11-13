@@ -57,19 +57,18 @@ export default function ConfirmDialog({
   const titleId = "confirm-dialog-title";
 
   return (
-    <div
-      className="confirm-dialog-overlay"
-      onClick={onCancel}
-      onKeyDown={(e) =>
-        e.key === "Enter" && e.target === e.currentTarget && onCancel()
-      }
-      role="presentation"
-    >
+    <div className="confirm-dialog-overlay">
+      <button
+        type="button"
+        className="confirm-dialog-backdrop"
+        aria-label={cancelLabel}
+        tabIndex={-1}
+        onClick={onCancel}
+      />
       <dialog
         className={`confirm-dialog confirm-dialog--${variant}`}
         aria-labelledby={titleId}
         open
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="confirm-dialog__icon">{variantIcon[variant]}</div>
         <h2 id={titleId} className="confirm-dialog__title">

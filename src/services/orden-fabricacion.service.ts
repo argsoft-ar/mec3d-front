@@ -14,6 +14,7 @@ import type {
   SolicitudesCerradasParams,
 } from "../interfaces";
 import { downloadFile, request } from "./http.client";
+import { apiPath } from "../utils/api-path.util";
 
 export const ordenFabricacionService = {
   fabricantesSugeridos: (
@@ -52,18 +53,18 @@ export const ordenFabricacionService = {
 
   proponerPrecio: (ordenId: string, precio: number) =>
     request<ApiResponse<OrdenFabricacion>>(
-      `/ordenes-fabricacion/${ordenId}/proponer-precio`,
+      apiPath`/ordenes-fabricacion/${ordenId}/proponer-precio`,
       { method: "POST", body: JSON.stringify({ precio }) },
     ),
 
   cerrarTrato: (ordenId: string, precio: number) =>
     request<CerrarTratoResponse>(
-      `/ordenes-fabricacion/${ordenId}/cerrar-trato`,
+      apiPath`/ordenes-fabricacion/${ordenId}/cerrar-trato`,
       { method: "POST", body: JSON.stringify({ precio }) },
     ),
 
   cancelar: (ordenId: string) =>
-    request<CancelarOrdenResponse>(`/ordenes-fabricacion/${ordenId}/cancelar`, {
+    request<CancelarOrdenResponse>(apiPath`/ordenes-fabricacion/${ordenId}/cancelar`, {
       method: "POST",
     }),
 
@@ -75,31 +76,31 @@ export const ordenFabricacionService = {
   // POST: cada llamada genera un código nuevo e invalida el anterior.
   codigoEntrega: (ordenId: string) =>
     request<ApiResponse<CodigoEntregaResponse>>(
-      `/ordenes-fabricacion/${ordenId}/codigo-entrega`,
+      apiPath`/ordenes-fabricacion/${ordenId}/codigo-entrega`,
       { method: "POST" },
     ),
 
   disputar: (ordenId: string, motivo: string) =>
     request<ApiResponse<OrdenFabricacion>>(
-      `/ordenes-fabricacion/${ordenId}/disputar`,
+      apiPath`/ordenes-fabricacion/${ordenId}/disputar`,
       { method: "POST", body: JSON.stringify({ motivo }) },
     ),
 
   declararEntrega: (ordenId: string) =>
     request<ApiResponse<OrdenFabricacion>>(
-      `/ordenes-fabricacion/${ordenId}/declarar-entrega`,
+      apiPath`/ordenes-fabricacion/${ordenId}/declarar-entrega`,
       { method: "POST" },
     ),
 
   confirmarEntrega: (ordenId: string, codigo: string) =>
     request<ApiResponse<OrdenFabricacion>>(
-      `/ordenes-fabricacion/${ordenId}/confirmar-entrega`,
+      apiPath`/ordenes-fabricacion/${ordenId}/confirmar-entrega`,
       { method: "POST", body: JSON.stringify({ codigo }) },
     ),
 
   getDisenoDeOrden: (ordenId: string, signal?: AbortSignal) =>
     request<ApiResponse<DisenoDeOrden>>(
-      `/ordenes-fabricacion/${encodeURIComponent(ordenId)}/diseno`,
+      apiPath`/ordenes-fabricacion/${ordenId}/diseno`,
       { signal },
     ),
 
@@ -126,7 +127,7 @@ export function descargarDisenoOrden(
   fileName: string,
 ): Promise<void> {
   return downloadFile(
-    `/ordenes-fabricacion/${encodeURIComponent(ordenId)}/descargar-diseno`,
+    apiPath`/ordenes-fabricacion/${ordenId}/descargar-diseno`,
     fileName,
   );
 }

@@ -90,13 +90,13 @@ const ADMIN_NAV_LINK: NavLink = {
   icon: <ShieldCheck size={18} strokeWidth={1.5} />,
 };
 
-const AUTH_ROUTES = ["/login", "/register"];
+const AUTH_ROUTES: ReadonlySet<string> = new Set(["/login", "/register"]);
 
 function ShellContent() {
   const location = useLocation();
   const { isAuthenticated, rol } = useSession();
   const { totalNoLeidos } = useNotificaciones();
-  const isAuthRoute = AUTH_ROUTES.includes(location.pathname);
+  const isAuthRoute = AUTH_ROUTES.has(location.pathname);
   const navLinks = isAuthenticated
     ? [
         ...PUBLIC_NAV_LINKS,

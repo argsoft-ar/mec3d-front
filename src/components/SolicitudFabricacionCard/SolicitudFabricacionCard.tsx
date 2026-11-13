@@ -56,12 +56,9 @@ const SolicitudFabricacionCard = ({
       </header>
 
       {enDisputa && (
-        <p
-          className="solicitud-card__note solicitud-card__note--danger"
-          role="status"
-        >
+        <output className="solicitud-card__note solicitud-card__note--danger">
           El comprador abrió una disputa. {AVISO_EN_DISPUTA}
-        </p>
+        </output>
       )}
 
       {puedeCancelar && pagada && onCancelar && (

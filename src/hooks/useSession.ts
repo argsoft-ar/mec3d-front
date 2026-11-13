@@ -26,9 +26,8 @@ export function useSession(): UseSessionReturn {
   const snapshot = useSyncExternalStore(subscribe, getSessionSnapshot);
 
   return useMemo(() => {
-    const [token] = snapshot.split("|", 1);
-    const isAuthenticated = token !== "";
-    const user = isAuthenticated ? getCurrentUser() : null;
-    return { isAuthenticated, user, rol: user?.rolPrincipal ?? null };
+    // El snapshot es el perfil serializado: vacío => sin sesión.
+    const user = snapshot ? getCurrentUser() : null;
+    return { isAuthenticated: user !== null, user, rol: user?.rolPrincipal ?? null };
   }, [snapshot]);
 }

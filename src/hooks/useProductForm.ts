@@ -256,11 +256,12 @@ export function useProductForm() {
   };
 
   // Los planos (PDF/DWG/DXF) no tienen vista previa 3D.
-  const archivoPreviewFormat = rules.esPlano
-    ? ""
-    : archivoFile
-      ? getModelFormatFromName(archivoFile.name)
-      : getModelFormatFromName(form.archivoUrl);
+  let archivoPreviewFormat = "";
+  if (!rules.esPlano) {
+    archivoPreviewFormat = getModelFormatFromName(
+      archivoFile ? archivoFile.name : form.archivoUrl,
+    );
+  }
 
   const handleImagePreviewError = () => {
     addToast("No se pudo previsualizar la imagen", "error");

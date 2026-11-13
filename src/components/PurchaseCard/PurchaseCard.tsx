@@ -168,12 +168,12 @@ const PurchaseCard = ({
           )}
         </div>
         {deliveryStage === "en_disputa" && (
-          <p className="purchase-card__dispute-notice" role="status">
+          <output className="purchase-card__dispute-notice">
             <ShieldAlert size={14} strokeWidth={2} aria-hidden="true" />
             <span>
               <strong>En disputa.</strong> {AVISO_EN_DISPUTA}
             </span>
-          </p>
+          </output>
         )}
       </div>
     </article>

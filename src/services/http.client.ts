@@ -1,10 +1,61 @@
 import type { ApiError, ApiErrorDetail } from "../interfaces";
 import type { ToastType } from "../types";
-import { clearSessionData, getToken } from "./session";
-import { buildLoginUrl } from "../utils/redirect.util";
+import { clearSessionData, isAuthenticated } from "./session";
+import { buildLoginUrl, hasControlOrWhitespace } from "../utils/redirect.util";
 
-export const BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+// Same-origin por defecto ("/api/v1"): en dev lo atiende el proxy de Vite y en prod el
+// rewrite de Vercel, así la cookie de sesión es first-party.
+export const BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
+
+// Origen y prefijo de la API resueltos una sola vez (admite VITE_API_URL relativa, p. ej. "/api/v1").
+const API_BASE = new URL(BASE_URL, globalThis.location?.origin);
+const API_BASE_PATH = API_BASE.pathname.replace(/\/+$/, "");
+
+/** Segmento que (decodificado) es "." / ".." o esconde un separador: lo usaria un path traversal. */
+function isUnsafeSegment(segment: string): boolean {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(segment);
+  } catch {
+    return true;
+  }
+  return (
+    decoded === "." ||
+    decoded === ".." ||
+    decoded.includes("/") ||
+    decoded.includes("\\")
+  );
+}
+
+/**
+ * Convierte un endpoint relativo ("/productos/123?x=1") en la URL absoluta de la API.
+ * Rechaza URLs absolutas, protocol-relative ("//host"), backslashes, espacios/control y
+ * segmentos "."/".." (tambien codificados): la URL final debe quedar en el origen y
+ * bajo el prefijo de BASE_URL (SSRF / API traversal del lado del cliente).
+ */
+function resolveApiUrl(endpoint: string): string {
+  const invalid = () => new HttpError(0, "Ruta de API inválida");
+  if (
+    typeof endpoint !== "string" ||
+    !endpoint.startsWith("/") ||
+    endpoint.startsWith("//") ||
+    endpoint.includes("\\") ||
+    hasControlOrWhitespace(endpoint)
+  )
+    throw invalid();
+
+  const pathEnd = endpoint.search(/[?#]/);
+  const path = pathEnd === -1 ? endpoint : endpoint.slice(0, pathEnd);
+  if (path.slice(1).split("/").some(isUnsafeSegment)) throw invalid();
+
+  const url = new URL(`${API_BASE_PATH}${endpoint}`, API_BASE.origin);
+  if (
+    url.origin !== API_BASE.origin ||
+    !url.pathname.startsWith(`${API_BASE_PATH}/`)
+  )
+    throw invalid();
+  return url.href;
+}
 
 export class HttpError extends Error implements ApiError {
   readonly status: number;
@@ -76,19 +127,19 @@ function endSession(): void {
   window.location.href = buildLoginUrl(`${pathname}${search}${hash}`);
 }
 
-// Solo el 401 (token inválido/vencido) cierra la sesión; el 403 es un error de negocio
-// (p. ej. "sin acceso a este recurso") y se propaga sin tocar el token. Los 401 de
-// /auth/* son credenciales incorrectas, no una sesión vencida. Sin token (navegación
+// Solo el 401 (cookie de sesión inválida/vencida) cierra la sesión; el 403 es un error de
+// negocio (p. ej. "sin acceso a este recurso") y se propaga sin tocar la sesión. Los 401 de
+// /auth/* son credenciales incorrectas, no una sesión vencida. Sin sesión local (navegación
 // anónima) no hay sesión que cerrar: el 401 se propaga sin redirigir.
 async function throwHttpError(
   response: Response,
   endpoint: string,
-  hadToken: boolean,
+  hadSession: boolean,
   keepSession = false,
 ): Promise<never> {
   if (
     response.status === 401 &&
-    hadToken &&
+    hadSession &&
     !keepSession &&
     !endpoint.startsWith("/auth/")
   )
@@ -107,53 +158,62 @@ export async function request<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const { keepSessionOnUnauthorized, ...init } = options;
-  const token = getToken();
+  const url = resolveApiUrl(endpoint);
+  const hadSession = isAuthenticated();
 
+  // Con FormData el browser arma el Content-Type multipart (con boundary): no se pisa.
+  const isFormData = init.body instanceof FormData;
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...init.headers,
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  // La sesión viaja en la cookie HttpOnly: `credentials: "include"` la adjunta.
+  const response = await fetch(url, {
     ...init,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok)
     return throwHttpError(
       response,
       endpoint,
-      token !== null,
+      hadSession,
       keepSessionOnUnauthorized,
     );
+
+  // 204 (p. ej. POST /auth/logout) no trae cuerpo.
+  if (response.status === 204) return undefined as T;
 
   return response.json() as Promise<T>;
 }
 
-// Los endpoints de descarga responden 302 y exigen el JWT como header (un <a href>
-// plano no puede enviarlo): se hace fetch manual y se dispara la descarga del blob.
+// Los endpoints de descarga responden 302 con autenticación requerida: se hace fetch
+// manual (con la cookie de sesión) y se dispara la descarga del blob.
 export async function downloadFile(
   endpoint: string,
   fileName: string,
 ): Promise<void> {
-  const token = getToken();
+  const url = resolveApiUrl(endpoint);
+  const hadSession = isAuthenticated();
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  // same-origin (no include): la cookie llega igual a /api (same-origin) y el salto 302 a la
+  // URL firmada de R2 (cross-origin) va sin credenciales; con include R2 tendría que responder
+  // Access-Control-Allow-Credentials y la descarga fallaría por CORS.
+  const response = await fetch(url, { credentials: "same-origin" });
 
-  if (!response.ok) return throwHttpError(response, endpoint, token !== null);
+  if (!response.ok) return throwHttpError(response, endpoint, hadSession);
 
   const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
+  const blobUrl = window.URL.createObjectURL(blob);
   const anchor = document.createElement("a");
-  anchor.href = url;
+  anchor.href = blobUrl;
   anchor.download = fileName;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.URL.revokeObjectURL(url);
+  window.URL.revokeObjectURL(blobUrl);
 }
 
 export function getErrorMessage(error: unknown, fallback: string): string {

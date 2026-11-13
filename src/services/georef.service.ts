@@ -1,4 +1,5 @@
 import { request } from "./http.client";
+import { apiPath } from "../utils/api-path.util";
 import { cacheGet, cacheSet } from "./cache";
 import type {
   ApiResponse,
@@ -23,7 +24,7 @@ export const georefService = {
 
   getDepartamentos: (provinciaId: string) =>
     request<ApiResponse<Departamento[]>>(
-      `/georef/provincias/${encodeURIComponent(provinciaId)}/departamentos`,
+      apiPath`/georef/provincias/${provinciaId}/departamentos`,
     ),
 
   getLocalidades: (provinciaId: string, departamentoId?: string) => {

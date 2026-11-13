@@ -77,13 +77,13 @@ export function useChatThread({
   }, [ordenFabricacionId, conversacion?.miRol]);
 
   useEffect(() => {
-    chatService
+    void chatService
       .getMensajes(conversacionId)
       .then((res) => setMensajes([...res.data].reverse()))
       .catch(() => addToast("No se pudo cargar el historial", "error"))
       .finally(() => setLoadingMensajes(false));
 
-    chatSocketService.joinConversacion(conversacionId).then((ack) => {
+    void chatSocketService.joinConversacion(conversacionId).then((ack) => {
       if (!ack.ok) addToast(ack.error ?? "No se pudo unir al chat", "error");
     });
 

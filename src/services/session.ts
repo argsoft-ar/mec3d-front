@@ -1,8 +1,14 @@
 import { cacheClear } from "./cache";
 import type { RolUsuario, UsuarioPublico } from "../interfaces";
 
-const TOKEN_KEY = "auth_token";
+/**
+ * La sesión real es la cookie HttpOnly `mec3d_session` (JS no la ve). En localStorage solo
+ * queda el perfil público del usuario, que la UI necesita de forma síncrona; su presencia
+ * es el indicador local de "hay sesión" y se valida al arrancar contra GET /auth/me.
+ */
 const USER_KEY = "auth_user";
+/** JWT que versiones anteriores guardaban en el browser; se purga al arrancar. */
+const LEGACY_TOKEN_KEY = "auth_token";
 
 const clearListeners = new Set<() => void>();
 const changeListeners = new Set<() => void>();
@@ -24,22 +30,37 @@ export function notifySessionChanged(): void {
   changeListeners.forEach((listener) => listener());
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+export function isUsuarioPublico(value: unknown): value is UsuarioPublico {
+  if (typeof value !== "object" || value === null) return false;
+  const { id, email, rolPrincipal } = value as Partial<
+    Record<keyof UsuarioPublico, unknown>
+  >;
+  return (
+    typeof id === "string" &&
+    typeof email === "string" &&
+    typeof rolPrincipal === "string"
+  );
 }
 
-export function isAuthenticated(): boolean {
-  return getToken() !== null;
+/** Elimina tokens persistidos por versiones anteriores (la sesión ahora vive en la cookie). */
+export function purgeLegacyToken(): void {
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
+  sessionStorage.removeItem(LEGACY_TOKEN_KEY);
 }
 
 export function getCurrentUser(): UsuarioPublico | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as UsuarioPublico;
+    const parsed: unknown = JSON.parse(raw);
+    return isUsuarioPublico(parsed) ? parsed : null;
   } catch {
     return null;
   }
+}
+
+export function isAuthenticated(): boolean {
+  return getCurrentUser() !== null;
 }
 
 export function getCurrentUserRole(): RolUsuario | null {
@@ -48,19 +69,25 @@ export function getCurrentUserRole(): RolUsuario | null {
 
 /** Firma estable (string) del estado de sesión, apta para useSyncExternalStore. */
 export function getSessionSnapshot(): string {
-  return `${getToken() ?? ""}|${localStorage.getItem(USER_KEY) ?? ""}`;
+  return localStorage.getItem(USER_KEY) ?? "";
 }
 
-export function saveSession(token: string, user: UsuarioPublico): void {
-  localStorage.setItem(TOKEN_KEY, token);
+export function saveSession(user: UsuarioPublico): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
   notifySessionChanged();
 }
 
-/** Elimina credenciales, cache del usuario y estado en memoria asociado a la sesión. */
+/** Actualiza campos del usuario guardado (p. ej. tras un cambio de rol); no-op sin sesión. */
+export function updateCurrentUser(patch: Partial<UsuarioPublico>): void {
+  const user = getCurrentUser();
+  if (!user) return;
+  saveSession({ ...user, ...patch });
+}
+
+/** Elimina el perfil local, la cache del usuario y el estado en memoria asociado a la sesión. */
 export function clearSessionData(): void {
-  localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  purgeLegacyToken();
   cacheClear();
   clearListeners.forEach((listener) => listener());
   notifySessionChanged();

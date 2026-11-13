@@ -22,6 +22,7 @@ import { useCodigoEntrega } from "../../hooks/useCodigoEntrega";
 import { useDisputa } from "../../hooks/useDisputa";
 import { useCompraDeOrden } from "../../hooks/useCompraDeOrden";
 import { useNotificaciones } from "../../hooks/useNotificaciones";
+import { useSession } from "../../hooks/useSession";
 import {
   AVISO_EN_DISPUTA,
   compraPagada,
@@ -51,16 +52,6 @@ function varianteMensaje(
 
 interface LocationState {
   ordenFabricacionId?: string;
-}
-
-function getCurrentUserId(): string | null {
-  const raw = localStorage.getItem("auth_user");
-  if (!raw) return null;
-  try {
-    return (JSON.parse(raw) as { id?: string }).id ?? null;
-  } catch {
-    return null;
-  }
 }
 
 interface ChatThreadProps {
@@ -159,6 +150,14 @@ function ChatThread({
         }
       : undefined;
 
+  let dealLabel = "Negociación en curso";
+  if (dealClosed) {
+    dealLabel =
+      precioAcordadoValue == null
+        ? "Trato cerrado"
+        : `Trato cerrado en ${formatPrice(precioAcordadoValue)}`;
+  }
+
   return (
     <>
       <div className="chat-page__thread-header">
@@ -178,13 +177,7 @@ function ChatThread({
       </div>
 
       <div className="chat-page__deal-bar">
-        <span>
-          {dealClosed
-            ? precioAcordadoValue != null
-              ? `Trato cerrado en ${formatPrice(precioAcordadoValue)}`
-              : "Trato cerrado"
-            : "Negociación en curso"}
-        </span>
+        <span>{dealLabel}</span>
         {!ordenFabricacionId && (
           <span className="chat-page__deal-bar-note">
             Sin orden de fabricación asociada: no se puede aceptar un
@@ -228,9 +221,9 @@ function ChatThread({
       )}
 
       {enDisputa && (
-        <p className="chat-page__dispute-notice" role="status">
+        <output className="chat-page__dispute-notice">
           <strong>Orden en disputa.</strong> {AVISO_EN_DISPUTA}
-        </p>
+        </output>
       )}
 
       <MotivoDialog
@@ -283,7 +276,7 @@ function ChatThread({
           onChange={(e) => setComposerText(e.target.value)}
           placeholder="Escribí un mensaje..."
           onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
+            if (e.key === "Enter") void handleSend();
           }}
           disabled={dealClosed}
         />
@@ -383,7 +376,8 @@ function ChatPage() {
   const { conversacionId } = useParams<{ conversacionId?: string }>();
   const location = useLocation();
   const { toasts, addToast, removeToast } = useToast();
-  const currentUserId = getCurrentUserId();
+  const { user } = useSession();
+  const currentUserId = user?.id ?? null;
   const stateOrdenId = (location.state as LocationState | null)
     ?.ordenFabricacionId;
 

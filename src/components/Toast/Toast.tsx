@@ -15,7 +15,7 @@ interface ToastProps {
   onRemove: (id: string) => void;
 }
 
-function Toast({ toast, onRemove }: ToastProps) {
+function Toast({ toast, onRemove }: Readonly<ToastProps>) {
   return (
     <div
       className={`toast toast--${toast.type}`}

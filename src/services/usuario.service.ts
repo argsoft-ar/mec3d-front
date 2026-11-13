@@ -1,6 +1,6 @@
 import { request } from "./http.client";
 import { cacheGet, cacheSet, cacheDel } from "./cache";
-import { notifySessionChanged } from "./session";
+import { updateCurrentUser } from "./session";
 import type {
   PerfilCompleto,
   UpdateProfileDTO,
@@ -42,23 +42,14 @@ export const usuarioService = {
     }),
 
   changeRol: async (rol: RolUsuario) => {
+    // El backend renueva la cookie de sesión con el rol nuevo; el body ya no trae token.
     const data = await request<{
       id: string;
       email: string;
       rolPrincipal: RolUsuario;
-      token: string;
     }>("/usuarios/rol", { method: "PATCH", body: JSON.stringify({ rol }) });
-    localStorage.setItem("auth_token", data.token);
     cacheDel(PROFILE_KEY);
-    const raw = localStorage.getItem("auth_user");
-    if (raw) {
-      const user = JSON.parse(raw) as Record<string, unknown>;
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({ ...user, rolPrincipal: rol }),
-      );
-    }
-    notifySessionChanged();
+    updateCurrentUser({ rolPrincipal: rol });
     return data;
   },
 
@@ -67,6 +58,8 @@ export const usuarioService = {
       method: "DELETE",
     });
     cacheDel(PROFILE_KEY);
+    // El backend renueva la cookie con rol comprador: se sincroniza el perfil local.
+    updateCurrentUser({ rolPrincipal: "comprador" });
     return result;
   },
 

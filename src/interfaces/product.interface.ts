@@ -117,5 +117,4 @@ export interface PlanoProductPayload extends ProductPayloadBase {
 
 export type CreateProductPayload = ModeloProductPayload | PlanoProductPayload;
 
-export type UpdateProductPayload = CreateProductPayload;
 export type PartialUpdateProductPayload = Partial<CreateProductPayload>;

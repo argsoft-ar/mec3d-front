@@ -6,7 +6,9 @@ export const catalogoService = {
     request<CatalogoItem[]>(
       tecnologiaId === undefined
         ? "/catalogos/materiales"
-        : `/catalogos/materiales?tecnologiaId=${tecnologiaId}`,
+        : `/catalogos/materiales?${new URLSearchParams({
+            tecnologiaId: String(tecnologiaId),
+          }).toString()}`,
     ),
   getTecnologias: () => request<CatalogoItem[]>("/catalogos/tecnologias"),
 };

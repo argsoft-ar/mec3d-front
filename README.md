@@ -68,3 +68,17 @@ export default defineConfig([
 ])
 ```
 # mec3d-front
+
+## Configuración y autenticación
+
+Copiá `.env.example` a `.env`:
+
+| Variable | Dev | Producción | Descripción |
+| --- | --- | --- | --- |
+| `VITE_API_URL` | `/api/v1` | `/api/v1` | Base de la API, siempre same-origin. |
+| `VITE_SOCKET_URL` | `http://localhost:3000` | `https://mec3d-api.onrender.com` | Origen del backend para Socket.IO. |
+
+- **Sesión por cookie**: el backend setea la cookie HttpOnly `mec3d_session` en login/registro/cambio de rol; el front no guarda ningún JWT (solo el perfil público en `localStorage.auth_user`) y todas las requests usan `credentials: "include"`. Al arrancar se valida la sesión con `GET /auth/me`; el logout llama a `POST /auth/logout`.
+- **API same-origin**: en dev, Vite proxea `/api` → `http://localhost:3000` (`vite.config.ts`, el header `Origin` llega como `http://localhost:5173` para el chequeo CSRF del backend); en producción, `vercel.json` reescribe `/api/*` → `https://mec3d-api.onrender.com/api/*`.
+- **Socket.IO**: se conecta directo a `VITE_SOCKET_URL`; cada (re)conexión pide un token de 60 s a `POST /auth/socket-token` y lo envía en `auth.token`.
+- **Rutas**: los segmentos dinámicos de los endpoints se codifican con el helper `apiPath` (`src/utils/api-path.util.ts`).

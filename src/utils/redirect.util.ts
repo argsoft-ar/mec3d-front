@@ -1,5 +1,12 @@
 // eslint-disable-next-line no-control-regex -- los caracteres de control son justamente lo que se rechaza
-const CONTROL_OR_WHITESPACE = /[\u0000-\u001f\u007f-\u009f\s]/;
+const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/;
+// Separado de CONTROL_CHARS: \s ya incluye \t-\r (0x09-0x0d) y duplicaba el rango de la clase.
+const WHITESPACE = /\s/;
+
+/** true si el valor tiene caracteres de control (C0/C1) o cualquier espacio en blanco Unicode. */
+export function hasControlOrWhitespace(value: string): boolean {
+  return CONTROL_CHARS.test(value) || WHITESPACE.test(value);
+}
 
 /** Solo rutas internas relativas: '/x' sí; '//host', '/\host', URLs absolutas, espacios y caracteres de control no (open redirect). */
 export function isSafeInternalPath(value: unknown): value is string {
@@ -8,7 +15,7 @@ export function isSafeInternalPath(value: unknown): value is string {
     !value.startsWith("/") ||
     value.startsWith("//") ||
     value.includes("\\") ||
-    CONTROL_OR_WHITESPACE.test(value)
+    hasControlOrWhitespace(value)
   )
     return false;
 

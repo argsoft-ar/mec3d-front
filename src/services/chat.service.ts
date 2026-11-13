@@ -7,12 +7,18 @@ import type {
   Mensaje,
 } from "../interfaces";
 import { request } from "./http.client";
+import { apiPath } from "../utils/api-path.util";
 
 export const chatService = {
-  getMensajes: (conversacionId: string, page = 1, limit = 20) =>
-    request<PaginatedResponse<Mensaje>>(
-      `/conversaciones/${conversacionId}/mensajes?page=${page}&limit=${limit}`,
-    ),
+  getMensajes: (conversacionId: string, page = 1, limit = 20) => {
+    const query = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    return request<PaginatedResponse<Mensaje>>(
+      `${apiPath`/conversaciones/${conversacionId}/mensajes`}?${query.toString()}`,
+    );
+  },
 
   misConversaciones: () =>
     request<ApiResponse<ConversacionResumen[]>>("/conversaciones/mias"),
@@ -22,7 +28,7 @@ export const chatService = {
 
   marcarLeida: (conversacionId: string) =>
     request<ApiResponse<ConversacionLeida>>(
-      `/conversaciones/${encodeURIComponent(conversacionId)}/leer`,
+      apiPath`/conversaciones/${conversacionId}/leer`,
       { method: "POST" },
     ),
 };
