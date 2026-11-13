@@ -13,14 +13,14 @@ interface NavbarProps {
   isAuthenticated: boolean;
 }
 
-function Navbar({ links, isAuthenticated }: NavbarProps) {
+function Navbar({ links, isAuthenticated }: Readonly<NavbarProps>) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
     setIsOpen(false);
+    await authService.logout();
     navigate("/login");
   };
 
@@ -104,7 +104,10 @@ function Navbar({ links, isAuthenticated }: NavbarProps) {
 
         <div className="sidebar__bottom">
           {isAuthenticated ? (
-            <button className="sidebar__logout" onClick={handleLogout}>
+            <button
+              className="sidebar__logout"
+              onClick={() => void handleLogout()}
+            >
               <LogOut size={18} className="sidebar__logout-icon" />
               <span>Cerrar sesión</span>
             </button>

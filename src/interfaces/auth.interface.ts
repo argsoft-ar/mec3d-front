@@ -10,9 +10,9 @@ export interface LoginLocationState {
   from?: string;
 }
 
+/** La sesión queda en la cookie HttpOnly `mec3d_session`; el body ya no trae token. */
 export interface LoginResponse {
   message: string;
-  token: string;
   user: UsuarioPublico;
 }
 

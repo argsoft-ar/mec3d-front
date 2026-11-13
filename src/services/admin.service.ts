@@ -11,6 +11,7 @@ import type {
   ResumenReintentoReembolsos,
 } from "../interfaces";
 import { request } from "./http.client";
+import { apiPath } from "../utils/api-path.util";
 
 function paginationQuery(
   { page, limit }: AdminListParams,
@@ -31,7 +32,7 @@ export const adminService = {
 
   marcarPayoutPagado: (payoutId: string, referencia: string) =>
     request<ApiResponse<MovimientoBilletera>>(
-      `/admin/payouts/${payoutId}/marcar-pagado`,
+      apiPath`/admin/payouts/${payoutId}/marcar-pagado`,
       { method: "POST", body: JSON.stringify({ referencia }) },
     ),
 
@@ -44,7 +45,7 @@ export const adminService = {
     ),
 
   resolverDisputa: (ordenId: string, payload: ResolverDisputaPayload) =>
-    request<ResolverDisputaResponse>(`/admin/disputas/${ordenId}/resolver`, {
+    request<ResolverDisputaResponse>(apiPath`/admin/disputas/${ordenId}/resolver`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),

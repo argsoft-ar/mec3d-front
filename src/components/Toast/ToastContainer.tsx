@@ -12,7 +12,7 @@ function ToastContainer({
   toasts,
   onRemove,
   position = "bottom",
-}: ToastContainerProps) {
+}: Readonly<ToastContainerProps>) {
   if (toasts.length === 0) return null;
 
   return (

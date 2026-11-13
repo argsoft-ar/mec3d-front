@@ -139,6 +139,49 @@ function PurchasesPage() {
     }
   }
 
+  const renderPurchases = () => {
+    if (loading) return <PageLoader />;
+    if (purchases.length === 0) {
+      return <p className="purchases-page__empty">Todavía no tenés compras.</p>;
+    }
+    return (
+      <div className="purchases-page__list">
+        {purchases.map((item) => (
+          <PurchaseCard
+            key={item.id}
+            imageUrl={item.diseno.imagenUrl ?? ""}
+            title={item.diseno.titulo}
+            format={item.diseno.formato ?? ""}
+            material={item.material}
+            pricePaid={item.precioPagado}
+            tipo={item.tipo}
+            estadoCompra={item.estado}
+            deliveryStage={deliveryStageFor(item)}
+            downloading={downloadingId === item.id}
+            paying={payingId === item.id}
+            cancelando={cancelacion.cancelandoId === item.id}
+            onDownload={() => handleDownload(item)}
+            onPagar={() => handlePagar(item)}
+            onSolicitarFabricacion={() => handleSolicitarFabricacion(item)}
+            onFabricar={() => handleFabricar(item)}
+            onCancelar={() => cancelacion.abrir(item)}
+            onConfirmarEntrega={() => setConfirmingItem(item)}
+            onGenerarCodigo={
+              item.ordenFabricacionId
+                ? () => codigoEntrega.abrir(item.ordenFabricacionId as string)
+                : undefined
+            }
+            onAbrirDisputa={
+              item.ordenFabricacionId
+                ? () => disputa.abrir(item.ordenFabricacionId as string)
+                : undefined
+            }
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <Breadcrumb items={BREADCRUMB_ITEMS} />
@@ -148,46 +191,7 @@ function PurchasesPage() {
         subtitle="Descargá tus diseños comprados y confirmá la entrega."
       />
 
-      {loading ? (
-        <PageLoader />
-      ) : purchases.length === 0 ? (
-        <p className="purchases-page__empty">Todavía no tenés compras.</p>
-      ) : (
-        <div className="purchases-page__list">
-          {purchases.map((item) => (
-            <PurchaseCard
-              key={item.id}
-              imageUrl={item.diseno.imagenUrl ?? ""}
-              title={item.diseno.titulo}
-              format={item.diseno.formato ?? ""}
-              material={item.material}
-              pricePaid={item.precioPagado}
-              tipo={item.tipo}
-              estadoCompra={item.estado}
-              deliveryStage={deliveryStageFor(item)}
-              downloading={downloadingId === item.id}
-              paying={payingId === item.id}
-              cancelando={cancelacion.cancelandoId === item.id}
-              onDownload={() => handleDownload(item)}
-              onPagar={() => handlePagar(item)}
-              onSolicitarFabricacion={() => handleSolicitarFabricacion(item)}
-              onFabricar={() => handleFabricar(item)}
-              onCancelar={() => cancelacion.abrir(item)}
-              onConfirmarEntrega={() => setConfirmingItem(item)}
-              onGenerarCodigo={
-                item.ordenFabricacionId
-                  ? () => codigoEntrega.abrir(item.ordenFabricacionId as string)
-                  : undefined
-              }
-              onAbrirDisputa={
-                item.ordenFabricacionId
-                  ? () => disputa.abrir(item.ordenFabricacionId as string)
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-      )}
+      {renderPurchases()}
 
       <ConfirmDialog
         open={confirmingItem !== null}

@@ -1,6 +1,7 @@
 import { Component, Suspense, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
+import type { ThreeElements } from "@react-three/fiber";
 import {
   Bounds,
   Center,
@@ -20,6 +21,13 @@ type SupportedFormat = (typeof SUPPORTED_FORMATS)[number];
 
 // Matches the backend's upload cap (see mec3d-back upload.service.ts).
 const MAX_MODEL_SIZE_BYTES = 30 * 1024 * 1024;
+
+// Props de luces de three.js pasadas por spread (son props de R3F, no del DOM).
+const AMBIENT_LIGHT_PROPS: ThreeElements["ambientLight"] = { intensity: 0.6 };
+const DIRECTIONAL_LIGHT_PROPS: ThreeElements["directionalLight"] = {
+  position: [5, 10, 7],
+  intensity: 1,
+};
 
 const HEAVY_FILE_MESSAGE =
   "Este archivo es muy pesado para previsualizar en el navegador. Descargalo para verlo en tu software CAD.";
@@ -316,10 +324,8 @@ function ModelViewer3D({
           dpr={[1, 2]}
           camera={{ position: [0, 0, 5], fov: 50 }}
         >
-          <ambientLight intensity={0.6} />{" "}
-          {/* NOSONAR - react-three-fiber intrinsic prop */}
-          <directionalLight position={[5, 10, 7]} intensity={1} />{" "}
-          {/* NOSONAR - react-three-fiber intrinsic props */}
+          <ambientLight {...AMBIENT_LIGHT_PROPS} />
+          <directionalLight {...DIRECTIONAL_LIGHT_PROPS} />
           <Suspense fallback={<CanvasLoader />}>
             <Bounds fit clip observe margin={1.2}>
               <Center>

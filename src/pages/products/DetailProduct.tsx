@@ -35,6 +35,7 @@ import {
   formatPrintHours,
 } from "../../utils/product.util";
 import type { Product } from "../../interfaces/product.interface";
+import { formatDownloads, formatPrice } from "../../utils/format.util";
 import type { ButtonVariant } from "../../types";
 import PageLoader from "../../components/PageLoader/PageLoader";
 import "./DetailProduct.css";
@@ -78,7 +79,7 @@ interface StarProps {
   rating: number;
 }
 
-function Stars({ rating }: StarProps) {
+function Stars({ rating }: Readonly<StarProps>) {
   const filled = Math.round(rating);
   return (
     <span
@@ -99,17 +100,6 @@ function Stars({ rating }: StarProps) {
       ))}
     </span>
   );
-}
-
-function formatDownloads(n: number): string {
-  return n >= 1000
-    ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
-    : String(n);
-}
-
-function formatPrice(price: number): string {
-  if (price === 0) return "Gratis";
-  return "$ " + price.toLocaleString("es-AR");
 }
 
 function DetailProduct() {

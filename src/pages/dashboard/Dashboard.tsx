@@ -100,10 +100,8 @@ function Dashboard() {
     }
   }, [addToast, location.state, navigate, location.pathname]);
 
-  const rawUser = localStorage.getItem("auth_user");
-  const userEmail: string = rawUser
-    ? (JSON.parse(rawUser) as { email: string }).email
-    : "";
+  const { user: sessionUser, rol: sessionRol } = useSession();
+  const userEmail = sessionUser?.email ?? "";
   const displayName = userEmail
     ? userEmail.split("@")[0].charAt(0).toUpperCase() +
       userEmail.split("@")[0].slice(1)
@@ -113,7 +111,6 @@ function Dashboard() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const { rol: sessionRol } = useSession();
   const esFabricante = (profile?.rolPrincipal ?? sessionRol) === "fabricante";
   const solicitudesCerradas = useSolicitudesCerradas({
     enabled: esFabricante,

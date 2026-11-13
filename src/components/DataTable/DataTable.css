@@ -10,9 +10,12 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5);
   background: var(--color-surface-bright);
-  border-bottom: 1px solid var(--color-border) !important;
-  min-height: 68px !important;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.data-table__toolbar.data-table__toolbar {
+  border-bottom: 1px solid var(--color-border);
+  min-height: 68px;
 }
 
 @keyframes search-expand {
@@ -86,15 +89,19 @@
 
 .data-table__search-btn {
   color: var(--color-text-secondary);
-  width: 36px !important;
-  height: 36px !important;
+}
+.data-table__search-btn.data-table__search-btn {
+  width: 36px;
+  height: 36px;
 }
 .data-table__search-btn:hover {
   color: var(--color-text-primary);
 }
 
+.data-table__search-close.data-table__search-close {
+  color: var(--color-danger);
+}
 .data-table__search-close {
-  color: var(--color-danger) !important;
   transition:
     color var(--transition-fast),
     opacity var(--transition-fast);
@@ -124,7 +131,12 @@
   padding-top: var(--space-2);
   padding-bottom: var(--space-2);
   padding-left: var(--space-3);
-  padding-right: var(--space-6) !important;
+}
+
+/* Must outrank MUI's `&&&` (3-class) padding-right on the select */
+.data-table__filter-select.data-table__filter-select
+  .MuiSelect-select.MuiSelect-select {
+  padding-right: var(--space-6);
 }
 
 .data-table__filter-select .MuiInputBase-root {
@@ -151,22 +163,25 @@
 }
 .data-table__filter-select .MuiInputLabel-root {
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary) !important;
   font-weight: var(--font-weight-medium);
 }
-.data-table__filter-select .MuiInputLabel-root.Mui-focused {
-  color: var(--color-border-focus) !important;
+.data-table__filter-select.data-table__filter-select .MuiInputLabel-root {
+  color: var(--color-text-secondary);
+}
+.data-table__filter-select.data-table__filter-select
+  .MuiInputLabel-root.Mui-focused {
+  color: var(--color-border-focus);
 }
 
-.data-table {
-  border-radius: var(--radius-lg) !important;
-  box-shadow: none !important;
-  border: 1px solid var(--color-border) !important;
-  background: var(--color-surface) !important;
+.data-table.data-table {
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
-.data-table__container {
-  background: var(--color-surface) !important;
+.data-table__container.data-table__container {
+  background: var(--color-surface);
 }
 
 .data-table__container::-webkit-scrollbar {
@@ -188,27 +203,34 @@
 }
 
 .data-table__head-cell {
-  font-weight: var(--font-weight-semibold) !important;
-  font-size: var(--font-size-sm) !important;
-  color: white !important;
-  background: var(--color-surface-bright) !important;
-  border-bottom: 1px solid var(--color-border) !important;
-  padding: var(--space-3) var(--space-4) !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
-
-.data-table__head-cell .MuiTableSortLabel-root {
-  color: var(--color-primary) !important;
+.data-table__head-cell.data-table__head-cell {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: white;
+  background: var(--color-surface-bright);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
 }
-.data-table__head-cell .MuiTableSortLabel-root:hover,
-.data-table__head-cell .MuiTableSortLabel-root.Mui-active {
-  color: var(--color-primary) !important;
+
+.data-table__head-cell.data-table__head-cell .MuiTableSortLabel-root {
+  color: var(--color-primary);
+}
+.data-table__head-cell.data-table__head-cell .MuiTableSortLabel-root:hover,
+.data-table__head-cell.data-table__head-cell
+  .MuiTableSortLabel-root.Mui-active {
+  color: var(--color-primary);
 }
 .data-table__head-cell .MuiTableSortLabel-icon {
-  color: var(--color-primary) !important;
   opacity: 0.7;
+}
+/* Must outrank MUI's `.MuiTableSortLabel-root.Mui-active .MuiTableSortLabel-icon` */
+.data-table__head-cell.data-table__head-cell
+  .MuiTableSortLabel-icon.MuiTableSortLabel-icon {
+  color: var(--color-primary);
 }
 .data-table__head-cell
   .MuiTableSortLabel-root.Mui-active
@@ -216,9 +238,11 @@
   opacity: 1;
 }
 
-.data-table__container .MuiTableHead-root .MuiTableCell-stickyHeader {
-  background: var(--color-surface-bright) !important;
-  color: var(--color-primary) !important;
+.data-table__container.data-table__container
+  .MuiTableHead-root
+  .MuiTableCell-stickyHeader {
+  background: var(--color-surface-bright);
+  color: var(--color-primary);
 }
 
 .data-table__row:nth-child(odd) td {
@@ -227,15 +251,15 @@
 .data-table__row:nth-child(even) td {
   background: var(--color-surface-container-low);
 }
-.data-table__row:hover td {
-  background: var(--color-surface-container-high) !important;
+.data-table__row.data-table__row:hover td {
+  background: var(--color-surface-container-high);
 }
 
-.data-table__cell {
-  font-size: var(--font-size-sm) !important;
-  color: var(--color-text-primary) !important;
-  border-bottom: 1px solid var(--color-border) !important;
-  padding: var(--space-3) var(--space-4) !important;
+.data-table__cell.data-table__cell {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
 }
 
 .data-table__cell--actions {

@@ -36,12 +36,13 @@ export function useLogin() {
     setError("");
     setLoading(true);
     try {
-      const { token, user } = await authService.login(
+      const { user } = await authService.login(
         formData.email,
         formData.password,
       );
+      // La cookie HttpOnly ya quedó seteada; se descarta el estado del usuario anterior.
       clearSessionData();
-      saveSession(token, user);
+      saveSession(user);
       // `state.from` (navegación interna) tiene prioridad sobre `?redirect=` (cierre por 401).
       const fallback = resolveRedirectParam(
         location.search,

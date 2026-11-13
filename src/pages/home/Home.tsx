@@ -95,25 +95,23 @@ function Home() {
       <section className="home-categories">
         <h2 className="home-section-title">Categorías</h2>
         <div className="home-categories__grid">
-          {CATEGORIAS.map(
-            ({ nombre, etiqueta, descripcion, icon: Icon }, index) => (
-              <Card
-                key={nombre}
-                className="home-category-card"
-                icon={
-                  <span className="home-category-icon">
-                    <Icon {...ICON_PROPS} />
-                  </span>
-                }
-                title={etiqueta}
-                text={descripcion}
-                variant={index < 2 ? "elevated" : "elevated"}
-                onClick={() =>
-                  navigate(`/explore?category=${encodeURIComponent(nombre)}`)
-                }
-              />
-            ),
-          )}
+          {CATEGORIAS.map(({ nombre, etiqueta, descripcion, icon: Icon }) => (
+            <Card
+              key={nombre}
+              className="home-category-card"
+              icon={
+                <span className="home-category-icon">
+                  <Icon {...ICON_PROPS} />
+                </span>
+              }
+              title={etiqueta}
+              text={descripcion}
+              variant="elevated"
+              onClick={() =>
+                navigate(`/explore?category=${encodeURIComponent(nombre)}`)
+              }
+            />
+          ))}
         </div>
       </section>
 

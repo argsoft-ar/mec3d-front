@@ -131,6 +131,41 @@ function MisSolicitudesFabricacion() {
     }
   }
 
+  const renderOrdenes = () => {
+    if (loading) return <PageLoader />;
+    if (ordenes.length === 0) {
+      return (
+        <p className="mis-solicitudes__empty">
+          No tenés solicitudes de fabricación pendientes.
+        </p>
+      );
+    }
+    return (
+      <div className="mis-solicitudes__list">
+        {ordenes.map((orden) => (
+          <SolicitudFabricacionCard
+            key={orden.id}
+            orden={orden}
+            downloading={downloadingId === orden.id}
+            onDescargar={() => handleDescargar(orden)}
+            onConfirmarEntrega={() => openConfirmarEntrega(orden.id)}
+            onCancelar={() => setCancelando(orden)}
+            onAbrirChat={() =>
+              navigate(`/chat/${orden.conversacionId}`, {
+                state: { ordenFabricacionId: orden.id },
+              })
+            }
+            onVerDiseno={() =>
+              navigate(rutaDisenoOrden(orden.id), {
+                state: { conversacionId: orden.conversacionId },
+              })
+            }
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <Breadcrumb items={BREADCRUMB_ITEMS} />
@@ -140,36 +175,7 @@ function MisSolicitudesFabricacion() {
         subtitle="Revisá el diseño, enviá tu presupuesto desde el chat y, cuando el comprador lo acepte y pague, descargá el archivo y confirmá la entrega."
       />
 
-      {loading ? (
-        <PageLoader />
-      ) : ordenes.length === 0 ? (
-        <p className="mis-solicitudes__empty">
-          No tenés solicitudes de fabricación pendientes.
-        </p>
-      ) : (
-        <div className="mis-solicitudes__list">
-          {ordenes.map((orden) => (
-            <SolicitudFabricacionCard
-              key={orden.id}
-              orden={orden}
-              downloading={downloadingId === orden.id}
-              onDescargar={() => handleDescargar(orden)}
-              onConfirmarEntrega={() => openConfirmarEntrega(orden.id)}
-              onCancelar={() => setCancelando(orden)}
-              onAbrirChat={() =>
-                navigate(`/chat/${orden.conversacionId}`, {
-                  state: { ordenFabricacionId: orden.id },
-                })
-              }
-              onVerDiseno={() =>
-                navigate(rutaDisenoOrden(orden.id), {
-                  state: { conversacionId: orden.conversacionId },
-                })
-              }
-            />
-          ))}
-        </div>
-      )}
+      {renderOrdenes()}
 
       <ConfirmDialog
         open={confirmandoId !== null}

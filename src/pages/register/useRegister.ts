@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ChangeEvent, FormEvent } from "react";
 import { authService, HttpError } from "../../services/api";
+import { clearSessionData, saveSession } from "../../services/session";
 import { toZonaId } from "../../services/georef.service";
 import { useGeoref } from "../../hooks/useGeoref";
 import { useUsernameAvailability } from "../../hooks/useUsernameAvailability";
@@ -104,7 +105,7 @@ export function useRegister() {
 
     setLoading(true);
     try {
-      await authService.register({
+      const { user } = await authService.register({
         email: formData.email,
         username: formData.username.trim(),
         password: formData.password,
@@ -112,7 +113,18 @@ export function useRegister() {
         zonaId: toZonaId(georef.localidadId),
         georefLocalidadId: georef.localidadId,
       });
-      navigate("/login");
+      // El backend ya abrió la sesión (cookie HttpOnly): se refleja localmente igual que en
+      // el login. Ir a /login dejaba una cookie viva sin perfil local (sin botón de logout) o,
+      // con otra sesión abierta, la UI de un usuario operando con la cookie de otro.
+      clearSessionData();
+      saveSession({
+        id: user.id,
+        email: user.email,
+        rolPrincipal: user.rolPrincipal,
+        zonaId: user.zonaId,
+        cuentaMercadopago: null,
+      });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       const failure = mapRegisterError(err);
       if (failure.field === "username") setUsernameServerError(failure.message);

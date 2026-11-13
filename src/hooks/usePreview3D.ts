@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { productService } from "../services/product.service";
 import { HttpError } from "../services/http.client";
+import { isAuthenticated } from "../services/session";
 
 // Margen para renovar antes de que la URL firmada venza del lado del servidor.
 const EXPIRY_MARGIN_MS = 10_000;
@@ -35,13 +36,13 @@ const LOADING: Preview3DState = {
   expiresAt: null,
 };
 
-const FALLBACK_STATUSES: readonly number[] = [401, 403, 404, 429];
+const FALLBACK_STATUSES: ReadonlySet<number> = new Set([401, 403, 404, 429]);
 
 // Cualquier falla del original con respuesta del servidor cae al preview público.
 function debeCaerAlPublico(error: unknown): boolean {
   return (
     error instanceof HttpError &&
-    (FALLBACK_STATUSES.includes(error.status) || error.status >= 500)
+    (FALLBACK_STATUSES.has(error.status) || error.status >= 500)
   );
 }
 
@@ -58,7 +59,7 @@ async function resolverPreview(
   productId: string,
   soloPublico: boolean,
 ): Promise<Preview3DState> {
-  const haySesion = localStorage.getItem("auth_token") !== null;
+  const haySesion = isAuthenticated();
 
   if (haySesion && !soloPublico) {
     try {

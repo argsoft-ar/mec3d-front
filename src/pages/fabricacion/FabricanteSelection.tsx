@@ -143,7 +143,7 @@ function FabricanteSelection() {
 
     uniqueZonaIds.forEach((zonaId) => {
       resolvedZonasRef.current.add(zonaId);
-      resolveZonaLabel(zonaId).then((label) => {
+      void resolveZonaLabel(zonaId).then((label) => {
         setZonaLabels((prev) => new Map(prev).set(zonaId, label));
       });
     });
@@ -198,6 +198,53 @@ function FabricanteSelection() {
 
   if (esPlano) return <Navigate to={`/product/${id}`} replace />;
 
+  const renderFabricantes = () => {
+    if (loading) return <PageLoader />;
+    if (fabricantes.length === 0) {
+      const emptyMessage = hasZonaFilter(appliedZonaFilter)
+        ? "Ningún fabricante coincide con las zonas elegidas. Probá ampliar o limpiar los filtros."
+        : "No encontramos fabricantes disponibles para este diseño.";
+      return <p className="fabricante-selection__empty">{emptyMessage}</p>;
+    }
+    return (
+      <div className="fabricante-selection__grid">
+        {fabricantes.map((f) => {
+          const isSelected = selected.has(f.id);
+          const title = f.username || f.tagline || "Fabricante";
+          const showTagline =
+            !!f.username && !!f.tagline && f.tagline !== f.username;
+          const zonaLabel =
+            f.zonaId !== null
+              ? (zonaLabels.get(f.zonaId) ?? `Zona ${f.zonaId}`)
+              : null;
+          return (
+            <Card
+              key={f.id}
+              variant="contact"
+              title={title}
+              text={showTagline ? f.tagline! : undefined}
+              onClick={() => toggle(f.id)}
+              className={`fabricante-selection__card${isSelected ? " fabricante-selection__card--selected" : ""}`}
+              footer={
+                <>
+                  <span className="fabricante-selection__stat">
+                    <Star size={14} strokeWidth={2} />{" "}
+                    {f.puntuacion.toFixed(1)}
+                  </span>
+                  {zonaLabel !== null && (
+                    <span className="fabricante-selection__stat">
+                      <MapPin size={14} strokeWidth={2} /> {zonaLabel}
+                    </span>
+                  )}
+                </>
+              }
+            />
+          );
+        })}
+      </div>
+    );
+  };
+
   if (!compraId) {
     return (
       <Layout>
@@ -248,51 +295,7 @@ function FabricanteSelection() {
         </p>
       )}
 
-      {loading ? (
-        <PageLoader />
-      ) : fabricantes.length === 0 ? (
-        <p className="fabricante-selection__empty">
-          {hasZonaFilter(appliedZonaFilter)
-            ? "Ningún fabricante coincide con las zonas elegidas. Probá ampliar o limpiar los filtros."
-            : "No encontramos fabricantes disponibles para este diseño."}
-        </p>
-      ) : (
-        <div className="fabricante-selection__grid">
-          {fabricantes.map((f) => {
-            const isSelected = selected.has(f.id);
-            const title = f.username || f.tagline || "Fabricante";
-            const showTagline =
-              !!f.username && !!f.tagline && f.tagline !== f.username;
-            const zonaLabel =
-              f.zonaId !== null
-                ? (zonaLabels.get(f.zonaId) ?? `Zona ${f.zonaId}`)
-                : null;
-            return (
-              <Card
-                key={f.id}
-                variant="contact"
-                title={title}
-                text={showTagline ? f.tagline! : undefined}
-                onClick={() => toggle(f.id)}
-                className={`fabricante-selection__card${isSelected ? " fabricante-selection__card--selected" : ""}`}
-                footer={
-                  <>
-                    <span className="fabricante-selection__stat">
-                      <Star size={14} strokeWidth={2} />{" "}
-                      {f.puntuacion.toFixed(1)}
-                    </span>
-                    {zonaLabel !== null && (
-                      <span className="fabricante-selection__stat">
-                        <MapPin size={14} strokeWidth={2} /> {zonaLabel}
-                      </span>
-                    )}
-                  </>
-                }
-              />
-            );
-          })}
-        </div>
-      )}
+      {renderFabricantes()}
 
       <div className="fabricante-selection__actions">
         <Button
