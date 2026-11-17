@@ -5,6 +5,8 @@ import type {
   PrecioPropuestoPayload,
   OrdenCompletadaPayload,
   EntregaDeclaradaPayload,
+  OrdenCanceladaPayload,
+  ConversacionCerradaPayload,
   JoinConversacionAck,
   EnviarMensajeAck,
   MarcarLeidoAck,
@@ -62,6 +64,18 @@ export const chatSocketService = {
     cb: (payload: EntregaDeclaradaPayload) => void,
   ): (() => void) => {
     return onSocketEvent("entrega-declarada", cb);
+  },
+
+  onOrdenCancelada: (
+    cb: (payload: OrdenCanceladaPayload) => void,
+  ): (() => void) => {
+    return onSocketEvent("orden-cancelada", cb);
+  },
+
+  onConversacionCerrada: (
+    cb: (payload: ConversacionCerradaPayload) => void,
+  ): (() => void) => {
+    return onSocketEvent("conversacion-cerrada", cb);
   },
 
   marcarLeido: (conversacionId: string): Promise<MarcarLeidoAck> =>

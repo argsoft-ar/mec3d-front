@@ -1,4 +1,4 @@
-import { FileSearch } from "lucide-react";
+import { FileSearch, Trash2, XCircle } from "lucide-react";
 import Button from "../../components/Button/Button";
 import MaterialTag from "../../components/MaterialTag/MaterialTag";
 import { formatPrice } from "../../utils/format.util";
@@ -7,32 +7,64 @@ import type { CompraDeOrden } from "../../hooks/useCompraDeOrden";
 
 export const VER_DISENO_LABEL = "VER DISEÑO";
 
+interface CerrarChatAction {
+  label: string;
+  /** "Eliminar chat" (ya cerrado por la contraparte) usa el ícono de papelera. */
+  eliminar: boolean;
+  onClick: () => void;
+}
+
 interface ThreadHeaderProps {
   productoTitulo?: string | null;
   esFabricante: boolean;
   onVerDiseno?: () => void;
+  /** Sin acción, el chat no se puede cerrar (trato vigente o disputa). */
+  cerrarChat?: CerrarChatAction;
 }
 
 export function ThreadHeader({
   productoTitulo,
   esFabricante,
   onVerDiseno,
+  cerrarChat,
 }: Readonly<ThreadHeaderProps>) {
   const variant = esFabricante ? "primary" : "outline";
+  const CerrarIcon = cerrarChat?.eliminar ? Trash2 : XCircle;
   return (
     <div className="chat-page__thread-header">
       {productoTitulo && (
         <h3 className="chat-page__product-title">{productoTitulo}</h3>
       )}
-      {onVerDiseno && (
-        <Button
-          title={VER_DISENO_LABEL}
-          variant={variant}
-          icon={<FileSearch size={16} strokeWidth={2} />}
-          onClick={onVerDiseno}
-        />
-      )}
+      <div className="chat-page__thread-actions">
+        {onVerDiseno && (
+          <Button
+            title={VER_DISENO_LABEL}
+            variant={variant}
+            icon={<FileSearch size={16} strokeWidth={2} />}
+            onClick={onVerDiseno}
+          />
+        )}
+        {cerrarChat && (
+          <Button
+            title={cerrarChat.label}
+            variant="danger"
+            icon={<CerrarIcon size={16} strokeWidth={2} />}
+            onClick={cerrarChat.onClick}
+          />
+        )}
+      </div>
     </div>
+  );
+}
+
+/** Aviso del hilo cuando la otra parte ya cerró el chat. */
+export function ClosedChatNotice({ visible }: Readonly<{ visible: boolean }>) {
+  if (!visible) return null;
+  return (
+    <output className="chat-page__closed-notice">
+      <strong>Chat cerrado.</strong> La otra parte cerró este chat. Podés
+      eliminarlo de tus conversaciones.
+    </output>
   );
 }
 

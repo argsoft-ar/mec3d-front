@@ -45,7 +45,8 @@ export function useConversaciones(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Una solicitud nueva o un mensaje de una conversación fuera de la lista obliga a recargarla.
+  // Una solicitud nueva, un chat cerrado por la contraparte o un mensaje de una
+  // conversación fuera de la lista obliga a recargarla.
   const seqProcesado = useRef(ultimoEventoConversacion?.seq ?? 0);
   useEffect(() => {
     if (!ultimoEventoConversacion) return;
@@ -54,7 +55,7 @@ export function useConversaciones(
     const conocida = conversaciones.some(
       (c) => c.id === ultimoEventoConversacion.conversacionId,
     );
-    if (ultimoEventoConversacion.tipo === "solicitud" || !conocida) refresh();
+    if (ultimoEventoConversacion.tipo !== "mensaje" || !conocida) refresh();
   }, [ultimoEventoConversacion, conversaciones, refresh]);
 
   const noLeidosDe = useCallback(
