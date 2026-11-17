@@ -14,7 +14,7 @@ interface BilleteraResult {
 export function useBilletera() {
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(DEFAULT_LIMIT);
-  const [estado, setEstadoState] = useState<EstadoMovimientoFiltro | "">("");
+  const [estado, setEstado] = useState<EstadoMovimientoFiltro | "">("");
   const [reloadToken, setReloadToken] = useState(0);
   const [result, setResult] = useState<BilleteraResult | null>(null);
 
@@ -44,8 +44,8 @@ export function useBilletera() {
     };
   }, [key, page, limit, estado]);
 
-  const setEstado = useCallback((value: EstadoMovimientoFiltro | "") => {
-    setEstadoState(value);
+  const changeEstado = useCallback((value: EstadoMovimientoFiltro | "") => {
+    setEstado(value);
     setPage(0);
   }, []);
 
@@ -69,7 +69,7 @@ export function useBilletera() {
     estado,
     setPage,
     setLimit: changeLimit,
-    setEstado,
+    setEstado: changeEstado,
     reload,
   };
 }

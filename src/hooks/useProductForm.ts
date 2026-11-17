@@ -17,6 +17,7 @@ import {
   getFileExtension,
   getProductFormRules,
   isFormatoPlano,
+  validatePesoGramos,
 } from "../utils/product.util";
 import type { ProductForm, ProductFormErrors } from "../interfaces";
 
@@ -25,6 +26,7 @@ const INITIAL_FORM: ProductForm = {
   descripcion: "",
   categoria: "",
   precioBase: "",
+  pesoGramos: "",
   formato: "",
   imagenUrl: "",
   archivoUrl: "",
@@ -133,6 +135,8 @@ export function useProductForm() {
           descripcion: product.description,
           categoria: product.categoria ?? "",
           precioBase: String(product.price),
+          pesoGramos:
+            product.pesoGramos == null ? "" : String(product.pesoGramos),
           formato: product.format,
           imagenUrl: product.imageUrl ?? "",
           archivoUrl: product.archivoUrl ?? "",
@@ -252,11 +256,12 @@ export function useProductForm() {
   };
 
   // Los planos (PDF/DWG/DXF) no tienen vista previa 3D.
-  const archivoPreviewFormat = rules.esPlano
-    ? ""
-    : archivoFile
-      ? getModelFormatFromName(archivoFile.name)
-      : getModelFormatFromName(form.archivoUrl);
+  let archivoPreviewFormat = "";
+  if (!rules.esPlano) {
+    archivoPreviewFormat = getModelFormatFromName(
+      archivoFile ? archivoFile.name : form.archivoUrl,
+    );
+  }
 
   const handleImagePreviewError = () => {
     addToast("No se pudo previsualizar la imagen", "error");
@@ -300,6 +305,8 @@ export function useProductForm() {
     if (!form.categoria) newErrors.categoria = "Seleccioná una categoría";
     if (!isValidPrecio(form.precioBase))
       newErrors.precioBase = `Ingresá un precio mayor a 0 y hasta ${MAX_PRECIO_BASE.toLocaleString("es-AR")}, con máximo 2 decimales`;
+    const pesoError = validatePesoGramos(form.pesoGramos);
+    if (pesoError) newErrors.pesoGramos = pesoError;
     if (rules.esPlano ? !isFormatoPlano(form.formato) : !form.formato)
       newErrors.formato = "Seleccioná un formato";
     if (!form.archivoUrl.trim() && !archivoFile)

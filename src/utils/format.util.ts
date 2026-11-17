@@ -4,9 +4,9 @@ export function formatPrice(price: number): string {
 }
 
 export function formatDownloads(n: number): string {
-  return n >= 1000
-    ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
-    : String(n);
+  if (n < 1000) return String(n);
+  const decimals = n % 1000 === 0 ? 0 : 1;
+  return `${(n / 1000).toFixed(decimals)}k`;
 }
 
 /** Un diseño puede tener varios formatos separados por coma (ej. "STL,3MF"). */

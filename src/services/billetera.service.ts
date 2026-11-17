@@ -8,8 +8,7 @@ export const billeteraService = {
     if (limit !== undefined) query.set("limit", String(limit));
     if (estado) query.set("estado", estado);
     const qs = query.toString();
-    return request<BilleteraResponse>(
-      `/usuarios/mi-billetera${qs ? `?${qs}` : ""}`,
-    );
+    const suffix = qs ? "?" + qs : "";
+    return request<BilleteraResponse>(`/usuarios/mi-billetera${suffix}`);
   },
 };

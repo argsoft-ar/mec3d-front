@@ -28,7 +28,7 @@ function Button({
   loading = false,
   type = "button",
   className = "",
-}: ButtonProps) {
+}: Readonly<ButtonProps>) {
   const classes = [
     "btn",
     `btn--${variant}`,

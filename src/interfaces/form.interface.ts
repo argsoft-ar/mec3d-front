@@ -6,6 +6,8 @@ export interface ProductForm {
   descripcion: string;
   categoria: string;
   precioBase: string;
+  /** Gramos enteros como texto del input numérico; se convierte a number al enviar. */
+  pesoGramos: string;
   formato: string;
   imagenUrl: string;
   archivoUrl: string;

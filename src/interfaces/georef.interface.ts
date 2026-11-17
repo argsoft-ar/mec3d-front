@@ -13,3 +13,10 @@ export interface Localidad {
   id: string;
   nombre: string;
 }
+
+/** Códigos Georef (solo dígitos) elegidos por nivel; se combinan con OR. */
+export interface ZonaFiltro {
+  provincias: string[];
+  departamentos: string[];
+  localidades: string[];
+}

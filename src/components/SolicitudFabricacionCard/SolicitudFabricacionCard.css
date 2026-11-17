@@ -110,5 +110,6 @@
 }
 
 .solicitud-card__note--danger {
+  display: block;
   color: var(--color-danger);
 }

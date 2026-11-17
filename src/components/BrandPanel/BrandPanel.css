@@ -113,7 +113,6 @@
   );
   top: -120px;
   left: -80px;
-  animation: floatBlobA 18s ease-in-out infinite;
 }
 
 .login-brand__blob--orange {
@@ -126,7 +125,6 @@
   );
   bottom: -80px;
   right: -60px;
-  animation: floatBlobB 22s ease-in-out infinite;
 }
 
 .login-brand__blob--purple {
@@ -139,7 +137,6 @@
   );
   top: 40%;
   left: 40%;
-  animation: floatBlobC 26s ease-in-out infinite;
 }
 
 /* -- Gear shapes -- */
@@ -155,7 +152,6 @@
   height: 96px;
   top: 12%;
   right: 14%;
-  animation: rotateSlow 20s linear infinite;
   clip-path: polygon(
     50% 0%,
     61% 15%,
@@ -212,7 +208,6 @@
     39% 15%
   );
   opacity: 0.25;
-  animation: rotateSlowReverse 14s linear infinite;
 }
 
 .login-brand__gear--3 {
@@ -244,7 +239,6 @@
     39% 15%
   );
   opacity: 0.18;
-  animation: rotateSlow 10s linear infinite;
 }
 
 /* -- Hexagon shapes -- */
@@ -264,7 +258,6 @@
   );
   bottom: 30%;
   right: 18%;
-  animation: floatUp 8s ease-in-out infinite;
 }
 
 .login-brand__hex--2 {
@@ -277,7 +270,6 @@
   );
   top: 25%;
   left: 15%;
-  animation: floatUp 11s ease-in-out infinite reverse;
 }
 
 /* -- Brand content -- */
@@ -307,7 +299,6 @@
   background-clip: text;
   line-height: 1;
   margin: 0;
-  animation: fadeUp 0.7s ease both;
 }
 
 .login-brand__tagline {
@@ -315,7 +306,6 @@
   color: var(--color-text-secondary);
   letter-spacing: 0.04em;
   margin: 0;
-  animation: fadeUp 0.7s 0.15s ease both;
 }
 
 .login-brand__divider {
@@ -323,7 +313,6 @@
   height: 2px;
   background: var(--color-primary);
   border-radius: 2px;
-  animation: fadeUp 0.7s 0.25s ease both;
 }
 
 .login-brand__features {
@@ -333,7 +322,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2, 0.5rem);
-  animation: fadeUp 0.7s 0.35s ease both;
 }
 
 .login-brand__features li {
@@ -346,6 +334,57 @@
   content: "›  ";
   color: var(--color-primary);
   font-weight: var(--font-weight-bold, 700);
+}
+
+/* -- Motion (only when the user has not requested reduced motion) -- */
+@media (prefers-reduced-motion: no-preference) {
+  .login-brand__blob--blue {
+    animation: floatBlobA 18s ease-in-out infinite;
+  }
+
+  .login-brand__blob--orange {
+    animation: floatBlobB 22s ease-in-out infinite;
+  }
+
+  .login-brand__blob--purple {
+    animation: floatBlobC 26s ease-in-out infinite;
+  }
+
+  .login-brand__gear--1 {
+    animation: rotateSlow 20s linear infinite;
+  }
+
+  .login-brand__gear--2 {
+    animation: rotateSlowReverse 14s linear infinite;
+  }
+
+  .login-brand__gear--3 {
+    animation: rotateSlow 10s linear infinite;
+  }
+
+  .login-brand__hex--1 {
+    animation: floatUp 8s ease-in-out infinite;
+  }
+
+  .login-brand__hex--2 {
+    animation: floatUp 11s ease-in-out infinite reverse;
+  }
+
+  .login-brand__logo {
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .login-brand__tagline {
+    animation: fadeUp 0.7s 0.15s ease both;
+  }
+
+  .login-brand__divider {
+    animation: fadeUp 0.7s 0.25s ease both;
+  }
+
+  .login-brand__features {
+    animation: fadeUp 0.7s 0.35s ease both;
+  }
 }
 
 /* -- Responsive: hide on mobile -- */

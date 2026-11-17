@@ -21,6 +21,7 @@
 }
 
 .product-preview-3d__notice {
+  display: block;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }

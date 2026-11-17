@@ -1,7 +1,19 @@
 // Mismas reglas que esCuentaMercadopagoValida del backend (utils/policy.util.ts).
 const CBU_CVU_RE = /^\d{22}$/;
 const ALIAS_RE = /^[a-zA-Z0-9.-]{6,20}$/;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const WHITESPACE_RE = /\s/;
+
+/**
+ * Equivale a /^[^\s@]+@[^\s@]+\.[^\s@]+$/ sin regex con backtracking:
+ * un único "@", parte local no vacía y un punto interno en el dominio.
+ */
+function esEmailValido(valor: string): boolean {
+  if (WHITESPACE_RE.test(valor)) return false;
+  const partes = valor.split("@");
+  if (partes.length !== 2) return false;
+  const [local, dominio] = partes;
+  return local.length > 0 && dominio.slice(1, -1).includes(".");
+}
 
 export const MAX_CUENTA_MERCADOPAGO = 255;
 
@@ -17,7 +29,7 @@ export function validarCuentaMercadopago(valor: string): string | undefined {
   }
   if (CBU_CVU_RE.test(limpio) || ALIAS_RE.test(limpio)) return undefined;
   if (limpio.includes("@")) {
-    return EMAIL_RE.test(limpio) ? undefined : "Ingresá un email válido";
+    return esEmailValido(limpio) ? undefined : "Ingresá un email válido";
   }
   if (/^\d+$/.test(limpio)) {
     return "Un CBU/CVU debe tener exactamente 22 dígitos";

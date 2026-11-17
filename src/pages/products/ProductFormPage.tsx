@@ -17,11 +17,14 @@ import MultiSelectField from "../../components/MultiSelectField/MultiSelectField
 import { useProductForm } from "../../hooks/useProductForm";
 import {
   MAX_MATERIALES_POR_DISENO,
+  MAX_PESO_GRAMOS,
   MAX_PRECIO_BASE,
   MAX_PRINT_HOURS,
+  MIN_PESO_GRAMOS,
   MIN_PRECIO_BASE,
   MIN_PRINT_HOURS,
 } from "../../utils/product.util";
+import { CATEGORIA_OPTIONS } from "../../utils/categoria.util";
 import type {
   FormFieldConfig,
   ButtonConfig,
@@ -32,16 +35,6 @@ import "./ProductFormPage.css";
 const ModelViewer3D = lazy(
   () => import("../../components/ModelViewer3D/ModelViewer3D"),
 );
-
-const CATEGORY_OPTIONS: SelectOption[] = [
-  { value: "Autos", label: "Autos" },
-  { value: "Motos", label: "Motos" },
-  { value: "Barcos", label: "Barcos" },
-  { value: "Casa", label: "Casa" },
-  { value: "Maquinas", label: "Máquinas" },
-  { value: "Engranajes", label: "Engranajes" },
-  { value: "Planos técnicos", label: "Planos técnicos" },
-];
 
 const DIFICULTAD_OPTIONS: SelectOption[] = [
   { value: "Básico", label: "Básico" },
@@ -110,10 +103,23 @@ const FORM_FIELDS: FormFieldConfig[] = [
     hint: "Máximo 2 decimales.",
   },
   {
+    label: "Peso (g)",
+    name: "pesoGramos",
+    type: "number",
+    placeholder: "Ej: 250",
+    required: true,
+    min: MIN_PESO_GRAMOS,
+    max: MAX_PESO_GRAMOS,
+    step: 1,
+    inputMode: "numeric",
+    blockedKeys: INTEGER_ONLY_KEYS,
+    hint: "Peso aproximado de la pieza impresa, en gramos enteros.",
+  },
+  {
     label: "Categoría",
     name: "categoria",
     type: "select",
-    options: CATEGORY_OPTIONS,
+    options: CATEGORIA_OPTIONS,
     required: true,
   },
   {
@@ -185,6 +191,11 @@ const FORM_FIELDS: FormFieldConfig[] = [
     required: true,
   },
 ];
+
+// Desde "tecnologia" en adelante, los campos solo aplican a modelos 3D.
+const TECHNICAL_FIELDS_START = FORM_FIELDS.findIndex(
+  (f) => f.name === "tecnologia",
+);
 
 function ProductFormPage() {
   const {
@@ -382,7 +393,7 @@ function ProductFormPage() {
                 </div>
               </div>
 
-              {FORM_FIELDS.slice(2, 7).map(renderField)}
+              {FORM_FIELDS.slice(2, TECHNICAL_FIELDS_START).map(renderField)}
 
               {rules.showTechnicalFields && (
                 <>
@@ -390,7 +401,7 @@ function ProductFormPage() {
                     Especificaciones Técnicas
                   </h3>
 
-                  {FORM_FIELDS.slice(7).map((field) => (
+                  {FORM_FIELDS.slice(TECHNICAL_FIELDS_START).map((field) => (
                     <Fragment key={field.name}>
                       {renderField(field)}
                       {field.name === "tecnologia" && (

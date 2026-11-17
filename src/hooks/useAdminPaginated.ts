@@ -21,7 +21,7 @@ export function useAdminPaginated<T>(
   fallbackError: string,
 ) {
   const [page, setPage] = useState(0);
-  const [limit, setLimitState] = useState(DEFAULT_LIMIT);
+  const [limit, setLimit] = useState(DEFAULT_LIMIT);
   const [reloadToken, setReloadToken] = useState(0);
   const [result, setResult] = useState<PageResult<T> | null>(null);
 
@@ -47,8 +47,8 @@ export function useAdminPaginated<T>(
     };
   }, [key, fetcher, page, limit, fallbackError]);
 
-  const setLimit = useCallback((value: number) => {
-    setLimitState(value);
+  const changeLimit = useCallback((value: number) => {
+    setLimit(value);
     setPage(0);
   }, []);
 
@@ -67,7 +67,7 @@ export function useAdminPaginated<T>(
     page,
     limit,
     setPage,
-    setLimit,
+    setLimit: changeLimit,
     resetPage,
     reload,
   };

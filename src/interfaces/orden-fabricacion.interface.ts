@@ -1,4 +1,5 @@
 import type { EstadoCompra, ResultadoReembolso } from "./pago.interface";
+import type { ZonaFiltro } from "./georef.interface";
 
 export type EstadoOrdenFabricacion =
   | "solicitado"
@@ -51,12 +52,67 @@ export interface CodigoEntregaResponse {
   codigoEntrega: string;
 }
 
+export interface DisenoOrdenEspecificaciones {
+  dimensiones?: string;
+  dificultad?: string;
+  tiempoImpresion?: number;
+  soportes?: string;
+  configuracion?: { layer?: string; infill?: string };
+}
+
+/** Diseño de una orden visto por sus partes; nunca incluye el archivo original. */
+export interface DisenoOrden {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  imagenUrl: string | null;
+  previewUrl: string | null;
+  categoria: string | null;
+  tecnologia: string | null;
+  materiales: string[];
+  formato: string | null;
+  pesoGramos: number | null;
+  especificaciones: DisenoOrdenEspecificaciones | null;
+}
+
+export interface DisenoDeOrden {
+  ordenId: string;
+  estado: EstadoOrdenFabricacion;
+  material: string | null;
+  diseno: DisenoOrden;
+  puedeDescargar: boolean;
+}
+
+export interface SolicitudCerrada {
+  id: string;
+  compraId: string;
+  estado: Extract<
+    EstadoOrdenFabricacion,
+    "trato_cerrado" | "confirmada" | "completado"
+  >;
+  disenoId: string;
+  disenoTitulo: string;
+  disenoImagenUrl: string | null;
+  compradorUsername: string | null;
+  /** Pesos (no centavos). */
+  precioAcordado: number | null;
+  material: string | null;
+  fechaCierre: string | null;
+  actualizadoEn: string | null;
+  conversacionId: string | null;
+}
+
+export interface SolicitudesCerradasParams {
+  page?: number;
+  limit?: number;
+}
+
 export interface CerrarTratoResponse {
   message: string;
   data: OrdenFabricacion;
-  /** true cuando este cierre finalizó el trato y el comprador debe pagar. */
+  /** Solo el comprador cierra el trato: siempre requiere pago. */
   pagoRequerido: boolean;
-  /** Checkout Pro; solo si cerró el comprador y se creó la preference. */
+  /** Checkout Pro; si es null se inicia el pago con POST /compras/:id/pagar. */
   initPoint: string | null;
 }
 
@@ -96,7 +152,7 @@ export interface CancelarOrdenResponse {
   reembolso: ResultadoReembolso;
 }
 
-export interface FabricantesSugeridosParams {
+export interface FabricantesSugeridosParams extends Partial<ZonaFiltro> {
   disenoId: string;
   compraId: string;
   material?: string;
@@ -105,9 +161,13 @@ export interface FabricantesSugeridosParams {
   limit?: number;
 }
 
+/** Máximo de códigos por nivel que acepta el filtro de zonas. */
+export const MAX_CODIGOS_ZONA_FILTRO = 50;
+
 export interface FabricanteSugerido {
   id: string;
   zonaId: number | null;
+  georefLocalidadId: string | null;
   puntuacion: number;
   tagline: string | null;
   username: string | null;

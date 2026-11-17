@@ -28,22 +28,15 @@ function Card({
   onClick,
   disableHover = false,
   bodyClassName,
-}: CardProps) {
+}: Readonly<CardProps>) {
   const isClickable = typeof onClick === "function";
+  const Root = isClickable ? "button" : "div";
 
   return (
-    <div
+    <Root
+      type={isClickable ? "button" : undefined}
       className={`card card--${variant}${isClickable ? " card--clickable" : ""}${disableHover ? " card--no-hover" : ""} ${className}`.trim()}
       onClick={onClick}
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      onKeyDown={
-        isClickable
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") onClick();
-            }
-          : undefined
-      }
     >
       {(icon || title) && (
         <div className="card__header">
@@ -56,8 +49,8 @@ function Card({
 
       {list && list.length > 0 && (
         <ul className="card__list">
-          {list.map((item, index) => (
-            <li key={index} className="card__list-item">
+          {list.map((item) => (
+            <li key={item} className="card__list-item">
               {item}
             </li>
           ))}
@@ -73,7 +66,7 @@ function Card({
       )}
 
       {footer && <div className="card__footer">{footer}</div>}
-    </div>
+    </Root>
   );
 }
 

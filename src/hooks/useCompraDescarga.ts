@@ -1,11 +1,18 @@
 import { useCallback, useState } from "react";
 import { useCheckout } from "./useCheckout";
 import { compraService } from "../services/compra.service";
-import { getErrorMessage } from "../services/http.client";
+import { getErrorMessage, hasErrorCode } from "../services/http.client";
+import { CODIGO_COMPRA_DUPLICADA } from "../interfaces";
 import type { AddToast } from "../types";
 
-/** Crea la compra de descarga de un diseño y redirige a Mercado Pago; permite reintentar el pago si falla. */
-export function useCompraDescarga(addToast: AddToast) {
+/**
+ * Crea la compra de descarga de un diseño y redirige a Mercado Pago; permite reintentar el pago si falla.
+ * `onCompraDuplicada` se invoca cuando el backend responde que el diseño ya fue comprado.
+ */
+export function useCompraDescarga(
+  addToast: AddToast,
+  onCompraDuplicada?: () => void,
+) {
   const { paying, redirigir, pagar } = useCheckout(addToast);
   const [processing, setProcessing] = useState(false);
   // Compra creada cuyo checkout no pudo abrirse; se puede reintentar el pago.
@@ -25,6 +32,12 @@ export function useCompraDescarga(addToast: AddToast) {
           setProcessing(false);
         }
       } catch (error) {
+        if (hasErrorCode(error, CODIGO_COMPRA_DUPLICADA)) {
+          addToast(getErrorMessage(error, "Ya compraste este diseño"), "info");
+          onCompraDuplicada?.();
+          setProcessing(false);
+          return;
+        }
         addToast(
           getErrorMessage(
             error,
@@ -35,7 +48,7 @@ export function useCompraDescarga(addToast: AddToast) {
         setProcessing(false);
       }
     },
-    [addToast, redirigir],
+    [addToast, redirigir, onCompraDuplicada],
   );
 
   const reintentarPago = useCallback(async () => {

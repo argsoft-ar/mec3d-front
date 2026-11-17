@@ -1,11 +1,12 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useSession } from "../hooks/useSession";
 import type { LoginLocationState } from "../interfaces";
 
 function ProtectedRoute() {
   const location = useLocation();
-  const token = localStorage.getItem("auth_token");
+  const { isAuthenticated } = useSession();
 
-  if (!token) {
+  if (!isAuthenticated) {
     const state: LoginLocationState = {
       from: `${location.pathname}${location.search}${location.hash}`,
     };

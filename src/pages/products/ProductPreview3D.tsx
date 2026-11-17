@@ -77,6 +77,35 @@ function ProductPreview3D() {
   if (esPlanoTecnico(product.categoria))
     return <Navigate to={`/product/${id}`} replace />;
 
+  const renderViewer = () => {
+    if (preview.status === "ready" && preview.url) {
+      return (
+        <>
+          <Suspense fallback={<PageLoader label="Cargando visor 3D..." />}>
+            <ModelViewer3D
+              url={preview.url}
+              format={preview.format ?? product.format}
+              className="product-preview-3d__canvas"
+              onPreviewError={preview.renovarSiExpiro}
+              errorMessage={
+                preview.degradado ? DEGRADED_VIEWER_ERROR : undefined
+              }
+            />
+          </Suspense>
+          {preview.degradado && <Watermark text={WATERMARK_TEXT} />}
+        </>
+      );
+    }
+    if (preview.status === "loading" || preview.status === "idle") {
+      return <PageLoader label="Cargando visor 3D..." />;
+    }
+    return (
+      <p className="product-preview-3d__no-file">
+        {PREVIEW_MESSAGES[preview.status]}
+      </p>
+    );
+  };
+
   return (
     <Layout>
       <div className="product-preview-3d">
@@ -91,36 +120,15 @@ function ProductPreview3D() {
           <div className="product-preview-3d__heading">
             <h1 className="product-preview-3d__title">{product.title}</h1>
             {preview.degradado && preview.status === "ready" && (
-              <p role="status" className="product-preview-3d__notice">
+              <output className="product-preview-3d__notice">
                 {DEGRADED_NOTICE}
-              </p>
+              </output>
             )}
           </div>
         </header>
 
         <section className="product-preview-3d__viewer">
-          {preview.status === "ready" && preview.url ? (
-            <>
-              <Suspense fallback={<PageLoader label="Cargando visor 3D..." />}>
-                <ModelViewer3D
-                  url={preview.url}
-                  format={preview.format ?? product.format}
-                  className="product-preview-3d__canvas"
-                  onPreviewError={preview.renovarSiExpiro}
-                  errorMessage={
-                    preview.degradado ? DEGRADED_VIEWER_ERROR : undefined
-                  }
-                />
-              </Suspense>
-              {preview.degradado && <Watermark text={WATERMARK_TEXT} />}
-            </>
-          ) : preview.status === "loading" || preview.status === "idle" ? (
-            <PageLoader label="Cargando visor 3D..." />
-          ) : (
-            <p className="product-preview-3d__no-file">
-              {PREVIEW_MESSAGES[preview.status]}
-            </p>
-          )}
+          {renderViewer()}
         </section>
       </div>
     </Layout>

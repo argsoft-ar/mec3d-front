@@ -160,23 +160,23 @@ function Billetera() {
         )}
 
         {resumen && !resumen.cuentaMercadopagoConfigurada && (
-          <div className="billetera__notice" role="status">
+          <output className="billetera__notice">
             <AlertTriangle size={18} strokeWidth={1.5} aria-hidden="true" />
-            <p>
+            <span>
               Todavía no configuraste tu cuenta de Mercado Pago, necesaria para
               cobrar. <Link to="/account">Configurala en Mi Cuenta</Link>.
-            </p>
-          </div>
+            </span>
+          </output>
         )}
 
         {resumen?.cuentaMercadopagoEnCooldown && (
-          <div className="billetera__notice" role="status">
+          <output className="billetera__notice">
             <Clock size={18} strokeWidth={1.5} aria-hidden="true" />
-            <p>
+            <span>
               Tu cuenta fue actualizada; los cobros se habilitan el{" "}
               {formatDateTime(resumen.cuentaMercadopagoHabilitadaDesde)}.
-            </p>
-          </div>
+            </span>
+          </output>
         )}
 
         <p className="billetera__fees">

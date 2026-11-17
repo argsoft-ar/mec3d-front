@@ -47,3 +47,24 @@ export interface CrearCompraResponse {
   /** Checkout Pro de Mercado Pago; null en fabricación (se paga al cerrar el trato). */
   initPoint: string | null;
 }
+
+export type EstadoCompraDescarga = "pendiente_pago" | "pagada" | "completada";
+
+/** Compra de descarga del usuario actual para un diseño. */
+export interface EstadoCompraDiseno {
+  /** true solo con la compra pagada o completada. */
+  comprado: boolean;
+  compraId: string | null;
+  estado: EstadoCompraDescarga | null;
+}
+
+/** `code` del 409 de POST /compras cuando la descarga ya fue comprada. */
+export const CODIGO_COMPRA_DUPLICADA = "COMPRA_DUPLICADA";
+
+export interface CompraCancelada {
+  compraId: string;
+  estado: "cancelada";
+}
+
+/** `code` del 409 de POST /compras/:id/cancelar (ya no está pendiente de pago o el pago se acreditó). */
+export const CODIGO_COMPRA_NO_CANCELABLE = "COMPRA_NO_CANCELABLE";

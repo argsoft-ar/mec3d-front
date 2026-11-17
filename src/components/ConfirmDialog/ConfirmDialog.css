@@ -26,6 +26,23 @@
   }
 }
 
+/* Full-overlay native button: clicking outside the dialog cancels it */
+.confirm-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.confirm-dialog-backdrop:focus {
+  outline: none;
+}
+
 .confirm-dialog {
   position: relative;
   background: var(--color-surface, #fff);

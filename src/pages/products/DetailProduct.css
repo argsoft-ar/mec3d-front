@@ -118,26 +118,9 @@
   margin-bottom: var(--space-6);
 }
 
-/* Specs grid */
-.detail-product__specs-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
-}
-
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .detail-product__hero {
-    grid-template-columns: 1fr;
-  }
-
-  .detail-product__specs-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .detail-product__specs-grid {
     grid-template-columns: 1fr;
   }
 }
