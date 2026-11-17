@@ -34,4 +34,4 @@ jobs:
         env:
           # Placeholder para que el build no falle sin .env
           VITE_API_URL: /api/v1
-          VITE_SOCKET_URL: https://mec3d-api.onrender.com
+          VITE_SOCKET_URL: https://mec3d-back.onrender.com
