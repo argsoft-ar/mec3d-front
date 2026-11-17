@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   PencilRuler,
@@ -180,6 +180,72 @@ function Dashboard() {
     },
   ];
 
+  const renderSolicitudesList = () =>
+    solicitudesCerradas.items.length === 0 ? (
+      <p className="dashboard__solicitudes-empty">
+        Todavía no tenés solicitudes cerradas
+      </p>
+    ) : (
+      <ul className="dashboard__solicitudes-list">
+        {solicitudesCerradas.items.map((s) => {
+          const estado = estadoOrdenVisual(s.estado);
+          const { conversacionId } = s;
+          return (
+            <li key={s.id}>
+              <SolicitudCerradaItem
+                titulo={s.disenoTitulo}
+                imagenUrl={s.disenoImagenUrl}
+                compradorUsername={s.compradorUsername}
+                estadoLabel={estado.label}
+                estadoVariant={estado.variant}
+                precio={s.precioAcordado}
+                fecha={s.fechaCierre ?? s.actualizadoEn}
+                onVerChat={
+                  conversacionId
+                    ? () =>
+                        navigate(`/chat/${encodeURIComponent(conversacionId)}`)
+                    : undefined
+                }
+                onVerDiseno={() =>
+                  navigate(
+                    `/fabricacion/ordenes/${encodeURIComponent(s.id)}/diseno`,
+                  )
+                }
+              />
+            </li>
+          );
+        })}
+      </ul>
+    );
+
+  let solicitudesCerradasContent: ReactNode;
+  if (solicitudesCerradas.loading)
+    solicitudesCerradasContent = (
+      <PageLoader label="Cargando solicitudes..." />
+    );
+  else if (solicitudesCerradas.error)
+    solicitudesCerradasContent = (
+      <div className="dashboard__solicitudes-error" role="alert">
+        <p>{solicitudesCerradas.error}</p>
+        <Button
+          title="Reintentar"
+          variant="outline"
+          size="sm"
+          onClick={solicitudesCerradas.refresh}
+        />
+      </div>
+    );
+  else
+    solicitudesCerradasContent = (
+      <>
+        <div className="dashboard__stat-value">{solicitudesCerradas.total}</div>
+        <p className="dashboard__stat-label">
+          solicitudes de fabricación cerradas
+        </p>
+        {renderSolicitudesList()}
+      </>
+    );
+
   return (
     <Layout>
       <div className="dashboard">
@@ -248,66 +314,7 @@ function Dashboard() {
                 />
               }
             >
-              {solicitudesCerradas.loading ? (
-                <PageLoader label="Cargando solicitudes..." />
-              ) : solicitudesCerradas.error ? (
-                <div className="dashboard__solicitudes-error" role="alert">
-                  <p>{solicitudesCerradas.error}</p>
-                  <Button
-                    title="Reintentar"
-                    variant="outline"
-                    size="sm"
-                    onClick={solicitudesCerradas.refresh}
-                  />
-                </div>
-              ) : (
-                <>
-                  <div className="dashboard__stat-value">
-                    {solicitudesCerradas.total}
-                  </div>
-                  <p className="dashboard__stat-label">
-                    solicitudes de fabricación cerradas
-                  </p>
-                  {solicitudesCerradas.items.length === 0 ? (
-                    <p className="dashboard__solicitudes-empty">
-                      Todavía no tenés solicitudes cerradas
-                    </p>
-                  ) : (
-                    <ul className="dashboard__solicitudes-list">
-                      {solicitudesCerradas.items.map((s) => {
-                        const estado = estadoOrdenVisual(s.estado);
-                        const { conversacionId } = s;
-                        return (
-                          <li key={s.id}>
-                            <SolicitudCerradaItem
-                              titulo={s.disenoTitulo}
-                              imagenUrl={s.disenoImagenUrl}
-                              compradorUsername={s.compradorUsername}
-                              estadoLabel={estado.label}
-                              estadoVariant={estado.variant}
-                              precio={s.precioAcordado}
-                              fecha={s.fechaCierre ?? s.actualizadoEn}
-                              onVerChat={
-                                conversacionId
-                                  ? () =>
-                                      navigate(
-                                        `/chat/${encodeURIComponent(conversacionId)}`,
-                                      )
-                                  : undefined
-                              }
-                              onVerDiseno={() =>
-                                navigate(
-                                  `/fabricacion/ordenes/${encodeURIComponent(s.id)}/diseno`,
-                                )
-                              }
-                            />
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </>
-              )}
+              {solicitudesCerradasContent}
             </Card>
           )}
         </div>

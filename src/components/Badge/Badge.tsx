@@ -14,20 +14,19 @@ function Badge({
   ariaLabel,
   variant = "danger",
   className = "",
-}: BadgeProps) {
+}: Readonly<BadgeProps>) {
   if (count <= 0) return null;
 
   const display = count > max ? `${max}+` : String(count);
 
   return (
-    <span
+    <output
       className={`badge badge--${variant} ${className}`.trim()}
       aria-label={ariaLabel ?? display}
       title={ariaLabel}
-      role="status"
     >
       {display}
-    </span>
+    </output>
   );
 }
 

@@ -73,12 +73,14 @@ export default defineConfig([
 
 Copiá `.env.example` a `.env`:
 
-| Variable | Dev | Producción | Descripción |
-| --- | --- | --- | --- |
-| `VITE_API_URL` | `/api/v1` | `/api/v1` | Base de la API, siempre same-origin. |
-| `VITE_SOCKET_URL` | `http://localhost:3000` | `https://mec3d-api.onrender.com` | Origen del backend para Socket.IO. |
+| Variable | Dev | Test (Vercel Preview, rama `test`) | Producción | Descripción |
+| --- | --- | --- | --- | --- |
+| `VITE_API_URL` | `/api/v1` | `/api/v1` | `/api/v1` | Base de la API, siempre relativa (same-origin). |
+| `VITE_SOCKET_URL` | `http://localhost:3000` | `https://mec3d-back-test.onrender.com` | `https://mec3d-api.onrender.com` | Origen del backend para Socket.IO. |
+
+> `VITE_API_URL` **nunca** debe ser una URL absoluta al backend: la cookie `mec3d_session` es `SameSite=Lax` y no viaja cross-site, así que el login rebota a `/login` con 401. En Vercel, cargá estas variables por entorno (Preview para la rama `test`, Production para el deploy productivo).
 
 - **Sesión por cookie**: el backend setea la cookie HttpOnly `mec3d_session` en login/registro/cambio de rol; el front no guarda ningún JWT (solo el perfil público en `localStorage.auth_user`) y todas las requests usan `credentials: "include"`. Al arrancar se valida la sesión con `GET /auth/me`; el logout llama a `POST /auth/logout`.
-- **API same-origin**: en dev, Vite proxea `/api` → `http://localhost:3000` (`vite.config.ts`, el header `Origin` llega como `http://localhost:5173` para el chequeo CSRF del backend); en producción, `vercel.json` reescribe `/api/*` → `https://mec3d-api.onrender.com/api/*`.
+- **API same-origin**: en dev, Vite proxea `/api` → `http://localhost:3000` (`vite.config.ts`, el header `Origin` llega como `http://localhost:5173` para el chequeo CSRF del backend); en Vercel, `vercel.json` reescribe `/api/*` según el host: `mec3d-front-test.vercel.app` → `https://mec3d-back-test.onrender.com/api/*` (regla con `has: host`, evaluada primero) y cualquier otro host (producción) → `https://mec3d-api.onrender.com/api/*`.
 - **Socket.IO**: se conecta directo a `VITE_SOCKET_URL`; cada (re)conexión pide un token de 60 s a `POST /auth/socket-token` y lo envía en `auth.token`.
 - **Rutas**: los segmentos dinámicos de los endpoints se codifican con el helper `apiPath` (`src/utils/api-path.util.ts`).

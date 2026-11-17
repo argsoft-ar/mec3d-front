@@ -41,3 +41,31 @@ export interface MultiSelectDropdownProps {
   /** Clase CSS adicional */
   className?: string;
 }
+
+export interface MultiSelectDropdownPopoverProps {
+  id: string;
+  listId: string;
+  labelId: string;
+  /** Nombre de los checkboxes */
+  name: string;
+  /** Etiqueta del campo, usada en el aria-label del buscador */
+  label: string;
+  options: SelectOption[];
+  /** Opciones filtradas a renderizar */
+  visible: SelectOption[];
+  value: string[];
+  totalMatches: number;
+  truncated: boolean;
+  limitReached: boolean;
+  maxSelected?: number;
+  loading: boolean;
+  emptyMessage: string;
+  searchable: boolean;
+  searchPlaceholder: string;
+  query: string;
+  onQueryChange: (query: string) => void;
+  onToggle: (optionValue: string) => void;
+  onClear: () => void;
+  searchRef: React.Ref<HTMLInputElement>;
+  listRef: React.Ref<HTMLFieldSetElement>;
+}

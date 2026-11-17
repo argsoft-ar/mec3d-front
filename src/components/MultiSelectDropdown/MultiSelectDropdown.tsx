@@ -1,13 +1,14 @@
 import {
+  useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
-  type ReactNode,
 } from "react";
 import { ChevronDown } from "lucide-react";
-import type { SelectOption } from "../../types";
+import { useDropdownDismiss } from "../../hooks/useDropdownDismiss";
+import { useMultiSelectOptions } from "../../hooks/useMultiSelectOptions";
+import MultiSelectDropdownPopover from "./MultiSelectDropdownPopover";
 import type { MultiSelectDropdownProps } from "./MultiSelectDropdown.types";
 import "../Form/Form.css";
 import "./MultiSelectDropdown.css";
@@ -15,11 +16,19 @@ import "./MultiSelectDropdown.css";
 // Tope de opciones renderizadas para listas con miles de elementos.
 const MAX_RENDERED = 200;
 
-function normalize(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+function joinIds(...ids: Array<string | false | undefined>): string | undefined {
+  return ids.filter(Boolean).join(" ") || undefined;
+}
+
+function getDisplayText(
+  value: string[],
+  labels: Map<string, string>,
+  placeholder: string,
+  loadingOptions: boolean,
+): string {
+  if (value.length === 0) return loadingOptions ? "Cargando…" : placeholder;
+  if (value.length === 1) return labels.get(value[0]) ?? "1 seleccionada";
+  return `${value.length} seleccionadas`;
 }
 
 function MultiSelectDropdown({
@@ -50,72 +59,32 @@ function MultiSelectDropdown({
   const listId = `${fieldId}-list`;
   const errorId = `${fieldId}-error`;
   const hintId = `${fieldId}-hint`;
-  const describedBy =
-    [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") ||
-    undefined;
+  const describedBy = joinIds(!!error && errorId, !!hint && hintId);
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLFieldSetElement>(null);
   const isOpen = open && !disabled;
 
-  const indexed = useMemo(
-    () => options.map((option) => ({ option, key: normalize(option.label) })),
-    [options],
-  );
-  const labels = useMemo(
-    () => new Map(options.map((o) => [o.value, o.label])),
-    [options],
-  );
-
-  const { selectedMatches, otherMatches } = useMemo(() => {
-    const selectedList: SelectOption[] = [];
-    const otherList: SelectOption[] = [];
-    if (!isOpen)
-      return { selectedMatches: selectedList, otherMatches: otherList };
-    const term = normalize(query.trim());
-    const selected = new Set(value);
-    for (const { option, key } of indexed) {
-      if (term && !key.includes(term)) continue;
-      if (selected.has(option.value)) selectedList.push(option);
-      else otherList.push(option);
-    }
-    return { selectedMatches: selectedList, otherMatches: otherList };
-  }, [indexed, query, value, isOpen]);
-
-  // Las seleccionadas se muestran siempre primero y no cuentan para el recorte.
-  const visible = [
-    ...selectedMatches,
-    ...otherMatches.slice(
-      0,
-      Math.max(0, MAX_RENDERED - selectedMatches.length),
-    ),
-  ];
-  const totalMatches = selectedMatches.length + otherMatches.length;
-  const truncated = visible.length < totalMatches;
+  const { visible, totalMatches, truncated, labels } = useMultiSelectOptions({
+    options,
+    value,
+    query,
+    isOpen,
+    maxRendered: MAX_RENDERED,
+  });
   const limitReached = maxSelected !== undefined && value.length >= maxSelected;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleOutside(event: Event) {
-      if (
-        event.target instanceof Node &&
-        rootRef.current?.contains(event.target)
-      )
-        return;
-      setOpen(false);
-      setQuery("");
-    }
-    document.addEventListener("mousedown", handleOutside);
-    document.addEventListener("focusin", handleOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleOutside);
-      document.removeEventListener("focusin", handleOutside);
-    };
-  }, [isOpen]);
+  const close = useCallback((returnFocus: boolean) => {
+    setOpen(false);
+    setQuery("");
+    if (returnFocus) triggerRef.current?.focus();
+  }, []);
+
+  useDropdownDismiss(rootRef, isOpen, close);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -126,12 +95,6 @@ function MultiSelectDropdown({
         ?.focus();
   }, [isOpen]);
 
-  function close(returnFocus: boolean) {
-    setOpen(false);
-    setQuery("");
-    if (returnFocus) triggerRef.current?.focus();
-  }
-
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key === "ArrowDown" && !isOpen) {
       event.preventDefault();
@@ -139,12 +102,9 @@ function MultiSelectDropdown({
     }
   }
 
-  function handleRootKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Escape" && isOpen) {
-      event.preventDefault();
-      event.stopPropagation();
-      close(true);
-    }
+  function toggleOpen() {
+    if (isOpen) close(false);
+    else setOpen(true);
   }
 
   function toggleOption(optionValue: string) {
@@ -160,75 +120,35 @@ function MultiSelectDropdown({
     searchRef.current?.focus();
   }
 
-  let display: string;
-  if (value.length === 0)
-    display = loading && options.length === 0 ? "Cargando…" : placeholder;
-  else if (value.length === 1)
-    display = labels.get(value[0]) ?? "1 seleccionada";
-  else display = `${value.length} seleccionadas`;
+  const display = getDisplayText(
+    value,
+    labels,
+    placeholder,
+    loading && options.length === 0,
+  );
 
   const rootClass = [
     "form-field",
     "multi-select-dropdown",
     `multi-select-dropdown--${size}`,
     `multi-select-dropdown--${variant}`,
-    fullWidth ? "form-field--full" : "",
-    error ? "form-field--error" : "",
-    isOpen ? "multi-select-dropdown--open" : "",
+    fullWidth && "form-field--full",
+    error && "form-field--error",
+    isOpen && "multi-select-dropdown--open",
     className,
   ]
     .filter(Boolean)
     .join(" ");
 
-  let content: ReactNode;
-  if (options.length === 0)
-    content = (
-      <p className="multi-select-dropdown__message">
-        {loading ? "Cargando opciones…" : emptyMessage}
-      </p>
-    );
-  else if (visible.length === 0)
-    content = (
-      <p className="multi-select-dropdown__message">
-        Sin resultados para “{query.trim()}”.
-      </p>
-    );
-  else
-    content = (
-      <div
-        ref={listRef}
-        id={listId}
-        role="group"
-        aria-labelledby={labelId}
-        className="multi-select-dropdown__list"
-      >
-        {visible.map((opt) => {
-          const checked = value.includes(opt.value);
-          return (
-            <label
-              key={opt.value}
-              className={`multi-select-dropdown__option${checked ? " multi-select-dropdown__option--checked" : ""}`}
-            >
-              <input
-                type="checkbox"
-                className="multi-select-dropdown__checkbox"
-                name={name}
-                value={opt.value}
-                checked={checked}
-                disabled={limitReached && !checked}
-                onChange={() => toggleOption(opt.value)}
-              />
-              <span className="multi-select-dropdown__option-label">
-                {opt.label}
-              </span>
-            </label>
-          );
-        })}
-      </div>
-    );
+  const valueClass = [
+    "multi-select-dropdown__value",
+    value.length === 0 && "multi-select-dropdown__value--placeholder",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div ref={rootRef} className={rootClass} onKeyDown={handleRootKeyDown}>
+    <div ref={rootRef} className={rootClass}>
       <label id={labelId} htmlFor={fieldId} className="form-field__label">
         {label}
         {required && (
@@ -240,6 +160,7 @@ function MultiSelectDropdown({
       </label>
 
       <div className="multi-select-dropdown__control">
+        {/* El error se anuncia vía aria-describedby (aria-invalid no aplica a role=button). */}
         <button
           ref={triggerRef}
           id={fieldId}
@@ -250,16 +171,13 @@ function MultiSelectDropdown({
           aria-controls={isOpen ? popoverId : undefined}
           aria-labelledby={`${labelId} ${valueId}`}
           aria-describedby={describedBy}
-          aria-invalid={error ? true : undefined}
           aria-busy={loading}
+          data-invalid={error ? true : undefined}
           disabled={disabled}
-          onClick={() => (isOpen ? close(false) : setOpen(true))}
+          onClick={toggleOpen}
           onKeyDown={handleTriggerKeyDown}
         >
-          <span
-            id={valueId}
-            className={`multi-select-dropdown__value${value.length === 0 ? " multi-select-dropdown__value--placeholder" : ""}`}
-          >
+          <span id={valueId} className={valueClass}>
             {display}
           </span>
           <ChevronDown
@@ -270,57 +188,30 @@ function MultiSelectDropdown({
         </button>
 
         {isOpen && (
-          <div id={popoverId} className="multi-select-dropdown__popover">
-            {searchable && (
-              <div className="multi-select-dropdown__search-wrapper">
-                <input
-                  ref={searchRef}
-                  type="search"
-                  className="form-field__input multi-select-dropdown__search"
-                  placeholder={searchPlaceholder}
-                  aria-label={`Buscar en ${label}`}
-                  aria-controls={listId}
-                  autoComplete="off"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") e.preventDefault();
-                  }}
-                />
-              </div>
-            )}
-
-            {limitReached && (
-              <p className="multi-select-dropdown__note" role="status">
-                Máximo {maxSelected}
-              </p>
-            )}
-
-            {content}
-
-            {truncated && (
-              <p className="multi-select-dropdown__note">
-                Mostrando {visible.length} de {totalMatches}, refiná la búsqueda
-              </p>
-            )}
-
-            {value.length > 0 && (
-              <div className="multi-select-dropdown__footer">
-                <span>
-                  {value.length === 1
-                    ? "1 seleccionada"
-                    : `${value.length} seleccionadas`}
-                </span>
-                <button
-                  type="button"
-                  className="multi-select-dropdown__clear"
-                  onClick={clearSelection}
-                >
-                  Limpiar
-                </button>
-              </div>
-            )}
-          </div>
+          <MultiSelectDropdownPopover
+            id={popoverId}
+            listId={listId}
+            labelId={labelId}
+            name={name}
+            label={label}
+            options={options}
+            visible={visible}
+            value={value}
+            totalMatches={totalMatches}
+            truncated={truncated}
+            limitReached={limitReached}
+            maxSelected={maxSelected}
+            loading={loading}
+            emptyMessage={emptyMessage}
+            searchable={searchable}
+            searchPlaceholder={searchPlaceholder}
+            query={query}
+            onQueryChange={setQuery}
+            onToggle={toggleOption}
+            onClear={clearSelection}
+            searchRef={searchRef}
+            listRef={listRef}
+          />
         )}
       </div>
 

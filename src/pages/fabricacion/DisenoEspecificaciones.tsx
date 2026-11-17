@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   AlignLeft,
@@ -145,6 +145,33 @@ function buildSpecItems(diseno: DisenoOrden): SpecGridItem[] {
   ];
 }
 
+function renderVisor3D(
+  preview: ReturnType<typeof usePreview3D>,
+  formato: string,
+): ReactNode {
+  if (preview.status === "ready" && preview.url)
+    return (
+      <>
+        <Suspense fallback={<PageLoader label="Cargando visor 3D..." />}>
+          <ModelViewer3D
+            url={preview.url}
+            format={preview.format ?? formato}
+            className="diseno-especificaciones__canvas"
+            onPreviewError={preview.renovarSiExpiro}
+          />
+        </Suspense>
+        {preview.degradado && <Watermark text="MEC3D · VISTA PREVIA" />}
+      </>
+    );
+  if (preview.status === "loading" || preview.status === "idle")
+    return <PageLoader label="Cargando visor 3D..." />;
+  return (
+    <p className="diseno-especificaciones__placeholder">
+      La vista previa 3D no está disponible.
+    </p>
+  );
+}
+
 function DisenoEspecificaciones() {
   const { ordenId } = useParams<{ ordenId: string }>();
   const navigate = useNavigate();
@@ -244,29 +271,7 @@ function DisenoEspecificaciones() {
           </div>
           {conPreview3D && (
             <div className="diseno-especificaciones__viewer">
-              {preview.status === "ready" && preview.url ? (
-                <>
-                  <Suspense
-                    fallback={<PageLoader label="Cargando visor 3D..." />}
-                  >
-                    <ModelViewer3D
-                      url={preview.url}
-                      format={preview.format ?? diseno.formato ?? ""}
-                      className="diseno-especificaciones__canvas"
-                      onPreviewError={preview.renovarSiExpiro}
-                    />
-                  </Suspense>
-                  {preview.degradado && (
-                    <Watermark text="MEC3D · VISTA PREVIA" />
-                  )}
-                </>
-              ) : preview.status === "loading" || preview.status === "idle" ? (
-                <PageLoader label="Cargando visor 3D..." />
-              ) : (
-                <p className="diseno-especificaciones__placeholder">
-                  La vista previa 3D no está disponible.
-                </p>
-              )}
+              {renderVisor3D(preview, diseno.formato ?? "")}
             </div>
           )}
         </section>
@@ -289,10 +294,10 @@ function DisenoEspecificaciones() {
               onClick={() => void descargar()}
             />
           ) : (
-            <p className="diseno-especificaciones__note" role="status">
+            <output className="diseno-especificaciones__note">
               <Info {...ICON_PROPS} aria-hidden="true" />
               <span>{AVISO_DESCARGA}</span>
-            </p>
+            </output>
           )}
         </section>
       </div>

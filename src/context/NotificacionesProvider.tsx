@@ -29,7 +29,9 @@ function sinConversacion(
 }
 
 /** Debe montarse solo con sesión activa: abre el socket y consulta endpoints autenticados. */
-function NotificacionesProvider({ children }: NotificacionesProviderProps) {
+function NotificacionesProvider({
+  children,
+}: Readonly<NotificacionesProviderProps>) {
   const navigate = useNavigate();
   const rutaChat = useMatch("/chat/:conversacionId");
   const { toasts, addToast, removeToast } = useToast();
@@ -37,7 +39,7 @@ function NotificacionesProvider({ children }: NotificacionesProviderProps) {
   const [noLeidosPorConversacion, setNoLeidosPorConversacion] = useState<
     Record<string, number>
   >({});
-  const [conversacionExplicita, setConversacionActiva] = useState<
+  const [conversacionExplicita, setConversacionExplicita] = useState<
     string | null
   >(null);
   const [ultimoEventoConversacion, setUltimoEventoConversacion] =
@@ -159,7 +161,7 @@ function NotificacionesProvider({ children }: NotificacionesProviderProps) {
       totalNoLeidos,
       noLeidosPorConversacion,
       conversacionActiva,
-      setConversacionActiva,
+      setConversacionActiva: setConversacionExplicita,
       marcarConversacionLeida,
       sincronizarNoLeidos,
       refrescarTotal,

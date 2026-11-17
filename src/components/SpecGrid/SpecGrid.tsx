@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Card from "../Card/Card";
 import type { SpecGridProps } from "./SpecGrid.types";
 import "./SpecGrid.css";
@@ -11,6 +12,17 @@ function isEmpty(value: SpecGridProps["items"][number]["value"]): boolean {
   );
 }
 
+function renderValue(
+  value: SpecGridProps["items"][number]["value"],
+  emptyValue: ReactNode,
+): ReactNode {
+  if (isEmpty(value))
+    return <span className="spec-grid__empty">{emptyValue}</span>;
+  if (typeof value === "string" || typeof value === "number")
+    return <span className="spec-grid__value">{value}</span>;
+  return value;
+}
+
 function SpecGrid({
   items,
   emptyValue = "—",
@@ -19,24 +31,15 @@ function SpecGrid({
   className = "",
 }: Readonly<SpecGridProps>) {
   return (
-    <div
-      className={`spec-grid spec-grid--${size} ${className}`.trim()}
-      role="list"
-    >
+    <ul className={`spec-grid spec-grid--${size} ${className}`.trim()}>
       {items.map(({ label, value, icon }) => (
-        <div key={label} role="listitem" className="spec-grid__item">
+        <li key={label} className="spec-grid__item">
           <Card variant={variant} title={label} icon={icon}>
-            {isEmpty(value) ? (
-              <span className="spec-grid__empty">{emptyValue}</span>
-            ) : typeof value === "string" || typeof value === "number" ? (
-              <span className="spec-grid__value">{value}</span>
-            ) : (
-              value
-            )}
+            {renderValue(value, emptyValue)}
           </Card>
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 

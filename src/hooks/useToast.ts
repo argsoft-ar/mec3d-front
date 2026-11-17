@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import type { AddToast, ToastItem } from "../types";
 
+const DEFAULT_DURATION = 4000;
+
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -19,8 +21,9 @@ export function useToast(): UseToastReturn {
   }, []);
 
   const addToast = useCallback<AddToast>(
-    (message, type, duration = 4000, action) => {
+    (message, type, durationMs, action) => {
       const id = generateId();
+      const duration = durationMs ?? DEFAULT_DURATION;
       const toast: ToastItem = { id, message, type, duration, action };
 
       setToasts((prev) => [...prev, toast]);

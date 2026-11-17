@@ -17,9 +17,8 @@ function YaCompradoNotice({
   className = "",
 }: Readonly<YaCompradoNoticeProps>) {
   return (
-    <div
+    <output
       className={`ya-comprado-notice ya-comprado-notice--${size} ya-comprado-notice--${variant} ${className}`.trim()}
-      role="status"
     >
       <p className="ya-comprado-notice__message">
         <CircleCheck
@@ -49,7 +48,7 @@ function YaCompradoNotice({
           Ver mis compras
         </Link>
       </div>
-    </div>
+    </output>
   );
 }
 

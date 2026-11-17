@@ -1,6 +1,6 @@
 import { io, type Socket } from "socket.io-client";
 import { BASE_URL, request } from "./http.client";
-import { onSessionCleared } from "./session";
+import { isAuthenticated, onSessionChanged, onSessionCleared } from "./session";
 import { trimTrailingSlashes } from "../utils/string.util";
 
 const DEV_SOCKET_URL = "http://localhost:3000";
@@ -33,11 +33,20 @@ async function fetchSocketToken(): Promise<string> {
   return token;
 }
 
+type SocketHandler = (...args: unknown[]) => void;
+
+interface SocketSubscription {
+  event: string;
+  handler: SocketHandler;
+}
+
 let socket: Socket | null = null;
+// Registro de listeners: sobreviven a la recreación del socket (logout/re-login del mismo usuario).
+const subscriptions = new Set<SocketSubscription>();
 
 export function getSocket(): Socket {
   if (socket) return socket;
-  socket = io(SOCKET_URL, {
+  const instance = io(SOCKET_URL, {
     // Forma callback: se invoca en cada (re)conexión, así cada handshake usa un token fresco.
     auth: (cb: (data: SocketAuth) => void) => {
       fetchSocketToken()
@@ -46,7 +55,33 @@ export function getSocket(): Socket {
     },
     autoConnect: true,
   });
-  return socket;
+  // Rechazo del middleware (sin token o token inválido): Socket.IO no reintenta solo. Se
+  // descarta la instancia para que el próximo uso abra una nueva con token fresco.
+  instance.on("connect_error", () => {
+    if (instance.active || socket !== instance) return;
+    instance.disconnect();
+    socket = null;
+  });
+  subscriptions.forEach(({ event, handler }) => instance.on(event, handler));
+  socket = instance;
+  return instance;
+}
+
+/** Suscribe a un evento del socket actual y de los que se creen después; devuelve la desuscripción. */
+export function onSocketEvent<T extends unknown[]>(
+  event: string,
+  listener: (...args: T) => void,
+): () => void {
+  const subscription: SocketSubscription = {
+    event,
+    handler: (...args) => listener(...(args as T)),
+  };
+  subscriptions.add(subscription);
+  getSocket().on(event, subscription.handler);
+  return () => {
+    subscriptions.delete(subscription);
+    socket?.off(event, subscription.handler);
+  };
 }
 
 export function disconnectSocket(): void {
@@ -56,3 +91,8 @@ export function disconnectSocket(): void {
 
 // Logout, 401 y nuevo login: el socket de la sesión anterior no debe sobrevivir.
 onSessionCleared(disconnectSocket);
+
+// Re-login sin remontar a los suscriptores: se reabre el socket para no dejarlos sin eventos.
+onSessionChanged(() => {
+  if (!socket && subscriptions.size > 0 && isAuthenticated()) getSocket();
+});

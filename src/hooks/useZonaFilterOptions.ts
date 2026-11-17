@@ -25,6 +25,21 @@ function toOptions(
   }));
 }
 
+function toZonaNodes(
+  items: ReadonlyArray<Omit<ZonaNode, "parentId">> | undefined,
+  parentId: string,
+): ZonaNode[] {
+  return (items ?? []).map((item) => ({ ...item, parentId }));
+}
+
+/** Updater que agrega/reemplaza las zonas hijas de `parentId`. */
+function withZonas(parentId: string, nodes: ZonaNode[]) {
+  return (prev: Record<string, ZonaNode[]>): Record<string, ZonaNode[]> => ({
+    ...prev,
+    [parentId]: nodes,
+  });
+}
+
 /** Opciones de provincias, departamentos y localidades para las provincias/departamentos elegidos. */
 export function useZonaFilterOptions(
   provinciaIds: string[],
@@ -67,13 +82,9 @@ export function useZonaFilterOptions(
         .getDepartamentos(provinciaId)
         .then((res) => {
           setError("");
-          setDepartamentosByProvincia((prev) => ({
-            ...prev,
-            [provinciaId]: (res.data ?? []).map((d) => ({
-              ...d,
-              parentId: provinciaId,
-            })),
-          }));
+          setDepartamentosByProvincia(
+            withZonas(provinciaId, toZonaNodes(res.data, provinciaId)),
+          );
         })
         .catch(() => {
           requested.current.delete(key);
@@ -100,13 +111,9 @@ export function useZonaFilterOptions(
         .getLocalidades(provinciaId, departamentoId)
         .then((res) => {
           setError("");
-          setLocalidadesByDepartamento((prev) => ({
-            ...prev,
-            [departamentoId]: (res.data ?? []).map((l) => ({
-              ...l,
-              parentId: departamentoId,
-            })),
-          }));
+          setLocalidadesByDepartamento(
+            withZonas(departamentoId, toZonaNodes(res.data, departamentoId)),
+          );
         })
         .catch(() => {
           requested.current.delete(key);

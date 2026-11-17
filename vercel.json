@@ -2,6 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
+      "has": [{ "type": "host", "value": "mec3d-front-test.vercel.app" }],
+      "destination": "https://mec3d-back-test.onrender.com/api/:path*"
+    },
+    {
+      "source": "/api/:path*",
       "destination": "https://mec3d-api.onrender.com/api/:path*"
     },
     {

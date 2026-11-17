@@ -100,8 +100,11 @@
 .multi-select-dropdown__list {
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  margin: 0;
   padding: var(--space-1) 0;
+  border: none;
 }
 
 .multi-select-dropdown__option {
@@ -150,6 +153,7 @@
 
 .multi-select-dropdown__message,
 .multi-select-dropdown__note {
+  display: block;
   margin: 0;
   padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-xs);
