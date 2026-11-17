@@ -1,6 +1,6 @@
 const PREFIX = "mec3d_";
 // Claves internas tipo "user:profile" / "georef:provincias": charset cerrado y largo acotado.
-const SAFE_KEY = /^[A-Za-z0-9_.:-]{1,100}$/;
+const SAFE_KEY = /^[\w.:-]{1,100}$/;
 const MAX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_ENTRY_LENGTH = 512 * 1024;
 const FORBIDDEN_PROPS = new Set(["__proto__", "constructor", "prototype"]);
@@ -11,7 +11,7 @@ const MAX_ARRAY_LENGTH = 5000;
 const MAX_OBJECT_KEYS = 200;
 const MAX_STRING_LENGTH = 10_000;
 // Nombres de propiedad tipo identificador (camelCase de los DTO); nada de rutas ni símbolos.
-const SAFE_PROP = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
+const SAFE_PROP = /^[A-Za-z_]\w{0,63}$/;
 // Caracteres de control (salvo \t \n \r): no tienen uso legítimo en los datos cacheados.
 const CONTROL_CHARS = /(?![\t\n\r])\p{Cc}/u;
 
