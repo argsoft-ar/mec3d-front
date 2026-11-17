@@ -4,6 +4,7 @@ import { chatSocketService } from "../services/chat-socket.service";
 import { ordenFabricacionService } from "../services/orden-fabricacion.service";
 import { getErrorToast, hasErrorCode } from "../services/http.client";
 import { useCheckout } from "./useCheckout";
+import { CODIGO_CONVERSACION_CERRADA } from "../interfaces";
 import type {
   Mensaje,
   DealClosedPayload,
@@ -153,12 +154,28 @@ export function useChatThread({
       },
     );
 
+    // La otra parte cerró el chat con la solicitud abierta: el mensaje de sistema
+    // aparece en vivo y la lista se recarga para reflejar el nuevo estado de la orden.
+    const offOrdenCancelada = chatSocketService.onOrdenCancelada((payload) => {
+      const esDeEsteHilo =
+        payload.mensaje.conversacionId === conversacionId ||
+        payload.ordenFabricacionId === ordenIdRef.current;
+      if (!esDeEsteHilo) return;
+      setMensajes((prev) =>
+        prev.some((m) => m.id === payload.mensaje.id)
+          ? prev
+          : [...prev, payload.mensaje],
+      );
+      onDealUpdate();
+    });
+
     return () => {
       offNuevoMensaje();
       offDealClosed();
       offPrecioPropuesto();
       offOrdenCompletada();
       offEntregaDeclarada();
+      offOrdenCancelada();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversacionId]);
@@ -175,10 +192,13 @@ export function useChatThread({
         conversacionId,
         composerText.trim(),
       );
-      if (!ack.ok) {
-        addToast(ack.error ?? "No se pudo enviar el mensaje", "error");
-      } else {
+      if (ack.ok) {
         setComposerText("");
+      } else if (ack.code === CODIGO_CONVERSACION_CERRADA) {
+        addToast("La otra parte cerró este chat", "warning");
+        onDealUpdate();
+      } else {
+        addToast(ack.error ?? "No se pudo enviar el mensaje", "error");
       }
     } finally {
       setSending(false);

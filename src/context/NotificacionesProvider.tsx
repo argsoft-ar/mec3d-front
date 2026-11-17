@@ -150,9 +150,22 @@ function NotificacionesProvider({
       },
     );
 
+    // La contraparte cerró un chat: la lista se recarga (cerradaPorContraparte) y,
+    // si no es el chat abierto (que ya muestra el aviso), se avisa con un toast.
+    const offCerrada = chatSocketService.onConversacionCerrada((payload) => {
+      const { conversacionId } = payload;
+      registrarEvento(conversacionId, "cerrada");
+      if (conversacionId === activaRef.current) return;
+      addToast("La otra parte cerró un chat", "info", TOAST_DURATION, {
+        label: "Ver",
+        onClick: irAlChat(conversacionId),
+      });
+    });
+
     return () => {
       offMensaje();
       offSolicitud();
+      offCerrada();
     };
   }, [addToast]);
 

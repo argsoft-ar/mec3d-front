@@ -5,7 +5,8 @@ export type NoLeidosPorConversacion = Readonly<Record<string, number>>;
 /** Último evento de socket que puede requerir recargar la lista de conversaciones. */
 export interface EventoConversacion {
   conversacionId: string;
-  tipo: "mensaje" | "solicitud";
+  /** "cerrada": la contraparte cerró el chat (`conversacion-cerrada`). */
+  tipo: "mensaje" | "solicitud" | "cerrada";
   /** Crece con cada evento para distinguir eventos repetidos de la misma conversación. */
   seq: number;
 }
@@ -24,6 +25,6 @@ export interface NotificacionesContextValue {
     conversaciones: ReadonlyArray<Pick<ConversacionResumen, "id" | "noLeidos">>,
   ) => void;
   refrescarTotal: () => Promise<void>;
-  /** Mensaje de otra conversación o nueva solicitud de fabricación; null hasta el primer evento. */
+  /** Mensaje de otra conversación, nueva solicitud o chat cerrado por la contraparte; null hasta el primer evento. */
   ultimoEventoConversacion: EventoConversacion | null;
 }

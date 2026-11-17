@@ -275,9 +275,6 @@ function DetailProduct() {
               <span>{formatDownloads(product.downloads)} descargas</span>
             </div>
 
-            {/* Description */}
-            <p className="detail-product__description">{product.description}</p>
-
             {/* Price + format */}
             <div className="detail-product__price-row">
               <span className="detail-product__price">
@@ -333,6 +330,11 @@ function DetailProduct() {
               </div>
             )}
           </div>
+        </section>
+
+        <section className="description_">
+          <h2 className="detail-product__section-title">Descripción</h2>
+          <p className="detail-product__description">{product.description}</p>
         </section>
 
         {/* Especificaciones Técnicas */}

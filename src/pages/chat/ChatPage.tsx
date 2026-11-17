@@ -14,6 +14,7 @@ import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import MotivoDialog from "../../components/MotivoDialog/MotivoDialog";
 import CodigoEntregaDialog from "../../components/CodigoEntregaDialog/CodigoEntregaDialog";
 import {
+  ClosedChatNotice,
   DealBar,
   NegotiationPanel,
   PaymentPanel,
@@ -26,6 +27,10 @@ import { useChatThread } from "../../hooks/useChatThread";
 import { useCheckout } from "../../hooks/useCheckout";
 import { useCodigoEntrega } from "../../hooks/useCodigoEntrega";
 import { useDisputa } from "../../hooks/useDisputa";
+import {
+  textosCerrarChat,
+  useCerrarConversacion,
+} from "../../hooks/useCerrarConversacion";
 import { useCompraDeOrden } from "../../hooks/useCompraDeOrden";
 import { useNotificaciones } from "../../hooks/useNotificaciones";
 import { useSession } from "../../hooks/useSession";
@@ -33,6 +38,7 @@ import {
   AVISO_EN_DISPUTA,
   compraPagada,
   estadoCompraVisual,
+  puedeCerrarChat,
   puedeDisputarOrden,
 } from "../../utils/estado.util";
 import { formatPrice } from "../../utils/format.util";
@@ -103,6 +109,8 @@ interface ChatThreadProps {
   currentUserId: string | null;
   conversacion?: ConversacionResumen;
   onDealUpdate: () => void;
+  /** El usuario cerró/eliminó este chat: recargar lista y contadores y salir del hilo. */
+  onConversacionCerrada: () => void;
   addToast: (
     message: string,
     type: "success" | "error" | "warning" | "info",
@@ -117,6 +125,7 @@ function ChatThread({
   currentUserId,
   conversacion,
   onDealUpdate,
+  onConversacionCerrada,
   addToast,
 }: Readonly<ChatThreadProps>) {
   const navigate = useNavigate();
@@ -136,6 +145,11 @@ function ChatThread({
     refreshCompra();
   }, [onDealUpdate, refreshCompra]);
   const disputa = useDisputa(addToast, handleDealUpdate);
+  const cierre = useCerrarConversacion(
+    addToast,
+    onConversacionCerrada,
+    handleDealUpdate,
+  );
 
   const {
     mensajes,
@@ -174,6 +188,19 @@ function ChatThread({
   const enDisputa = conversacion?.estadoOrden === "en_disputa";
   const esFabricante = conversacion?.miRol === "fabricante";
   const presupuesto = conversacion?.precioPropuestoFabricante ?? null;
+  const cerradoPorContraparte = conversacion?.cerradaPorContraparte === true;
+  const textosCierre = conversacion ? textosCerrarChat(conversacion) : null;
+  const puedeCerrar =
+    cerradoPorContraparte || puedeCerrarChat(conversacion?.estadoOrden);
+  const cerrarChat =
+    textosCierre && puedeCerrar
+      ? {
+          label: textosCierre.titulo,
+          eliminar: cerradoPorContraparte,
+          onClick: cierre.abrir,
+        }
+      : undefined;
+  const composerBloqueado = dealClosed || cerradoPorContraparte;
 
   const verDiseno = ordenFabricacionId
     ? () =>
@@ -188,6 +215,7 @@ function ChatThread({
         productoTitulo={conversacion?.productoTitulo}
         esFabricante={esFabricante}
         onVerDiseno={verDiseno}
+        cerrarChat={cerrarChat}
       />
 
       <DealBar
@@ -213,6 +241,24 @@ function ChatThread({
         <output className="chat-page__dispute-notice">
           <strong>Orden en disputa.</strong> {AVISO_EN_DISPUTA}
         </output>
+      )}
+
+      <ClosedChatNotice visible={cerradoPorContraparte} />
+
+      {textosCierre && (
+        <ConfirmDialog
+          open={cierre.abierto}
+          title={textosCierre.titulo}
+          message={textosCierre.mensaje}
+          confirmLabel={textosCierre.titulo}
+          cancelLabel="Volver"
+          variant="danger"
+          loading={cierre.loading}
+          onConfirm={() =>
+            void cierre.confirmar(conversacionId, textosCierre.exito)
+          }
+          onCancel={cierre.cerrar}
+        />
       )}
 
       <MotivoDialog
@@ -267,20 +313,20 @@ function ChatThread({
           onKeyDown={(e) => {
             if (e.key === "Enter") void handleSend();
           }}
-          disabled={dealClosed}
+          disabled={composerBloqueado}
         />
         <Button
           title="Enviar"
           icon={<Send size={16} strokeWidth={2} />}
           variant="primary"
           loading={sending}
-          disabled={dealClosed}
+          disabled={composerBloqueado}
           onClick={handleSend}
         />
       </div>
 
       <NegotiationPanel
-        visible={!dealClosed && conversacion !== undefined}
+        visible={!composerBloqueado && conversacion !== undefined}
         esComprador={esComprador}
         presupuesto={presupuesto}
         ordenFabricacionId={ordenFabricacionId}
@@ -340,7 +386,14 @@ function ChatPage() {
     refresh: refreshConversaciones,
     noLeidosDe,
   } = useConversaciones(addToast);
-  const { setConversacionActiva } = useNotificaciones();
+  const { setConversacionActiva, refrescarTotal } = useNotificaciones();
+  const navigate = useNavigate();
+
+  const handleConversacionCerrada = useCallback(() => {
+    refreshConversaciones();
+    void refrescarTotal();
+    navigate("/chat");
+  }, [refreshConversaciones, refrescarTotal, navigate]);
 
   useEffect(() => {
     setConversacionActiva(conversacionId ?? null);
@@ -419,6 +472,7 @@ function ChatPage() {
               currentUserId={currentUserId}
               conversacion={activeConversacion}
               onDealUpdate={refreshConversaciones}
+              onConversacionCerrada={handleConversacionCerrada}
               addToast={addToast}
             />
           ) : (
