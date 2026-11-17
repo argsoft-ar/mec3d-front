@@ -7,7 +7,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://mec3d-api.onrender.com/api/:path*"
+      "destination": "https://mec3d-back.onrender.com/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
