@@ -51,15 +51,10 @@ const LAYER_OPTIONS: SelectOption[] = [
   { value: "0.2mm", label: "0.2mm" },
   { value: "0.3mm", label: "0.3mm" },
 ];
-const INFILL_OPTIONS: SelectOption[] = [
-  { value: "15%", label: "15%" },
-  { value: "20%", label: "20%" },
-  { value: "25%", label: "25%" },
-  { value: "30%", label: "30%" },
-  { value: "40%", label: "40%" },
-  { value: "50%", label: "50%" },
-  { value: "60%", label: "60%" },
-];
+const INFILL_OPTIONS: SelectOption[] = Array.from({ length: 20 }, (_, i) => {
+  const v = `${(i + 1) * 5}%`;
+  return { value: v, label: v };
+});
 
 // Evita notación exponencial y signos en inputs numéricos.
 const NON_NUMERIC_KEYS = ["e", "E", "+", "-"] as const;

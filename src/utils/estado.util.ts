@@ -101,6 +101,28 @@ export function compraPagada(estado: EstadoCompra | null | undefined): boolean {
   return estado === "pagada" || estado === "completada";
 }
 
+const ESTADOS_CHAT_CERRABLE: ReadonlySet<EstadoOrdenFabricacion> = new Set([
+  "solicitado",
+  "en_negociacion",
+  "completado",
+  "cancelado",
+  "rechazado",
+]);
+
+/** No se puede cerrar el chat con el trato cerrado, la entrega pendiente o la orden en disputa. */
+export function puedeCerrarChat(
+  estadoOrden: EstadoOrdenFabricacion | null | undefined,
+): boolean {
+  return estadoOrden != null && ESTADOS_CHAT_CERRABLE.has(estadoOrden);
+}
+
+/** Con la solicitud abierta, cerrar el chat la cancela (comprador) o la rechaza (fabricante). */
+export function solicitudAbierta(
+  estadoOrden: EstadoOrdenFabricacion | null | undefined,
+): boolean {
+  return estadoOrden === "solicitado" || estadoOrden === "en_negociacion";
+}
+
 /** true si la fecha de liberación todavía no llegó (el payout sigue en retención). */
 export function enRetencionHasta(
   liberableDesde: string | null | undefined,

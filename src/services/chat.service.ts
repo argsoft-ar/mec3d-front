@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  ConversacionCerrada,
   ConversacionLeida,
   ConversacionResumen,
   NoLeidosTotal,
@@ -28,6 +29,13 @@ export const chatService = {
   marcarLeida: (conversacionId: string) =>
     request<ApiResponse<ConversacionLeida>>(
       apiPath`/conversaciones/${conversacionId}/leer`,
+      { method: "POST" },
+    ),
+
+  /** Cierra el chat (o lo elimina si ya lo cerró la contraparte); cancela/rechaza la solicitud abierta. */
+  cerrar: (conversacionId: string) =>
+    request<ApiResponse<ConversacionCerrada>>(
+      apiPath`/conversaciones/${conversacionId}/cerrar`,
       { method: "POST" },
     ),
 };
